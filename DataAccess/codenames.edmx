@@ -1,0 +1,465 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+  <!-- EF Runtime content -->
+  <edmx:Runtime>
+    <!-- SSDL content -->
+    <edmx:StorageModels>
+      <Schema Namespace="codenamesModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+        <EntityType Name="Address">
+          <Key>
+            <PropertyRef Name="playerID" />
+          </Key>
+          <Property Name="playerID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="country" Type="varchar" MaxLength="20" />
+          <Property Name="city" Type="varchar" MaxLength="30" />
+          <Property Name="street" Type="varchar" MaxLength="30" />
+          <Property Name="number" Type="varchar" MaxLength="5" />
+        </EntityType>
+        <EntityType Name="Ban">
+          <Key>
+            <PropertyRef Name="banID" />
+          </Key>
+          <Property Name="banID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="banDatetime" Type="datetimeoffset" Precision="2" Nullable="false" />
+          <Property Name="reason" Type="varchar" MaxLength="200" Nullable="false" />
+          <Property Name="timeout" Type="datetimeoffset" Precision="2" Nullable="false" />
+          <Property Name="userID" Type="uniqueidentifier" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Friendship">
+          <Key>
+            <PropertyRef Name="playerID" />
+            <PropertyRef Name="friendID" />
+          </Key>
+          <Property Name="playerID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="requestStatus" Type="bit" Nullable="false" />
+          <Property Name="friendID" Type="uniqueidentifier" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Player">
+          <Key>
+            <PropertyRef Name="playerID" />
+          </Key>
+          <Property Name="playerID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="username" Type="varchar" MaxLength="20" Nullable="false" />
+          <Property Name="avatarID" Type="tinyint" />
+          <Property Name="name" Type="varchar" MaxLength="20" />
+          <Property Name="lastName" Type="varchar" MaxLength="30" />
+          <Property Name="facebookUsername" Type="varchar" MaxLength="30" />
+          <Property Name="instagramUsername" Type="varchar" MaxLength="30" />
+          <Property Name="discordUsername" Type="varchar" MaxLength="30" />
+          <Property Name="userID" Type="uniqueidentifier" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Scoreboard">
+          <Key>
+            <PropertyRef Name="playerID" />
+          </Key>
+          <Property Name="playerID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="mostGamesWon" Type="int" />
+          <Property Name="fastestGame" Type="time" Precision="2" />
+          <Property Name="assassinsRevealed" Type="int" />
+        </EntityType>
+        <EntityType Name="User">
+          <Key>
+            <PropertyRef Name="userID" />
+          </Key>
+          <Property Name="userID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="email" Type="varchar" MaxLength="30" Nullable="false" />
+          <Property Name="passwordHash" Type="varbinary" MaxLength="64" Nullable="false" />
+          <Property Name="passwordSalt" Type="uniqueidentifier" Nullable="false" />
+        </EntityType>
+        <Association Name="FK_Address_Player">
+          <End Role="Player" Type="Self.Player" Multiplicity="1" />
+          <End Role="Address" Type="Self.Address" Multiplicity="0..1" />
+          <ReferentialConstraint>
+            <Principal Role="Player">
+              <PropertyRef Name="playerID" />
+            </Principal>
+            <Dependent Role="Address">
+              <PropertyRef Name="playerID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Ban_User">
+          <End Role="User" Type="Self.User" Multiplicity="1" />
+          <End Role="Ban" Type="Self.Ban" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="userID" />
+            </Principal>
+            <Dependent Role="Ban">
+              <PropertyRef Name="userID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_FriendshipFriendID_PlayerID">
+          <End Role="Player" Type="Self.Player" Multiplicity="1" />
+          <End Role="Friendship" Type="Self.Friendship" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Player">
+              <PropertyRef Name="playerID" />
+            </Principal>
+            <Dependent Role="Friendship">
+              <PropertyRef Name="friendID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_FriendshipPlayerID_PlayerID">
+          <End Role="Player" Type="Self.Player" Multiplicity="1" />
+          <End Role="Friendship" Type="Self.Friendship" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Player">
+              <PropertyRef Name="playerID" />
+            </Principal>
+            <Dependent Role="Friendship">
+              <PropertyRef Name="playerID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Player_User">
+          <End Role="User" Type="Self.User" Multiplicity="1" />
+          <End Role="Player" Type="Self.Player" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="userID" />
+            </Principal>
+            <Dependent Role="Player">
+              <PropertyRef Name="userID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Scoreboard_Player">
+          <End Role="Player" Type="Self.Player" Multiplicity="1" />
+          <End Role="Scoreboard" Type="Self.Scoreboard" Multiplicity="0..1" />
+          <ReferentialConstraint>
+            <Principal Role="Player">
+              <PropertyRef Name="playerID" />
+            </Principal>
+            <Dependent Role="Scoreboard">
+              <PropertyRef Name="playerID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Function Name="uspSignIn" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="email" Type="varchar" Mode="In" />
+          <Parameter Name="password" Type="varchar" Mode="In" />
+          <Parameter Name="username" Type="varchar" Mode="In" />
+          <Parameter Name="name" Type="varchar" Mode="In" />
+          <Parameter Name="lastName" Type="varchar" Mode="In" />
+        </Function>
+        <EntityContainer Name="codenamesModelStoreContainer">
+          <EntitySet Name="Address" EntityType="Self.Address" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Ban" EntityType="Self.Ban" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Friendship" EntityType="Self.Friendship" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Player" EntityType="Self.Player" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Scoreboard" EntityType="Self.Scoreboard" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="User" EntityType="Self.User" Schema="dbo" store:Type="Tables" />
+          <AssociationSet Name="FK_Address_Player" Association="Self.FK_Address_Player">
+            <End Role="Player" EntitySet="Player" />
+            <End Role="Address" EntitySet="Address" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Ban_User" Association="Self.FK_Ban_User">
+            <End Role="User" EntitySet="User" />
+            <End Role="Ban" EntitySet="Ban" />
+          </AssociationSet>
+          <AssociationSet Name="FK_FriendshipFriendID_PlayerID" Association="Self.FK_FriendshipFriendID_PlayerID">
+            <End Role="Player" EntitySet="Player" />
+            <End Role="Friendship" EntitySet="Friendship" />
+          </AssociationSet>
+          <AssociationSet Name="FK_FriendshipPlayerID_PlayerID" Association="Self.FK_FriendshipPlayerID_PlayerID">
+            <End Role="Player" EntitySet="Player" />
+            <End Role="Friendship" EntitySet="Friendship" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Player_User" Association="Self.FK_Player_User">
+            <End Role="User" EntitySet="User" />
+            <End Role="Player" EntitySet="Player" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Scoreboard_Player" Association="Self.FK_Scoreboard_Player">
+            <End Role="Player" EntitySet="Player" />
+            <End Role="Scoreboard" EntitySet="Scoreboard" />
+          </AssociationSet>
+        </EntityContainer>
+      </Schema>
+    </edmx:StorageModels>
+    <!-- CSDL content -->
+    <edmx:ConceptualModels>
+      <Schema Namespace="codenamesModel" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+        <EntityType Name="Address">
+          <Key>
+            <PropertyRef Name="playerID" />
+          </Key>
+          <Property Name="playerID" Type="Guid" Nullable="false" />
+          <Property Name="country" Type="String" MaxLength="20" FixedLength="false" Unicode="false" />
+          <Property Name="city" Type="String" MaxLength="30" FixedLength="false" Unicode="false" />
+          <Property Name="street" Type="String" MaxLength="30" FixedLength="false" Unicode="false" />
+          <Property Name="number" Type="String" MaxLength="5" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="Player" Relationship="Self.FK_Address_Player" FromRole="Address" ToRole="Player" />
+        </EntityType>
+        <EntityType Name="Ban">
+          <Key>
+            <PropertyRef Name="banID" />
+          </Key>
+          <Property Name="banID" Type="Guid" Nullable="false" />
+          <Property Name="banDatetime" Type="DateTimeOffset" Nullable="false" Precision="2" />
+          <Property Name="reason" Type="String" MaxLength="200" FixedLength="false" Unicode="false" Nullable="false" />
+          <Property Name="timeout" Type="DateTimeOffset" Nullable="false" Precision="2" />
+          <Property Name="userID" Type="Guid" Nullable="false" />
+          <NavigationProperty Name="User" Relationship="Self.FK_Ban_User" FromRole="Ban" ToRole="User" />
+        </EntityType>
+        <EntityType Name="Friendship">
+          <Key>
+            <PropertyRef Name="playerID" />
+            <PropertyRef Name="friendID" />
+          </Key>
+          <Property Name="playerID" Type="Guid" Nullable="false" />
+          <Property Name="requestStatus" Type="Boolean" Nullable="false" />
+          <Property Name="friendID" Type="Guid" Nullable="false" />
+          <NavigationProperty Name="Player" Relationship="Self.FK_FriendshipFriendID_PlayerID" FromRole="Friendship" ToRole="Player" />
+          <NavigationProperty Name="Player1" Relationship="Self.FK_FriendshipPlayerID_PlayerID" FromRole="Friendship" ToRole="Player" />
+        </EntityType>
+        <EntityType Name="Player">
+          <Key>
+            <PropertyRef Name="playerID" />
+          </Key>
+          <Property Name="playerID" Type="Guid" Nullable="false" />
+          <Property Name="username" Type="String" MaxLength="20" FixedLength="false" Unicode="false" Nullable="false" />
+          <Property Name="avatarID" Type="Byte" />
+          <Property Name="name" Type="String" MaxLength="20" FixedLength="false" Unicode="false" />
+          <Property Name="lastName" Type="String" MaxLength="30" FixedLength="false" Unicode="false" />
+          <Property Name="facebookUsername" Type="String" MaxLength="30" FixedLength="false" Unicode="false" />
+          <Property Name="instagramUsername" Type="String" MaxLength="30" FixedLength="false" Unicode="false" />
+          <Property Name="discordUsername" Type="String" MaxLength="30" FixedLength="false" Unicode="false" />
+          <Property Name="userID" Type="Guid" Nullable="false" />
+          <NavigationProperty Name="Address" Relationship="Self.FK_Address_Player" FromRole="Player" ToRole="Address" />
+          <NavigationProperty Name="Friendships" Relationship="Self.FK_FriendshipFriendID_PlayerID" FromRole="Player" ToRole="Friendship" />
+          <NavigationProperty Name="Friendships1" Relationship="Self.FK_FriendshipPlayerID_PlayerID" FromRole="Player" ToRole="Friendship" />
+          <NavigationProperty Name="User" Relationship="Self.FK_Player_User" FromRole="Player" ToRole="User" />
+          <NavigationProperty Name="Scoreboard" Relationship="Self.FK_Scoreboard_Player" FromRole="Player" ToRole="Scoreboard" />
+        </EntityType>
+        <EntityType Name="Scoreboard">
+          <Key>
+            <PropertyRef Name="playerID" />
+          </Key>
+          <Property Name="playerID" Type="Guid" Nullable="false" />
+          <Property Name="mostGamesWon" Type="Int32" />
+          <Property Name="fastestGame" Type="Time" Precision="2" />
+          <Property Name="assassinsRevealed" Type="Int32" />
+          <NavigationProperty Name="Player" Relationship="Self.FK_Scoreboard_Player" FromRole="Scoreboard" ToRole="Player" />
+        </EntityType>
+        <EntityType Name="User">
+          <Key>
+            <PropertyRef Name="userID" />
+          </Key>
+          <Property Name="userID" Type="Guid" Nullable="false" />
+          <Property Name="email" Type="String" MaxLength="30" FixedLength="false" Unicode="false" Nullable="false" />
+          <Property Name="passwordHash" Type="Binary" MaxLength="64" FixedLength="false" Nullable="false" />
+          <Property Name="passwordSalt" Type="Guid" Nullable="false" />
+          <NavigationProperty Name="Bans" Relationship="Self.FK_Ban_User" FromRole="User" ToRole="Ban" />
+          <NavigationProperty Name="Players" Relationship="Self.FK_Player_User" FromRole="User" ToRole="Player" />
+        </EntityType>
+        <Association Name="FK_Address_Player">
+          <End Role="Player" Type="Self.Player" Multiplicity="1" />
+          <End Role="Address" Type="Self.Address" Multiplicity="0..1" />
+          <ReferentialConstraint>
+            <Principal Role="Player">
+              <PropertyRef Name="playerID" />
+            </Principal>
+            <Dependent Role="Address">
+              <PropertyRef Name="playerID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Ban_User">
+          <End Role="User" Type="Self.User" Multiplicity="1" />
+          <End Role="Ban" Type="Self.Ban" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="userID" />
+            </Principal>
+            <Dependent Role="Ban">
+              <PropertyRef Name="userID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_FriendshipFriendID_PlayerID">
+          <End Role="Player" Type="Self.Player" Multiplicity="1" />
+          <End Role="Friendship" Type="Self.Friendship" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Player">
+              <PropertyRef Name="playerID" />
+            </Principal>
+            <Dependent Role="Friendship">
+              <PropertyRef Name="friendID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_FriendshipPlayerID_PlayerID">
+          <End Role="Player" Type="Self.Player" Multiplicity="1" />
+          <End Role="Friendship" Type="Self.Friendship" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Player">
+              <PropertyRef Name="playerID" />
+            </Principal>
+            <Dependent Role="Friendship">
+              <PropertyRef Name="playerID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Player_User">
+          <End Role="User" Type="Self.User" Multiplicity="1" />
+          <End Role="Player" Type="Self.Player" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="userID" />
+            </Principal>
+            <Dependent Role="Player">
+              <PropertyRef Name="userID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Scoreboard_Player">
+          <End Role="Player" Type="Self.Player" Multiplicity="1" />
+          <End Role="Scoreboard" Type="Self.Scoreboard" Multiplicity="0..1" />
+          <ReferentialConstraint>
+            <Principal Role="Player">
+              <PropertyRef Name="playerID" />
+            </Principal>
+            <Dependent Role="Scoreboard">
+              <PropertyRef Name="playerID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityContainer Name="codenamesEntities" annotation:LazyLoadingEnabled="true">
+          <EntitySet Name="Addresses" EntityType="Self.Address" />
+          <EntitySet Name="Bans" EntityType="Self.Ban" />
+          <EntitySet Name="Friendships" EntityType="Self.Friendship" />
+          <EntitySet Name="Players" EntityType="Self.Player" />
+          <EntitySet Name="Scoreboards" EntityType="Self.Scoreboard" />
+          <EntitySet Name="Users" EntityType="Self.User" />
+          <AssociationSet Name="FK_Address_Player" Association="Self.FK_Address_Player">
+            <End Role="Player" EntitySet="Players" />
+            <End Role="Address" EntitySet="Addresses" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Ban_User" Association="Self.FK_Ban_User">
+            <End Role="User" EntitySet="Users" />
+            <End Role="Ban" EntitySet="Bans" />
+          </AssociationSet>
+          <AssociationSet Name="FK_FriendshipFriendID_PlayerID" Association="Self.FK_FriendshipFriendID_PlayerID">
+            <End Role="Player" EntitySet="Players" />
+            <End Role="Friendship" EntitySet="Friendships" />
+          </AssociationSet>
+          <AssociationSet Name="FK_FriendshipPlayerID_PlayerID" Association="Self.FK_FriendshipPlayerID_PlayerID">
+            <End Role="Player" EntitySet="Players" />
+            <End Role="Friendship" EntitySet="Friendships" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Player_User" Association="Self.FK_Player_User">
+            <End Role="User" EntitySet="Users" />
+            <End Role="Player" EntitySet="Players" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Scoreboard_Player" Association="Self.FK_Scoreboard_Player">
+            <End Role="Player" EntitySet="Players" />
+            <End Role="Scoreboard" EntitySet="Scoreboards" />
+          </AssociationSet>
+          <FunctionImport Name="uspSignIn">
+            <Parameter Name="email" Mode="In" Type="String" />
+            <Parameter Name="password" Mode="In" Type="String" />
+            <Parameter Name="username" Mode="In" Type="String" />
+            <Parameter Name="name" Mode="In" Type="String" />
+            <Parameter Name="lastName" Mode="In" Type="String" />
+          </FunctionImport>
+        </EntityContainer>
+      </Schema>
+    </edmx:ConceptualModels>
+    <!-- C-S mapping content -->
+    <edmx:Mappings>
+      <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
+        <EntityContainerMapping StorageEntityContainer="codenamesModelStoreContainer" CdmEntityContainer="codenamesEntities">
+          <EntitySetMapping Name="Addresses">
+            <EntityTypeMapping TypeName="codenamesModel.Address">
+              <MappingFragment StoreEntitySet="Address">
+                <ScalarProperty Name="playerID" ColumnName="playerID" />
+                <ScalarProperty Name="country" ColumnName="country" />
+                <ScalarProperty Name="city" ColumnName="city" />
+                <ScalarProperty Name="street" ColumnName="street" />
+                <ScalarProperty Name="number" ColumnName="number" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Bans">
+            <EntityTypeMapping TypeName="codenamesModel.Ban">
+              <MappingFragment StoreEntitySet="Ban">
+                <ScalarProperty Name="banID" ColumnName="banID" />
+                <ScalarProperty Name="banDatetime" ColumnName="banDatetime" />
+                <ScalarProperty Name="reason" ColumnName="reason" />
+                <ScalarProperty Name="timeout" ColumnName="timeout" />
+                <ScalarProperty Name="userID" ColumnName="userID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Friendships">
+            <EntityTypeMapping TypeName="codenamesModel.Friendship">
+              <MappingFragment StoreEntitySet="Friendship">
+                <ScalarProperty Name="playerID" ColumnName="playerID" />
+                <ScalarProperty Name="requestStatus" ColumnName="requestStatus" />
+                <ScalarProperty Name="friendID" ColumnName="friendID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Players">
+            <EntityTypeMapping TypeName="codenamesModel.Player">
+              <MappingFragment StoreEntitySet="Player">
+                <ScalarProperty Name="playerID" ColumnName="playerID" />
+                <ScalarProperty Name="username" ColumnName="username" />
+                <ScalarProperty Name="avatarID" ColumnName="avatarID" />
+                <ScalarProperty Name="name" ColumnName="name" />
+                <ScalarProperty Name="lastName" ColumnName="lastName" />
+                <ScalarProperty Name="facebookUsername" ColumnName="facebookUsername" />
+                <ScalarProperty Name="instagramUsername" ColumnName="instagramUsername" />
+                <ScalarProperty Name="discordUsername" ColumnName="discordUsername" />
+                <ScalarProperty Name="userID" ColumnName="userID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Scoreboards">
+            <EntityTypeMapping TypeName="codenamesModel.Scoreboard">
+              <MappingFragment StoreEntitySet="Scoreboard">
+                <ScalarProperty Name="playerID" ColumnName="playerID" />
+                <ScalarProperty Name="mostGamesWon" ColumnName="mostGamesWon" />
+                <ScalarProperty Name="fastestGame" ColumnName="fastestGame" />
+                <ScalarProperty Name="assassinsRevealed" ColumnName="assassinsRevealed" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Users">
+            <EntityTypeMapping TypeName="codenamesModel.User">
+              <MappingFragment StoreEntitySet="User">
+                <ScalarProperty Name="userID" ColumnName="userID" />
+                <ScalarProperty Name="email" ColumnName="email" />
+                <ScalarProperty Name="passwordHash" ColumnName="passwordHash" />
+                <ScalarProperty Name="passwordSalt" ColumnName="passwordSalt" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <FunctionImportMapping FunctionImportName="uspSignIn" FunctionName="codenamesModel.Store.uspSignIn" />
+        </EntityContainerMapping>
+      </Mapping>
+    </edmx:Mappings>
+  </edmx:Runtime>
+  <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <Connection>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="MetadataArtifactProcessing" Value="EmbedInOutputAssembly" />
+      </DesignerInfoPropertySet>
+    </Connection>
+    <Options>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="ValidateOnBuild" Value="true" />
+        <DesignerProperty Name="EnablePluralization" Value="true" />
+        <DesignerProperty Name="IncludeForeignKeysInModel" Value="true" />
+        <DesignerProperty Name="UseLegacyProvider" Value="false" />
+        <DesignerProperty Name="CodeGenerationStrategy" Value="Ninguno" />
+      </DesignerInfoPropertySet>
+    </Options>
+    <!-- Diagram content (shape and connector positions) -->
+    <Diagrams></Diagrams>
+  </Designer>
+</edmx:Edmx>
