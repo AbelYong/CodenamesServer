@@ -141,7 +141,7 @@
         <Function Name="uspLogin" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
           <Parameter Name="username" Type="varchar" Mode="In" />
           <Parameter Name="password" Type="varchar" Mode="In" />
-          <Parameter Name="userFound" Type="bit" Mode="InOut" />
+          <Parameter Name="userID" Type="uniqueidentifier" Mode="InOut" />
         </Function>
         <Function Name="uspSignIn" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
           <Parameter Name="email" Type="varchar" Mode="In" />
@@ -149,6 +149,7 @@
           <Parameter Name="username" Type="varchar" Mode="In" />
           <Parameter Name="name" Type="varchar" Mode="In" />
           <Parameter Name="lastName" Type="varchar" Mode="In" />
+          <Parameter Name="newUserID" Type="uniqueidentifier" Mode="InOut" />
         </Function>
         <EntityContainer Name="codenamesModelStoreContainer">
           <EntitySet Name="Address" EntityType="Self.Address" Schema="dbo" store:Type="Tables" />
@@ -374,6 +375,19 @@
             <Parameter Name="password" Mode="In" Type="String" />
             <Parameter Name="userFound" Mode="InOut" Type="Boolean" />
           </FunctionImport>
+          <FunctionImport Name="uspLogin1">
+            <Parameter Name="username" Mode="In" Type="String" />
+            <Parameter Name="password" Mode="In" Type="String" />
+            <Parameter Name="userID" Mode="InOut" Type="Guid" />
+          </FunctionImport>
+          <FunctionImport Name="uspSignIn1">
+            <Parameter Name="email" Mode="In" Type="String" />
+            <Parameter Name="password" Mode="In" Type="String" />
+            <Parameter Name="username" Mode="In" Type="String" />
+            <Parameter Name="name" Mode="In" Type="String" />
+            <Parameter Name="lastName" Mode="In" Type="String" />
+            <Parameter Name="newUserID" Mode="InOut" Type="Guid" />
+          </FunctionImport>
         </EntityContainer>
       </Schema>
     </edmx:ConceptualModels>
@@ -447,9 +461,9 @@
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
-          <FunctionImportMapping FunctionImportName="uspSignIn" FunctionName="codenamesModel.Store.uspSignIn" />
-          <FunctionImportMapping FunctionImportName="uspLogin" FunctionName="codenamesModel.Store.uspLogin" />
-        </EntityContainerMapping>
+          <FunctionImportMapping FunctionImportName="uspLogin1" FunctionName="codenamesModel.Store.uspLogin" />
+          <FunctionImportMapping FunctionImportName="uspSignIn1" FunctionName="codenamesModel.Store.uspSignIn" />
+          </EntityContainerMapping>
       </Mapping>
     </edmx:Mappings>
   </edmx:Runtime>

@@ -34,7 +34,20 @@ namespace DataAccess
         public virtual DbSet<Scoreboard> Scoreboards { get; set; }
         public virtual DbSet<User> Users { get; set; }
     
-        public virtual int uspSignIn(string email, string password, string username, string name, string lastName)
+        public virtual int uspLogin(string username, string password, ObjectParameter userID)
+        {
+            var usernameParameter = username != null ?
+                new ObjectParameter("username", username) :
+                new ObjectParameter("username", typeof(string));
+    
+            var passwordParameter = password != null ?
+                new ObjectParameter("password", password) :
+                new ObjectParameter("password", typeof(string));
+    
+            return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction("uspLogin", usernameParameter, passwordParameter, userID);
+        }
+    
+        public virtual int uspSignIn(string email, string password, string username, string name, string lastName, ObjectParameter newUserID)
         {
             var emailParameter = email != null ?
                 new ObjectParameter("email", email) :
@@ -56,20 +69,7 @@ namespace DataAccess
                 new ObjectParameter("lastName", lastName) :
                 new ObjectParameter("lastName", typeof(string));
     
-            return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction("uspSignIn", emailParameter, passwordParameter, usernameParameter, nameParameter, lastNameParameter);
-        }
-    
-        public virtual int uspLogin(string username, string password, ObjectParameter userFound)
-        {
-            var usernameParameter = username != null ?
-                new ObjectParameter("username", username) :
-                new ObjectParameter("username", typeof(string));
-    
-            var passwordParameter = password != null ?
-                new ObjectParameter("password", password) :
-                new ObjectParameter("password", typeof(string));
-    
-            return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction("uspLogin", usernameParameter, passwordParameter, userFound);
+            return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction("uspSignIn", emailParameter, passwordParameter, usernameParameter, nameParameter, lastNameParameter, newUserID);
         }
     }
 }

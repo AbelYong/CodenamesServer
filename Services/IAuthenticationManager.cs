@@ -11,25 +11,64 @@ namespace Services
     public interface IAuthenticationManager
     {
         [OperationContract]
-        bool Login(User user);
+        Guid? Login(string username, string password);
 
-        // TODO: agregue aquí sus operaciones de servicio
+        System.Guid SignIn(User user, Player player);
     }
 
     [DataContract]
     public class User
     {
-        private System.Guid userID;
-        private string email;
-        private string password;
+        private System.Guid _userID;
+        private string _email;
+        private string _password;
 
         [DataMember]
-        public System.Guid UserID {  get; set; }
+        public System.Guid UserID
+        {
+            get { return _userID; }
+            set { _userID = value; }
+        }
 
         [DataMember]
-        public string Email { get; set; }
+        public string Email
+        {
+            get { return _email; }
+            set { _email = value; }
+        }
 
         [DataMember]
-        public string Password { get; set; }
+        public string Password
+        {
+            get { return _password; }
+            set { _password = value; }
+        }
+    }
+
+    [DataContract]
+    public class Player
+    {
+        private string _username;
+        private string _name;
+        private string _lastName;
+
+        [DataMember]
+        public string Username
+        {
+            get { return _username; }
+            set { _username = value; }
+        }
+        [DataMember]
+        public string Name
+        {
+            get { return _name; }
+            set { _name = value; }
+        }
+        [DataMember]
+        public string LastName
+        {
+            get { return _lastName; }
+            set { _lastName = value; }
+        }
     }
 }

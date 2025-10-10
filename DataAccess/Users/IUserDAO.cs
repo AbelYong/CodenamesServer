@@ -6,10 +6,8 @@ using System.Threading.Tasks;
 
 namespace DataAccess.Users
 {
-    internal interface IUserDAO
+    public interface IUserDAO
     {
-        bool Login(User user);
-
-        
+        Guid? Login(string username, string password);
     }
 }
