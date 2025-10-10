@@ -4,7 +4,7 @@
   <edmx:Runtime>
     <!-- SSDL content -->
     <edmx:StorageModels>
-      <Schema Namespace="codenamesModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+    <Schema Namespace="codenamesModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
         <EntityType Name="Address">
           <Key>
             <PropertyRef Name="playerID" />
@@ -38,7 +38,7 @@
           <Key>
             <PropertyRef Name="playerID" />
           </Key>
-          <Property Name="playerID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="playerID" Type="uniqueidentifier" Nullable="false" StoreGeneratedPattern="Identity" />
           <Property Name="username" Type="varchar" MaxLength="20" Nullable="false" />
           <Property Name="avatarID" Type="tinyint" />
           <Property Name="name" Type="varchar" MaxLength="20" />
@@ -61,7 +61,7 @@
           <Key>
             <PropertyRef Name="userID" />
           </Key>
-          <Property Name="userID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="userID" Type="uniqueidentifier" Nullable="false" StoreGeneratedPattern="Identity" />
           <Property Name="email" Type="varchar" MaxLength="30" Nullable="false" />
           <Property Name="passwordHash" Type="varbinary" MaxLength="64" Nullable="false" />
           <Property Name="passwordSalt" Type="uniqueidentifier" Nullable="false" />
@@ -138,6 +138,11 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Function Name="uspLogin" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="username" Type="varchar" Mode="In" />
+          <Parameter Name="password" Type="varchar" Mode="In" />
+          <Parameter Name="userFound" Type="bit" Mode="InOut" />
+        </Function>
         <Function Name="uspSignIn" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
           <Parameter Name="email" Type="varchar" Mode="In" />
           <Parameter Name="password" Type="varchar" Mode="In" />
@@ -177,8 +182,7 @@
             <End Role="Scoreboard" EntitySet="Scoreboard" />
           </AssociationSet>
         </EntityContainer>
-      </Schema>
-    </edmx:StorageModels>
+      </Schema></edmx:StorageModels>
     <!-- CSDL content -->
     <edmx:ConceptualModels>
       <Schema Namespace="codenamesModel" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
@@ -219,7 +223,7 @@
           <Key>
             <PropertyRef Name="playerID" />
           </Key>
-          <Property Name="playerID" Type="Guid" Nullable="false" />
+          <Property Name="playerID" Type="Guid" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
           <Property Name="username" Type="String" MaxLength="20" FixedLength="false" Unicode="false" Nullable="false" />
           <Property Name="avatarID" Type="Byte" />
           <Property Name="name" Type="String" MaxLength="20" FixedLength="false" Unicode="false" />
@@ -248,7 +252,7 @@
           <Key>
             <PropertyRef Name="userID" />
           </Key>
-          <Property Name="userID" Type="Guid" Nullable="false" />
+          <Property Name="userID" Type="Guid" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
           <Property Name="email" Type="String" MaxLength="30" FixedLength="false" Unicode="false" Nullable="false" />
           <Property Name="passwordHash" Type="Binary" MaxLength="64" FixedLength="false" Nullable="false" />
           <Property Name="passwordSalt" Type="Guid" Nullable="false" />
@@ -365,6 +369,11 @@
             <Parameter Name="name" Mode="In" Type="String" />
             <Parameter Name="lastName" Mode="In" Type="String" />
           </FunctionImport>
+          <FunctionImport Name="uspLogin">
+            <Parameter Name="username" Mode="In" Type="String" />
+            <Parameter Name="password" Mode="In" Type="String" />
+            <Parameter Name="userFound" Mode="InOut" Type="Boolean" />
+          </FunctionImport>
         </EntityContainer>
       </Schema>
     </edmx:ConceptualModels>
@@ -439,6 +448,7 @@
             </EntityTypeMapping>
           </EntitySetMapping>
           <FunctionImportMapping FunctionImportName="uspSignIn" FunctionName="codenamesModel.Store.uspSignIn" />
+          <FunctionImportMapping FunctionImportName="uspLogin" FunctionName="codenamesModel.Store.uspLogin" />
         </EntityContainerMapping>
       </Mapping>
     </edmx:Mappings>
