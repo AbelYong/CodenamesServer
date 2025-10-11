@@ -363,24 +363,12 @@
             <End Role="Player" EntitySet="Players" />
             <End Role="Scoreboard" EntitySet="Scoreboards" />
           </AssociationSet>
-          <FunctionImport Name="uspSignIn">
-            <Parameter Name="email" Mode="In" Type="String" />
-            <Parameter Name="password" Mode="In" Type="String" />
-            <Parameter Name="username" Mode="In" Type="String" />
-            <Parameter Name="name" Mode="In" Type="String" />
-            <Parameter Name="lastName" Mode="In" Type="String" />
-          </FunctionImport>
           <FunctionImport Name="uspLogin">
-            <Parameter Name="username" Mode="In" Type="String" />
-            <Parameter Name="password" Mode="In" Type="String" />
-            <Parameter Name="userFound" Mode="InOut" Type="Boolean" />
-          </FunctionImport>
-          <FunctionImport Name="uspLogin1">
             <Parameter Name="username" Mode="In" Type="String" />
             <Parameter Name="password" Mode="In" Type="String" />
             <Parameter Name="userID" Mode="InOut" Type="Guid" />
           </FunctionImport>
-          <FunctionImport Name="uspSignIn1">
+          <FunctionImport Name="uspSignIn">
             <Parameter Name="email" Mode="In" Type="String" />
             <Parameter Name="password" Mode="In" Type="String" />
             <Parameter Name="username" Mode="In" Type="String" />
@@ -461,8 +449,8 @@
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
-          <FunctionImportMapping FunctionImportName="uspLogin1" FunctionName="codenamesModel.Store.uspLogin" />
-          <FunctionImportMapping FunctionImportName="uspSignIn1" FunctionName="codenamesModel.Store.uspSignIn" />
+          <FunctionImportMapping FunctionImportName="uspLogin" FunctionName="codenamesModel.Store.uspLogin" />
+          <FunctionImportMapping FunctionImportName="uspSignIn" FunctionName="codenamesModel.Store.uspSignIn" />
           </EntityContainerMapping>
       </Mapping>
     </edmx:Mappings>
