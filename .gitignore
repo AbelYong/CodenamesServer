@@ -363,3 +363,7 @@ MigrationBackup/
 FodyWeavers.xsd
 /DataAccess/App.config
 /DataAccess/App.config
+
+# Ignorar archivo en la carpeta DataAccess y Host
+DataAccess/connectionStrings.Local.config
+Host/connectionStrings.Local.config
