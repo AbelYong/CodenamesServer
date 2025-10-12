@@ -22,7 +22,7 @@ namespace Host
                     _quitEvent.Set();
                 };
                 Console.WriteLine("=== Codenames: Duet - Server ===");
-                Console.WriteLine("Ejecutando... presiona Ctrl+C para salir.");
+                Console.WriteLine("Running... use Ctrl+C to exit.");
                 _quitEvent.WaitOne();
             }
         }
