@@ -77,6 +77,14 @@
     <Compile Include="Friendship.cs">
       <DependentUpon>codenames.tt</DependentUpon>
     </Compile>
+    <Compile Include="PasswordReset.cs">
+      <DependentUpon>codenames.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\Langs\Lang.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Lang.resx</DependentUpon>
+    </Compile>
     <Compile Include="Users\IUserDAO.cs" />
     <Compile Include="Player.cs">
       <DependentUpon>codenames.tt</DependentUpon>
@@ -116,6 +124,13 @@
   </ItemGroup>
   <ItemGroup>
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Langs\Lang.es.resx" />
+    <EmbeddedResource Include="Properties\Langs\Lang.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>Lang.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
