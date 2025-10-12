@@ -13,7 +13,8 @@ namespace Services
         [OperationContract]
         Guid? Login(string username, string password);
 
-        System.Guid SignIn(User user, Player player);
+        [OperationContract]
+        Guid? SignIn(User svUser, Player svPlayer);
     }
 
     [DataContract]

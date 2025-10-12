@@ -9,5 +9,7 @@ namespace DataAccess.Users
     public interface IUserDAO
     {
         Guid? Login(string username, string password);
+
+        Guid? SignIn(Player player, string password);
     }
 }

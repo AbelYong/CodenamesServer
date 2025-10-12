@@ -19,44 +19,58 @@ namespace DataAccess.Users
                 {
                     ObjectParameter outUserID = new ObjectParameter("userID", typeof(Guid?));
                     context.uspLogin(username, password, outUserID);
-                    userID = (Guid?) outUserID.Value;
+                    var databaseValue = outUserID.Value;
+                    userID = (databaseValue != DBNull.Value) ? (Guid?) databaseValue : null;
                 }
                 return userID;
             }
             catch (SqlException sqlex)
             {
-                // Create a StringBuilder to hold all the error messages
-                var errorMessage = new System.Text.StringBuilder();
-
-                Exception currentEx = sqlex;
-                int level = 0;
-                while (currentEx != null)
-                {
-                    errorMessage.AppendLine($"--- Level {level} ---");
-                    errorMessage.AppendLine($"Type: {currentEx.GetType().FullName}");
-                    errorMessage.AppendLine($"Message: {currentEx.Message}");
-                    errorMessage.AppendLine(currentEx.StackTrace);
-                    errorMessage.AppendLine();
-
-                    currentEx = currentEx.InnerException;
-                    level++;
-                }
-
-                // Print the full exception detail to the console
-                System.Console.WriteLine(errorMessage.ToString());
-
+                //TODO log
+                System.Console.WriteLine("SqlException");
+                System.Console.WriteLine(sqlex.Message);
                 return null;
             }
             catch (InvalidCastException icex)
             {
-                System.Console.WriteLine(icex.Message);
                 //TODO log
+                System.Console.WriteLine("CastException");
+                System.Console.WriteLine(icex.Message);
                 return null;
             }
             catch (Exception ex)
             {
+                System.Console.WriteLine("Exception");
                 System.Console.WriteLine(ex.Message);
                 //TODO log
+                return null;
+            }
+        }
+
+        public Guid? SignIn(Player player, string password)
+        {
+            try
+            {
+                Guid? newUserID = null;
+                using (var context = new codenamesEntities())
+                {
+                    ObjectParameter outUserID = new ObjectParameter("newUserID", typeof(Guid?));
+                    context.uspSignIn(player.User.email, password, player.username, player.name, player.lastName, outUserID);
+                    var databaseValue = outUserID.Value;
+                    newUserID = (databaseValue != DBNull.Value) ? (Guid?) databaseValue : null;
+                }
+                return newUserID;
+            }
+            catch (SqlException sqlex)
+            {
+                //TODO log
+                System.Console.WriteLine(sqlex.Message);
+                return null;
+            }
+            catch (Exception ex)
+            {
+                //TODO log
+                System.Console.WriteLine(ex.Message);
                 return null;
             }
         }
