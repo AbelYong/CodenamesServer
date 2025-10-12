@@ -34,6 +34,18 @@
           <Property Name="requestStatus" Type="bit" Nullable="false" />
           <Property Name="friendID" Type="uniqueidentifier" Nullable="false" />
         </EntityType>
+        <EntityType Name="PasswordReset">
+          <Key>
+            <PropertyRef Name="resetID" />
+          </Key>
+          <Property Name="resetID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="userID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="codeHash" Type="varbinary" MaxLength="64" Nullable="false" />
+          <Property Name="expiresAt" Type="datetimeoffset" Precision="2" Nullable="false" />
+          <Property Name="used" Type="bit" Nullable="false" />
+          <Property Name="attempts" Type="tinyint" Nullable="false" />
+          <Property Name="createdAt" Type="datetimeoffset" Precision="2" Nullable="false" />
+        </EntityType>
         <EntityType Name="Player">
           <Key>
             <PropertyRef Name="playerID" />
@@ -114,6 +126,18 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Association Name="FK_PasswordReset_User">
+          <End Role="User" Type="Self.User" Multiplicity="1" />
+          <End Role="PasswordReset" Type="Self.PasswordReset" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="userID" />
+            </Principal>
+            <Dependent Role="PasswordReset">
+              <PropertyRef Name="userID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         <Association Name="FK_Player_User">
           <End Role="User" Type="Self.User" Multiplicity="1" />
           <End Role="Player" Type="Self.Player" Multiplicity="*" />
@@ -155,6 +179,7 @@
           <EntitySet Name="Address" EntityType="Self.Address" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Ban" EntityType="Self.Ban" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Friendship" EntityType="Self.Friendship" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="PasswordReset" EntityType="Self.PasswordReset" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Player" EntityType="Self.Player" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Scoreboard" EntityType="Self.Scoreboard" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="User" EntityType="Self.User" Schema="dbo" store:Type="Tables" />
@@ -173,6 +198,10 @@
           <AssociationSet Name="FK_FriendshipPlayerID_PlayerID" Association="Self.FK_FriendshipPlayerID_PlayerID">
             <End Role="Player" EntitySet="Player" />
             <End Role="Friendship" EntitySet="Friendship" />
+          </AssociationSet>
+          <AssociationSet Name="FK_PasswordReset_User" Association="Self.FK_PasswordReset_User">
+            <End Role="User" EntitySet="User" />
+            <End Role="PasswordReset" EntitySet="PasswordReset" />
           </AssociationSet>
           <AssociationSet Name="FK_Player_User" Association="Self.FK_Player_User">
             <End Role="User" EntitySet="User" />
@@ -259,6 +288,7 @@
           <Property Name="passwordSalt" Type="Guid" Nullable="false" />
           <NavigationProperty Name="Bans" Relationship="Self.FK_Ban_User" FromRole="User" ToRole="Ban" />
           <NavigationProperty Name="Players" Relationship="Self.FK_Player_User" FromRole="User" ToRole="Player" />
+          <NavigationProperty Name="PasswordResets" Relationship="codenamesModel.FK_PasswordReset_User" FromRole="User" ToRole="PasswordReset" />
         </EntityType>
         <Association Name="FK_Address_Player">
           <End Role="Player" Type="Self.Player" Multiplicity="1" />
@@ -376,7 +406,37 @@
             <Parameter Name="lastName" Mode="In" Type="String" />
             <Parameter Name="newUserID" Mode="InOut" Type="Guid" />
           </FunctionImport>
+          <EntitySet Name="PasswordResets" EntityType="codenamesModel.PasswordReset" />
+          <AssociationSet Name="FK_PasswordReset_User" Association="codenamesModel.FK_PasswordReset_User">
+            <End Role="User" EntitySet="Users" />
+            <End Role="PasswordReset" EntitySet="PasswordResets" />
+          </AssociationSet>
         </EntityContainer>
+        <EntityType Name="PasswordReset">
+          <Key>
+            <PropertyRef Name="resetID" />
+          </Key>
+          <Property Name="resetID" Type="Guid" Nullable="false" />
+          <Property Name="userID" Type="Guid" Nullable="false" />
+          <Property Name="codeHash" Type="Binary" Nullable="false" MaxLength="64" FixedLength="false" />
+          <Property Name="expiresAt" Type="DateTimeOffset" Nullable="false" Precision="2" />
+          <Property Name="used" Type="Boolean" Nullable="false" />
+          <Property Name="attempts" Type="Byte" Nullable="false" />
+          <Property Name="createdAt" Type="DateTimeOffset" Nullable="false" Precision="2" />
+          <NavigationProperty Name="User" Relationship="codenamesModel.FK_PasswordReset_User" FromRole="PasswordReset" ToRole="User" />
+        </EntityType>
+        <Association Name="FK_PasswordReset_User">
+          <End Type="codenamesModel.User" Role="User" Multiplicity="1" />
+          <End Type="codenamesModel.PasswordReset" Role="PasswordReset" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="userID" />
+            </Principal>
+            <Dependent Role="PasswordReset">
+              <PropertyRef Name="userID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
       </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
@@ -451,6 +511,19 @@
           </EntitySetMapping>
           <FunctionImportMapping FunctionImportName="uspLogin" FunctionName="codenamesModel.Store.uspLogin" />
           <FunctionImportMapping FunctionImportName="uspSignIn" FunctionName="codenamesModel.Store.uspSignIn" />
+          <EntitySetMapping Name="PasswordResets">
+            <EntityTypeMapping TypeName="codenamesModel.PasswordReset">
+              <MappingFragment StoreEntitySet="PasswordReset">
+                <ScalarProperty Name="createdAt" ColumnName="createdAt" />
+                <ScalarProperty Name="attempts" ColumnName="attempts" />
+                <ScalarProperty Name="used" ColumnName="used" />
+                <ScalarProperty Name="expiresAt" ColumnName="expiresAt" />
+                <ScalarProperty Name="codeHash" ColumnName="codeHash" />
+                <ScalarProperty Name="userID" ColumnName="userID" />
+                <ScalarProperty Name="resetID" ColumnName="resetID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
           </EntityContainerMapping>
       </Mapping>
     </edmx:Mappings>
