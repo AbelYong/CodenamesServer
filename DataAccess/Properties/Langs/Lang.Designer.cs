@@ -61,6 +61,33 @@ namespace DataAccess.Properties.Langs {
         }
         
         /// <summary>
+        ///   Busca una cadena traducida similar a Incorrect code..
+        /// </summary>
+        public static string globalIncorrectCode {
+            get {
+                return ResourceManager.GetString("globalIncorrectCode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a Invalid data..
+        /// </summary>
+        public static string globalInvalidData {
+            get {
+                return ResourceManager.GetString("globalInvalidData", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a Too many attempts. Please request a new code..
+        /// </summary>
+        public static string globalTooManyAttempts {
+            get {
+                return ResourceManager.GetString("globalTooManyAttempts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Busca una cadena traducida similar a Code expired or invalid..
         /// </summary>
         public static string resetCodeExpired {
@@ -85,15 +112,6 @@ namespace DataAccess.Properties.Langs {
         public static string resetEmailSubject_Reset {
             get {
                 return ResourceManager.GetString("resetEmailSubject_Reset", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Busca una cadena traducida similar a Incorrect code..
-        /// </summary>
-        public static string resetIncorrectCode {
-            get {
-                return ResourceManager.GetString("resetIncorrectCode", resourceCulture);
             }
         }
         
@@ -125,11 +143,84 @@ namespace DataAccess.Properties.Langs {
         }
         
         /// <summary>
-        ///   Busca una cadena traducida similar a Too many attempts. Please request a new code..
+        ///   Busca una cadena traducida similar a The account could not be created..
         /// </summary>
-        public static string resetTooManyAttempts {
+        public static string verifyAccountCouldNotBeCreated {
             get {
-                return ResourceManager.GetString("resetTooManyAttempts", resourceCulture);
+                return ResourceManager.GetString("verifyAccountCouldNotBeCreated", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a Account created. Welcome, agent!.
+        /// </summary>
+        public static string verifyAccountCreated {
+            get {
+                return ResourceManager.GetString("verifyAccountCreated", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a There is already an active request for that email/user..
+        /// </summary>
+        public static string verifyAlreadyActiveRequest {
+            get {
+                return ResourceManager.GetString("verifyAlreadyActiveRequest", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a Your verify code is: {0}
+        ///Expires in 15 minutes..
+        /// </summary>
+        public static string verifyEmailBodyVerify {
+            get {
+                return ResourceManager.GetString("verifyEmailBodyVerify", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a The email or username is already in use..
+        /// </summary>
+        public static string verifyEmailOrUserInUse {
+            get {
+                return ResourceManager.GetString("verifyEmailOrUserInUse", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a Verify your account.
+        /// </summary>
+        public static string verifyEmailSubjectVerify {
+            get {
+                return ResourceManager.GetString("verifyEmailSubjectVerify", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a Invalid or expired request..
+        /// </summary>
+        public static string verifyInvalidOrExpiredRequest {
+            get {
+                return ResourceManager.GetString("verifyInvalidOrExpiredRequest", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a Required fields are missing..
+        /// </summary>
+        public static string verifyRequiredFieldsMissing {
+            get {
+                return ResourceManager.GetString("verifyRequiredFieldsMissing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a We sent you a verification code to your email..
+        /// </summary>
+        public static string verifyVerificationCodeSent {
+            get {
+                return ResourceManager.GetString("verifyVerificationCodeSent", resourceCulture);
             }
         }
     }

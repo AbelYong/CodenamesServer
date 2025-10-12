@@ -60,6 +60,23 @@
           <Property Name="discordUsername" Type="varchar" MaxLength="30" />
           <Property Name="userID" Type="uniqueidentifier" Nullable="false" />
         </EntityType>
+        <EntityType Name="RegistrationRequests">
+          <Key>
+            <PropertyRef Name="requestID" />
+          </Key>
+          <Property Name="requestID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="email" Type="varchar" MaxLength="30" Nullable="false" />
+          <Property Name="username" Type="varchar" MaxLength="20" Nullable="false" />
+          <Property Name="name" Type="varchar" MaxLength="20" />
+          <Property Name="lastName" Type="varchar" MaxLength="30" />
+          <Property Name="passwordHash" Type="varbinary" MaxLength="64" Nullable="false" />
+          <Property Name="passwordSalt" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="codeHash" Type="varbinary" MaxLength="64" Nullable="false" />
+          <Property Name="attempts" Type="tinyint" Nullable="false" />
+          <Property Name="used" Type="bit" Nullable="false" />
+          <Property Name="createdAt" Type="datetimeoffset" Precision="2" Nullable="false" />
+          <Property Name="expiresAt" Type="datetimeoffset" Precision="2" Nullable="false" />
+        </EntityType>
         <EntityType Name="Scoreboard">
           <Key>
             <PropertyRef Name="playerID" />
@@ -181,6 +198,7 @@
           <EntitySet Name="Friendship" EntityType="Self.Friendship" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="PasswordReset" EntityType="Self.PasswordReset" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Player" EntityType="Self.Player" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="RegistrationRequests" EntityType="Self.RegistrationRequests" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Scoreboard" EntityType="Self.Scoreboard" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="User" EntityType="Self.User" Schema="dbo" store:Type="Tables" />
           <AssociationSet Name="FK_Address_Player" Association="Self.FK_Address_Player">
@@ -411,6 +429,7 @@
             <End Role="User" EntitySet="Users" />
             <End Role="PasswordReset" EntitySet="PasswordResets" />
           </AssociationSet>
+          <EntitySet Name="RegistrationRequests" EntityType="codenamesModel.RegistrationRequest" />
         </EntityContainer>
         <EntityType Name="PasswordReset">
           <Key>
@@ -437,6 +456,23 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <EntityType Name="RegistrationRequest">
+          <Key>
+            <PropertyRef Name="requestID" />
+          </Key>
+          <Property Name="requestID" Type="Guid" Nullable="false" />
+          <Property Name="email" Type="String" Nullable="false" MaxLength="30" FixedLength="false" Unicode="false" />
+          <Property Name="username" Type="String" Nullable="false" MaxLength="20" FixedLength="false" Unicode="false" />
+          <Property Name="name" Type="String" MaxLength="20" FixedLength="false" Unicode="false" />
+          <Property Name="lastName" Type="String" MaxLength="30" FixedLength="false" Unicode="false" />
+          <Property Name="passwordHash" Type="Binary" Nullable="false" MaxLength="64" FixedLength="false" />
+          <Property Name="passwordSalt" Type="Guid" Nullable="false" />
+          <Property Name="codeHash" Type="Binary" Nullable="false" MaxLength="64" FixedLength="false" />
+          <Property Name="attempts" Type="Byte" Nullable="false" />
+          <Property Name="used" Type="Boolean" Nullable="false" />
+          <Property Name="createdAt" Type="DateTimeOffset" Nullable="false" Precision="2" />
+          <Property Name="expiresAt" Type="DateTimeOffset" Nullable="false" Precision="2" />
+        </EntityType>
       </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
@@ -521,6 +557,24 @@
                 <ScalarProperty Name="codeHash" ColumnName="codeHash" />
                 <ScalarProperty Name="userID" ColumnName="userID" />
                 <ScalarProperty Name="resetID" ColumnName="resetID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="RegistrationRequests">
+            <EntityTypeMapping TypeName="codenamesModel.RegistrationRequest">
+              <MappingFragment StoreEntitySet="RegistrationRequests">
+                <ScalarProperty Name="expiresAt" ColumnName="expiresAt" />
+                <ScalarProperty Name="createdAt" ColumnName="createdAt" />
+                <ScalarProperty Name="used" ColumnName="used" />
+                <ScalarProperty Name="attempts" ColumnName="attempts" />
+                <ScalarProperty Name="codeHash" ColumnName="codeHash" />
+                <ScalarProperty Name="passwordSalt" ColumnName="passwordSalt" />
+                <ScalarProperty Name="passwordHash" ColumnName="passwordHash" />
+                <ScalarProperty Name="lastName" ColumnName="lastName" />
+                <ScalarProperty Name="name" ColumnName="name" />
+                <ScalarProperty Name="username" ColumnName="username" />
+                <ScalarProperty Name="email" ColumnName="email" />
+                <ScalarProperty Name="requestID" ColumnName="requestID" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
