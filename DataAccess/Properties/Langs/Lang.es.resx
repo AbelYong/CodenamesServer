@@ -117,9 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="resetCodeExpired" xml:space="preserve">
-    <value>Código expirado o inválido.</value>
-  </data>
   <data name="resetEmailBody_Reset" xml:space="preserve">
     <value>Usa este código para cambiar tu contraseña: {0}
 Caduca en 10 minutos.</value>
@@ -127,7 +124,7 @@ Caduca en 10 minutos.</value>
   <data name="resetEmailSubject_Reset" xml:space="preserve">
     <value>Código para restablecer tu contraseña</value>
   </data>
-  <data name="resetIncorrectCode" xml:space="preserve">
+  <data name="globalIncorrectCode" xml:space="preserve">
     <value>Código incorrecto.</value>
   </data>
   <data name="resetInvalidRequest" xml:space="preserve">
@@ -139,7 +136,41 @@ Caduca en 10 minutos.</value>
   <data name="resetPasswordUpdated" xml:space="preserve">
     <value>Contraseña actualizada.</value>
   </data>
-  <data name="resetTooManyAttempts" xml:space="preserve">
+  <data name="globalTooManyAttempts" xml:space="preserve">
     <value>Demasiados intentos. Solicita un nuevo código.</value>
+  </data>
+  <data name="verifyEmailBodyVerify" xml:space="preserve">
+    <value>Tu código de verificación es: {0}
+Caduca en 15 minutos.</value>
+  </data>
+  <data name="verifyEmailSubjectVerify" xml:space="preserve">
+    <value>Verifica tu cuenta</value>
+  </data>
+  <data name="verifyRequiredFieldsMissing" xml:space="preserve">
+    <value>Faltan campos obligatorios.</value>
+  </data>
+  <data name="verifyEmailOrUserInUse" xml:space="preserve">
+    <value>El correo o usuario ya está en uso.</value>
+  </data>
+  <data name="verifyAlreadyActiveRequest" xml:space="preserve">
+    <value>Ya existe una solicitud activa para ese correo/usuario.</value>
+  </data>
+  <data name="verifyVerificationCodeSent" xml:space="preserve">
+    <value>Te enviamos un código de verificación a tu correo.</value>
+  </data>
+  <data name="globalInvalidData" xml:space="preserve">
+    <value>Datos inválidos.</value>
+  </data>
+  <data name="resetCodeExpired" xml:space="preserve">
+    <value>Código expirado o inválido.</value>
+  </data>
+  <data name="verifyInvalidOrExpiredRequest" xml:space="preserve">
+    <value>Solicitud inválida o expirada.</value>
+  </data>
+  <data name="verifyAccountCreated" xml:space="preserve">
+    <value>Cuenta creada. ¡Bienvenido, agente!</value>
+  </data>
+  <data name="verifyAccountCouldNotBeCreated" xml:space="preserve">
+    <value>No se pudo crear la cuenta.</value>
   </data>
 </root>

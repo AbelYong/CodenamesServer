@@ -85,6 +85,9 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Lang.resx</DependentUpon>
     </Compile>
+    <Compile Include="RegistrationRequest.cs">
+      <DependentUpon>codenames.tt</DependentUpon>
+    </Compile>
     <Compile Include="Users\IPlayerDAO.cs" />
     <Compile Include="Users\IUserDAO.cs" />
     <Compile Include="Player.cs">

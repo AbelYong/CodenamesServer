@@ -19,6 +19,7 @@
         <AssociationConnector Association="codenamesModel.FK_Scoreboard_Player" ManuallyRouted="false" />
         <EntityTypeShape EntityType="codenamesModel.PasswordReset" Width="1.5" PointX="3" PointY="11.375" />
         <AssociationConnector Association="codenamesModel.FK_PasswordReset_User" />
+        <EntityTypeShape EntityType="codenamesModel.RegistrationRequest" Width="1.5" PointX="7.375" PointY="0.75" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>

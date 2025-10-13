@@ -34,6 +34,7 @@ namespace DataAccess
         public virtual DbSet<Scoreboard> Scoreboards { get; set; }
         public virtual DbSet<User> Users { get; set; }
         public virtual DbSet<PasswordReset> PasswordResets { get; set; }
+        public virtual DbSet<RegistrationRequest> RegistrationRequests { get; set; }
     
         public virtual int uspLogin(string username, string password, ObjectParameter userID)
         {
