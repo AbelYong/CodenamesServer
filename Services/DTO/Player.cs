@@ -15,16 +15,16 @@ namespace Services.DTO
         private Guid? PlayerID { get; set; }
 
         [DataMember]
-        private string Username {  get; set; }
+        public string Username {  get; set; }
 
         [DataMember]
         private int AvatarID { get; set; }
 
         [DataMember]
-        private string Name { get; set; }
+        public string Name { get; set; }
 
         [DataMember]
-        private string LastName { get; set; }
+        public string LastName { get; set; }
 
         [DataMember]
         private string FacebookUsername { get; set; }
