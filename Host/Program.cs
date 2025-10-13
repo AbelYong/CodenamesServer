@@ -8,22 +8,35 @@ using System.Threading.Tasks;
 
 namespace Host
 {
-    internal class Program
+    internal static class Program
     {
         private static ManualResetEvent _quitEvent = new ManualResetEvent(false);
         static void Main(string[] args)
         {
-            using (ServiceHost host = new ServiceHost(typeof(Services.AuthenticationService)))
+            ServiceHost authenticationHost = new ServiceHost(typeof(Services.AuthenticationService));
+            ServiceHost userHost = new ServiceHost(typeof(Services.UserService));
+
+            try
             {
-                host.Open();
+                authenticationHost.Open();
+                userHost.Open();
 
                 Console.CancelKeyPress += (sender, eArgs) => {
                     eArgs.Cancel = true;
                     _quitEvent.Set();
                 };
                 Console.WriteLine("=== Codenames: Duet - Server ===");
-                Console.WriteLine("Running... use Ctrl+C to exit.");
+                Console.WriteLine("Running... press Ctrl+C to exit.");
                 _quitEvent.WaitOne();
+
+                authenticationHost.Close();
+                userHost.Close();
+            }
+            catch (CommunicationException cex)
+            {
+                Console.WriteLine("An exception occured: {0}", cex.Message);
+                authenticationHost.Abort();
+                userHost.Abort();
             }
         }
     }

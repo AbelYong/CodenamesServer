@@ -85,6 +85,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Lang.resx</DependentUpon>
     </Compile>
+    <Compile Include="Users\IPlayerDAO.cs" />
     <Compile Include="Users\IUserDAO.cs" />
     <Compile Include="Player.cs">
       <DependentUpon>codenames.tt</DependentUpon>
@@ -96,6 +97,7 @@
     <Compile Include="User.cs">
       <DependentUpon>codenames.tt</DependentUpon>
     </Compile>
+    <Compile Include="Users\PlayerDAO.cs" />
     <Compile Include="Users\UserDAO.cs" />
   </ItemGroup>
   <ItemGroup>

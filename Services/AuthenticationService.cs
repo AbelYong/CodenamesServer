@@ -1,5 +1,6 @@
 ﻿using DataAccess.Users;
 using DataAccess.Properties.Langs;
+using Services.DTO;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -27,24 +28,10 @@ namespace Services
 
         public Guid? SignIn(User svUser, Player svPlayer)
         {
-            DataAccess.Player player = AssemblePlayer(svUser, svPlayer);
+            DataAccess.Player dbPlayer = Player.AssembleDbPlayer(svUser, svPlayer);
             string password = svUser.Password;
 
-            return _userDAO.SignIn(player, password);
-        }
-
-        private DataAccess.Player AssemblePlayer(User svUser, Player svPlayer)
-        {
-            DataAccess.User dbUser = new DataAccess.User();
-            dbUser.email = svUser.Email;
-
-            DataAccess.Player dbPlayer = new DataAccess.Player();
-            dbPlayer.username = svPlayer.Username;
-            dbPlayer.name = svPlayer.Name;
-            dbPlayer.lastName = svPlayer.LastName;
-            dbPlayer.User = dbUser;
-
-            return dbPlayer;
+            return _userDAO.SignIn(dbPlayer, password);
         }
 
         public void BeginPasswordReset(string username, string email)
