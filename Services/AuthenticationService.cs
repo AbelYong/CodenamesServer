@@ -28,6 +28,9 @@ namespace Services
 
         public Guid? SignIn(User svUser, Player svPlayer)
         {
+            svPlayer.Name = string.IsNullOrWhiteSpace(svPlayer.Name) ? null : svPlayer.Name.Trim();
+            svPlayer.LastName = string.IsNullOrWhiteSpace(svPlayer.LastName) ? null : svPlayer.LastName.Trim();
+
             DataAccess.Player dbPlayer = Player.AssembleDbPlayer(svUser, svPlayer);
             string password = svUser.Password;
 
@@ -217,6 +220,12 @@ namespace Services
             if (string.IsNullOrWhiteSpace(pwd) || pwd.Length < 10 || pwd.Length > 16)
                 return new BeginRegistrationResult { Success = false, Message = Lang.resetPasswordLengthError };
 
+            svUser.Email = svUser?.Email?.Trim();
+            svPlayer.Username = svPlayer?.Username?.Trim();
+
+            var cleanName = string.IsNullOrWhiteSpace(svPlayer?.Name) ? null : svPlayer.Name.Trim();
+            var cleanLastName = string.IsNullOrWhiteSpace(svPlayer?.LastName) ? null : svPlayer.LastName.Trim();
+
             if (string.IsNullOrWhiteSpace(svUser?.Email) || string.IsNullOrWhiteSpace(svPlayer?.Username))
                 return new BeginRegistrationResult { Success = false, Message = Lang.verifyRequiredFieldsMissing };
 
@@ -244,8 +253,8 @@ namespace Services
                     requestID = Guid.NewGuid(),
                     email = svUser.Email,
                     username = svPlayer.Username,
-                    name = svPlayer.Name,
-                    lastName = svPlayer.LastName,
+                    name = cleanName,
+                    lastName = cleanLastName,
                     passwordSalt = salt,
                     passwordHash = passHash,
                     codeHash = codeHash,
