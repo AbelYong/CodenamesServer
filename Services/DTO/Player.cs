@@ -12,31 +12,31 @@ namespace Services.DTO
     public class Player
     {
         [DataMember]
-        private Guid? PlayerID { get; set; }
+        public Guid? PlayerID { get; set; }
 
         [DataMember]
-        private string Username {  get; set; }
+        public string Username {  get; set; }
 
         [DataMember]
-        private int AvatarID { get; set; }
+        public int AvatarID { get; set; }
 
         [DataMember]
-        private string Name { get; set; }
+        public string Name { get; set; }
 
         [DataMember]
-        private string LastName { get; set; }
+        public string LastName { get; set; }
 
         [DataMember]
-        private string FacebookUsername { get; set; }
+        public string FacebookUsername { get; set; }
 
         [DataMember]
-        private string InstagramUsername { get; set; }
+        public string InstagramUsername { get; set; }
 
         [DataMember]
-        private string DiscordUsername { get; set; }
+        public string DiscordUsername { get; set; }
 
         [DataMember]
-        private User User { get; set; }
+        public User User { get; set; }
 
         public static DataAccess.Player AssembleDbPlayer(User svUser, Player svPlayer)
         {

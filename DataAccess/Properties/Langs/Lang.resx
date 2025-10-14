@@ -173,4 +173,10 @@ Expires in 15 minutes.</value>
   <data name="verifyAccountCouldNotBeCreated" xml:space="preserve">
     <value>The account could not be created.</value>
   </data>
+  <data name="profileUpdateServerSideIssue" xml:space="preserve">
+    <value>Your profile couldn't be updated, due to an issue on our end, please try again later</value>
+  </data>
+  <data name="profileUpdateSuccess" xml:space="preserve">
+    <value>Your profile has been updated</value>
+  </data>
 </root>

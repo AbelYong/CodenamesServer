@@ -88,6 +88,24 @@ namespace DataAccess.Properties.Langs {
         }
         
         /// <summary>
+        ///   Busca una cadena traducida similar a Your profile couldn&apos;t be updated, due to an issue on our end, please try again later.
+        /// </summary>
+        public static string profileUpdateServerSideIssue {
+            get {
+                return ResourceManager.GetString("profileUpdateServerSideIssue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a Your profile has been updated.
+        /// </summary>
+        public static string profileUpdateSuccess {
+            get {
+                return ResourceManager.GetString("profileUpdateSuccess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Busca una cadena traducida similar a Code expired or invalid..
         /// </summary>
         public static string resetCodeExpired {

@@ -100,6 +100,7 @@
     <Compile Include="User.cs">
       <DependentUpon>codenames.tt</DependentUpon>
     </Compile>
+    <Compile Include="Util\OperationResult.cs" />
     <Compile Include="Users\PlayerDAO.cs" />
     <Compile Include="Users\UserDAO.cs" />
   </ItemGroup>

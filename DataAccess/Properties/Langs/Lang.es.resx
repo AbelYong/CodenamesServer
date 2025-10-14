@@ -173,4 +173,10 @@ Caduca en 15 minutos.</value>
   <data name="verifyAccountCouldNotBeCreated" xml:space="preserve">
     <value>No se pudo crear la cuenta.</value>
   </data>
+  <data name="profileUpdateServerSideIssue" xml:space="preserve">
+    <value>No pudimos actualizar tu perfil debido a un problema por nuestra parte, por favor inténtelo más tarde</value>
+  </data>
+  <data name="profileUpdateSuccess" xml:space="preserve">
+    <value>Tu perfil ha sido actualizado</value>
+  </data>
 </root>
