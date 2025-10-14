@@ -41,12 +41,18 @@ namespace Services.DTO
         public static DataAccess.Player AssembleDbPlayer(User svUser, Player svPlayer)
         {
             DataAccess.User dbUser = new DataAccess.User();
+            dbUser.userID = svUser.UserID;
             dbUser.email = svUser.Email;
 
             DataAccess.Player dbPlayer = new DataAccess.Player();
+            dbPlayer.playerID = (Guid) svPlayer.PlayerID;
             dbPlayer.username = svPlayer.Username;
+            dbPlayer.avatarID = (byte?) svPlayer.AvatarID;
             dbPlayer.name = svPlayer.Name;
             dbPlayer.lastName = svPlayer.LastName;
+            dbPlayer.facebookUsername = svPlayer.FacebookUsername;
+            dbPlayer.instagramUsername = svPlayer.InstagramUsername;
+            dbPlayer.discordUsername = svPlayer.DiscordUsername;
             dbPlayer.User = dbUser;
 
             return dbPlayer;

@@ -40,7 +40,7 @@ namespace DataAccess.Users
                 using (var context = new codenamesEntities())
                 {
                     var dbUser = (from u in context.Users
-                                where u.userID == updatedPlayer.userID
+                                where u.userID == updatedPlayer.User.userID
                                 select u).FirstOrDefault();
                     dbUser.email = updatedPlayer.User.email;
 
@@ -58,6 +58,7 @@ namespace DataAccess.Users
             catch (SqlException sqlex)
             {
                 //TODO log
+                Console.WriteLine("An error ocurred while trying to update an user's profile: {0}", sqlex.Message);
                 result.Success = false;
                 result.Message = Lang.profileUpdateServerSideIssue;
                 return result;
