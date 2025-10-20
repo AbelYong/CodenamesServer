@@ -57,7 +57,9 @@
   <ItemGroup>
     <Compile Include="DTO\Player.cs" />
     <Compile Include="DTO\User.cs" />
+    <Compile Include="FriendService.cs" />
     <Compile Include="IAuthenticationManager.cs" />
+    <Compile Include="IFriendManager.cs" />
     <Compile Include="IUserManager.cs" />
     <Compile Include="UserService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

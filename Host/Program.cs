@@ -15,11 +15,13 @@ namespace Host
         {
             ServiceHost authenticationHost = new ServiceHost(typeof(Services.AuthenticationService));
             ServiceHost userHost = new ServiceHost(typeof(Services.UserService));
+            ServiceHost friendHost = new ServiceHost(typeof(Services.FriendService));
 
             try
             {
                 authenticationHost.Open();
                 userHost.Open();
+                friendHost.Open();
 
                 Console.CancelKeyPress += (sender, eArgs) => {
                     eArgs.Cancel = true;
@@ -31,12 +33,14 @@ namespace Host
 
                 authenticationHost.Close();
                 userHost.Close();
+                friendHost.Close();
             }
             catch (CommunicationException cex)
             {
                 Console.WriteLine("An exception occured: {0}", cex.Message);
                 authenticationHost.Abort();
                 userHost.Abort();
+                friendHost.Abort();
             }
         }
     }

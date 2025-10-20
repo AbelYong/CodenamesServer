@@ -88,6 +88,8 @@
     <Compile Include="RegistrationRequest.cs">
       <DependentUpon>codenames.tt</DependentUpon>
     </Compile>
+    <Compile Include="Users\FriendDAO.cs" />
+    <Compile Include="Users\IFriendDAO.cs" />
     <Compile Include="Users\IPlayerDAO.cs" />
     <Compile Include="Users\IUserDAO.cs" />
     <Compile Include="Player.cs">
