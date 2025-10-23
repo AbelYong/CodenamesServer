@@ -1,12 +1,13 @@
-﻿using System;
+﻿using DataAccess.Properties.Langs;
+using DataAccess.Util;
+using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Runtime.Remoting.Contexts;
 using System.Text;
 using System.Threading.Tasks;
-using System.Data.Entity;
-using DataAccess.Properties.Langs;
-using DataAccess.Util;
 
 namespace DataAccess.Users
 {
@@ -37,22 +38,28 @@ namespace DataAccess.Users
             OperationResult result = new OperationResult();
             try
             {
-
                 using (var context = new codenamesEntities())
                 {
                     var dbUser = (from u in context.Users
-                                where u.userID == updatedPlayer.User.userID
-                                select u).FirstOrDefault();
-                    dbUser.email = updatedPlayer.User.email;
+                                  where u.userID == updatedPlayer.User.userID
+                                  select u).FirstOrDefault();
+
+                    result = HandleUserUpdate(updatedPlayer, dbUser);
+                    if (!result.Success)
+                    {
+                        return result;
+                    }
 
                     var dbPlayer = (from p in context.Players
-                                  where p.playerID == updatedPlayer.playerID
-                                  select p).FirstOrDefault();
-                    UpdatePlayer(dbPlayer, updatedPlayer);
-                    context.SaveChanges();
+                                    where p.playerID == updatedPlayer.playerID
+                                    select p).FirstOrDefault();
 
-                    result.Success = true;
-                    result.Message = Lang.profileUpdateSuccess;
+                    result = HandlePlayerUpdate(updatedPlayer, dbPlayer);
+                    if (result.Success)
+                    {
+                        UpdatePlayer(dbPlayer, updatedPlayer);
+                        context.SaveChanges();
+                    }
                     return result;
                 }
             }
@@ -64,6 +71,53 @@ namespace DataAccess.Users
                 result.Message = Lang.profileUpdateServerSideIssue;
                 return result;
             }
+        }
+
+        private static OperationResult HandleUserUpdate(Player updatedPlayer, User dbUser)
+        {
+            OperationResult result = new OperationResult();
+            bool isEmailValidationNeeded = (updatedPlayer.User.email != dbUser.email);
+
+            if (isEmailValidationNeeded)
+            {
+                if (UserDAO.ValidateEmailNotDuplicated(updatedPlayer.User.email))
+                {
+                    dbUser.email = updatedPlayer.User.email;
+                }
+                else
+                {
+                    result.Success = false;
+                    result.Message = Lang.errorEmailAddressInUse;
+                    return result;
+                }
+            }
+            result.Success = true;
+            return result;
+        }
+
+        private static OperationResult HandlePlayerUpdate(Player updatedPlayer, Player dbPlayer)
+        {
+            OperationResult result = new OperationResult();
+            bool isUsernameValidationNeeded = (updatedPlayer.username != dbPlayer.username);
+            if (isUsernameValidationNeeded)
+            {
+                if (!ValidateUsernameNotDuplicated(updatedPlayer.username))
+                {
+                    result.Success = false;
+                    result.Message = Lang.errorUsernameInUse;
+                }
+                else
+                {
+                    result.Success = true;
+                    result.Message = Lang.profileUpdateSuccess;
+                }
+            }
+            else
+            {
+                result.Success = true;
+                result.Message = Lang.profileUpdateSuccess;
+            }
+            return result;
         }
 
         /// <summary>

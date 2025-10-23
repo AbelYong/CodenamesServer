@@ -61,6 +61,24 @@ namespace DataAccess.Properties.Langs {
         }
         
         /// <summary>
+        ///   Busca una cadena traducida similar a The email address is already in use.
+        /// </summary>
+        public static string errorEmailAddressInUse {
+            get {
+                return ResourceManager.GetString("errorEmailAddressInUse", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a The username is already in use.
+        /// </summary>
+        public static string errorUsernameInUse {
+            get {
+                return ResourceManager.GetString("errorUsernameInUse", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Busca una cadena traducida similar a Incorrect code..
         /// </summary>
         public static string globalIncorrectCode {

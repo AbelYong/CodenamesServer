@@ -179,4 +179,10 @@ Caduca en 15 minutos.</value>
   <data name="profileUpdateSuccess" xml:space="preserve">
     <value>Tu perfil ha sido actualizado</value>
   </data>
+  <data name="errorEmailAddressInUse" xml:space="preserve">
+    <value>Esta dirección de correo electrónico ya esta en uso</value>
+  </data>
+  <data name="errorUsernameInUse" xml:space="preserve">
+    <value>Este nombre de usuario ya esta en uso</value>
+  </data>
 </root>

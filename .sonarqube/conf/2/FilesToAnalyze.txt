@@ -1,0 +1,6 @@
+﻿C:\Users\abelh\source\repos\CodenamesServer\Host\Program.cs
+C:\Users\abelh\source\repos\CodenamesServer\Host\Properties\AssemblyInfo.cs
+C:\Users\abelh\source\repos\CodenamesServer\Host\connectionStrings.Local.config
+C:\Users\abelh\source\repos\CodenamesServer\Host\appSettings.Local.config
+C:\Users\abelh\source\repos\CodenamesServer\Host\App.config
+C:\Users\abelh\source\repos\CodenamesServer\Host\packages.config

@@ -104,7 +104,7 @@ namespace DataAccess.Users
         /// <exception cref="System.Data.SqlClient.SqlException">
         /// Thrown if the database operation failed.
         /// </exception>
-        private static bool ValidateEmailNotDuplicated(string email)
+        public static bool ValidateEmailNotDuplicated(string email)
         {
             using (var context = new codenamesEntities())
             {
