@@ -38,13 +38,6 @@ namespace DataAccess.Users
                 System.Console.WriteLine(icex.Message);
                 return null;
             }
-            catch (Exception ex)
-            {
-                System.Console.WriteLine("Exception");
-                System.Console.WriteLine(ex.Message);
-                //TODO log
-                return null;
-            }
         }
 
         public Guid? SignIn(Player player, string password)
@@ -72,6 +65,51 @@ namespace DataAccess.Users
                 //TODO log
                 System.Console.WriteLine(ex.Message);
                 return null;
+            }
+        }
+
+        public static void DeleteUser(Player playerToDelete)
+        {
+            try
+            {
+                using (var context = new codenamesEntities())
+                {
+                    Player player = (from p in context.Players
+                                     where p.username == playerToDelete.username
+                                     select p).FirstOrDefault();
+                    if (player != null)
+                    {
+                        Guid userID = player.userID;
+                        User user = (from u in context.Users
+                                     where u.userID == userID
+                                     select u).FirstOrDefault();
+                        context.Players.Remove(player);
+                        context.Users.Remove(user);
+                        context.SaveChanges();
+                    }
+                }
+            } 
+            catch(SqlException sqlex)
+            {
+                //TODO log
+                System.Console.WriteLine(sqlex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Checks if the email is already in use.
+        /// </summary>
+        /// <param name="username">The email to verify.</param>
+        /// <returns>True if no matching email was found, otherwise returns false.</returns>
+        /// <exception cref="System.Data.SqlClient.SqlException">
+        /// Thrown if the database operation failed.
+        /// </exception>
+        private static bool ValidateEmailNotDuplicated(string email)
+        {
+            using (var context = new codenamesEntities())
+            {
+                bool EmailInUse = context.Users.Any(u => u.email == email);
+                return !EmailInUse;
             }
         }
     }

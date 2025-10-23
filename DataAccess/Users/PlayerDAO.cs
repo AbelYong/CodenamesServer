@@ -37,6 +37,7 @@ namespace DataAccess.Users
             OperationResult result = new OperationResult();
             try
             {
+
                 using (var context = new codenamesEntities())
                 {
                     var dbUser = (from u in context.Users
@@ -62,6 +63,23 @@ namespace DataAccess.Users
                 result.Success = false;
                 result.Message = Lang.profileUpdateServerSideIssue;
                 return result;
+            }
+        }
+
+        /// <summary>
+        /// Checks if the username is already in use.
+        /// </summary>
+        /// <param name="username">The username to verify.</param>
+        /// <returns>True if no matching username was found, otherwise returns false.</returns>
+        /// <exception cref="System.Data.SqlClient.SqlException">
+        /// Thrown if the database operation failed.
+        /// </exception>
+        private static bool ValidateUsernameNotDuplicated(string username)
+        {
+            using (var context = new codenamesEntities())
+            {
+                bool usernameInUse = context.Players.Any(p => p.username == username);
+                return !usernameInUse;
             }
         }
 
