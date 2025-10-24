@@ -107,7 +107,9 @@
     <Compile Include="Users\UserDAO.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
+    <None Include="App.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <EntityDeploy Include="codenames.edmx">
       <Generator>EntityModelCodeGenerator</Generator>
       <LastGenOutput>codenames.Designer.cs</LastGenOutput>
@@ -115,7 +117,9 @@
     <None Include="codenames.edmx.diagram">
       <DependentUpon>codenames.edmx</DependentUpon>
     </None>
-    <None Include="connectionStrings.Local.config" />
+    <None Include="connectionStrings.Local.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

@@ -1,12 +1,14 @@
 using DataAccess.Users;
+using NUnit.Framework;
+using System;
 
 namespace DataAccess.Tests.UserTests
 {
     [TestFixture]
     public class LoginTest
     {
-        private UserDAO? _userDAO;
-        private Player? _player;
+        private UserDAO _userDAO;
+        private Player _player;
 
         [SetUp]
         public void Setup()
