@@ -124,7 +124,7 @@ namespace DataAccess.Properties.Langs {
         }
         
         /// <summary>
-        ///   Busca una cadena traducida similar a Code expired or invalid..
+        ///   Busca una cadena traducida similar a Code expired or no remaining attempts..
         /// </summary>
         public static string resetCodeExpired {
             get {
@@ -239,6 +239,15 @@ namespace DataAccess.Properties.Langs {
         public static string verifyInvalidOrExpiredRequest {
             get {
                 return ResourceManager.GetString("verifyInvalidOrExpiredRequest", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a {0} attempts remaining.
+        /// </summary>
+        public static string verifyRemainingAttempts {
+            get {
+                return ResourceManager.GetString("verifyRemainingAttempts", resourceCulture);
             }
         }
         

@@ -162,7 +162,7 @@ Caduca en 15 minutos.</value>
     <value>Datos inválidos.</value>
   </data>
   <data name="resetCodeExpired" xml:space="preserve">
-    <value>Código expirado o inválido.</value>
+    <value>Código expirado o se agotaron los intentos.</value>
   </data>
   <data name="verifyInvalidOrExpiredRequest" xml:space="preserve">
     <value>Solicitud inválida o expirada.</value>
@@ -184,5 +184,8 @@ Caduca en 15 minutos.</value>
   </data>
   <data name="errorUsernameInUse" xml:space="preserve">
     <value>Este nombre de usuario ya esta en uso</value>
+  </data>
+  <data name="verifyRemainingAttempts" xml:space="preserve">
+    <value>Quedan {0} intentos</value>
   </data>
 </root>

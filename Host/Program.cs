@@ -16,12 +16,14 @@ namespace Host
             ServiceHost authenticationHost = new ServiceHost(typeof(Services.AuthenticationService));
             ServiceHost userHost = new ServiceHost(typeof(Services.UserService));
             ServiceHost friendHost = new ServiceHost(typeof(Services.FriendService));
+            ServiceHost emailHost = new ServiceHost(typeof(Services.EmailService));
 
             try
             {
                 authenticationHost.Open();
                 userHost.Open();
                 friendHost.Open();
+                emailHost.Open();
 
                 Console.CancelKeyPress += (sender, eArgs) => {
                     eArgs.Cancel = true;
@@ -34,6 +36,7 @@ namespace Host
                 authenticationHost.Close();
                 userHost.Close();
                 friendHost.Close();
+                emailHost.Close();
             }
             catch (CommunicationException cex)
             {

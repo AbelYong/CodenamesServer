@@ -47,8 +47,12 @@
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Configuration" />
+    <Reference Include="System.Configuration.ConfigurationManager, Version=9.0.0.10, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Configuration.ConfigurationManager.9.0.10\lib\net462\System.Configuration.ConfigurationManager.dll</HintPath>
+    </Reference>
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Runtime.Caching" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Xml" />
@@ -56,11 +60,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DTO\Player.cs" />
+    <Compile Include="DTO\RequestResult.cs" />
     <Compile Include="DTO\User.cs" />
+    <Compile Include="EmailService.cs" />
     <Compile Include="FriendService.cs" />
     <Compile Include="IAuthenticationManager.cs" />
+    <Compile Include="IEmailManager.cs" />
     <Compile Include="IFriendManager.cs" />
     <Compile Include="IUserManager.cs" />
+    <Compile Include="Operations\EmailOperations.cs" />
     <Compile Include="UserService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="AuthenticationService.cs" />

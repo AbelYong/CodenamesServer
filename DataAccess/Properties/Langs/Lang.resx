@@ -162,7 +162,7 @@ Expires in 15 minutes.</value>
     <value>Invalid data.</value>
   </data>
   <data name="resetCodeExpired" xml:space="preserve">
-    <value>Code expired or invalid.</value>
+    <value>Code expired or no remaining attempts.</value>
   </data>
   <data name="verifyInvalidOrExpiredRequest" xml:space="preserve">
     <value>Invalid or expired request.</value>
@@ -184,5 +184,8 @@ Expires in 15 minutes.</value>
   </data>
   <data name="errorUsernameInUse" xml:space="preserve">
     <value>The username is already in use</value>
+  </data>
+  <data name="verifyRemainingAttempts" xml:space="preserve">
+    <value>{0} attempts remaining</value>
   </data>
 </root>
