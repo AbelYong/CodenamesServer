@@ -46,6 +46,7 @@ namespace DataAccess.Tests.UserTests
         [Test]
         [TestCase("wrongUsername", "password", TestName = "Incorrect Username")]
         [TestCase("tester", "wrongPassword", TestName ="Incorrect Password")]
+        [TestCase("Tester", "password", TestName="Wrongly cased username")]
         [TestCase
             (
             "really extremelly astonishingly unpractically long username", 
