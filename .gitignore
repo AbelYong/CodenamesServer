@@ -370,3 +370,4 @@ Host/connectionStrings.Local.config
 
 Host/appSettings.Local.config
 /DataAccess.Tests/connectionStrings.Local.config
+/.sonarqube/conf
