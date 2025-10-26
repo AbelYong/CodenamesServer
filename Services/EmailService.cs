@@ -23,7 +23,7 @@ namespace Services
             {
                 try
                 {
-                    string code = EmailOperations.GenerateCode();
+                    string code = EmailOperations.GenerateSixDigitCode();
                     DateTimeOffset expiration = DateTimeOffset.UtcNow.AddMinutes(VERICATION_TIMEOUT_MINUTES);
 
                     var info = new VerificationInfo

@@ -12,7 +12,7 @@ namespace Services.Operations
 {
     public static class EmailOperations
     {
-        public static string GenerateCode()
+        public static string GenerateSixDigitCode()
         {
             using (var code = System.Security.Cryptography.RandomNumberGenerator.Create())
             {
@@ -23,7 +23,7 @@ namespace Services.Operations
             }
         }
 
-        public static void SendVerificationEmail(string to, string code)
+        public static void SendVerificationEmail(string address, string code)
         {
             var fromAddr = ConfigurationManager.AppSettings["SmtpFromAddress"] ?? "no-reply@example.com";
             var fromName = ConfigurationManager.AppSettings["SmtpFromName"] ?? "Codenames";
@@ -37,7 +37,7 @@ namespace Services.Operations
             using (var msg = new MailMessage())
             {
                 msg.From = new MailAddress(fromAddr, fromName);
-                msg.To.Add(to);
+                msg.To.Add(address);
                 msg.Subject = Lang.verifyEmailSubjectVerify;
                 msg.Body = string.Format(Lang.verifyEmailBodyVerify, code);
                 msg.IsBodyHtml = false;

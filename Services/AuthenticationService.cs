@@ -15,6 +15,7 @@ using System.ServiceModel;
 using System.Text;
 using DA = DataAccess;
 using System.ServiceModel.Channels;
+using Services.Operations;
 
 namespace Services
 {
@@ -48,7 +49,7 @@ namespace Services
 
                 if (userAgg == null) return;
 
-                var code = GenerateCode6();
+                string code = EmailOperations.GenerateSixDigitCode();
 
                 var pr = new DA.PasswordReset
                 {
@@ -120,17 +121,6 @@ namespace Services
             }
         }
 
-        private static string GenerateCode6()
-        {
-            using (var rng = System.Security.Cryptography.RandomNumberGenerator.Create())
-            {
-                var b = new byte[4];
-                rng.GetBytes(b);
-                uint n = BitConverter.ToUInt32(b, 0) % 1_000_000u;
-                return n.ToString("D6");
-            }
-        }
-
         private static byte[] Sha512(string input)
         {
             using (var sha = SHA512.Create())
@@ -184,35 +174,6 @@ namespace Services
             ).Single();
         }
 
-        private static void SendVerificationEmail(string to, string code)
-        {
-            var fromAddr = ConfigurationManager.AppSettings["SmtpFromAddress"] ?? "no-reply@example.com";
-            var fromName = ConfigurationManager.AppSettings["SmtpFromName"] ?? "Codenames";
-
-            var host = ConfigurationManager.AppSettings["SmtpHost"] ?? "smtp.gmail.com";
-            int port = int.TryParse(ConfigurationManager.AppSettings["SmtpPort"], out var p) ? p : 587;
-            bool ssl = bool.TryParse(ConfigurationManager.AppSettings["SmtpEnableSsl"], out var s) ? s : true;
-            var user = ConfigurationManager.AppSettings["SmtpUser"];
-            var pass = ConfigurationManager.AppSettings["SmtpPass"];
-
-            using (var msg = new MailMessage())
-            {
-                msg.From = new MailAddress(fromAddr, fromName);
-                msg.To.Add(to);
-                msg.Subject = Lang.verifyEmailSubjectVerify;
-                msg.Body = string.Format(Lang.verifyEmailBodyVerify, code);
-                msg.IsBodyHtml = false;
-
-                using (var smtp = new SmtpClient(host, port))
-                {
-                    smtp.EnableSsl = ssl;
-                    smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
-                    smtp.Credentials = new NetworkCredential(user, pass);
-                    smtp.Send(msg);
-                }
-            }
-        }
-
         public BeginRegistrationResult BeginRegistration(User svUser, Player svPlayer, string plainPassword)
         {
             var pwd = string.IsNullOrEmpty(plainPassword) ? svUser?.Password : plainPassword;
@@ -245,7 +206,7 @@ namespace Services
                 var salt = Guid.NewGuid();
                 var passHash = ComputePasswordHashInSql(db, pwd, salt);
 
-                var code = GenerateCode6();
+                string code = EmailOperations.GenerateSixDigitCode();
                 var codeHash = Sha512(code);
 
                 var req = new DA.RegistrationRequest
@@ -267,7 +228,7 @@ namespace Services
                 db.RegistrationRequests.Add(req);
                 db.SaveChanges();
 
-                SendVerificationEmail(svUser.Email, code);
+                EmailOperations.SendVerificationEmail(svUser.Email, code);
 
                 return new BeginRegistrationResult
                 {
