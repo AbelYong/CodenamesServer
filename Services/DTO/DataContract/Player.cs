@@ -1,10 +1,5 @@
-﻿using DataAccess;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System;
 using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Services.DTO
 {
@@ -78,6 +73,20 @@ namespace Services.DTO
             {
                 return null;
             }
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is Player other)
+            {
+                return PlayerID == other.PlayerID;
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return PlayerID.GetHashCode();
         }
     }
 }
