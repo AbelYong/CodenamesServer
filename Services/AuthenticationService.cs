@@ -9,22 +9,42 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Net;
 using System.Net.Mail;
-using System.Runtime.Serialization;
 using System.Security.Cryptography;
-using System.ServiceModel;
 using System.Text;
 using DA = DataAccess;
-using System.ServiceModel.Channels;
 using Services.Operations;
+using Services.DTO.Request;
+using System.Data.Entity.Core;
 
 namespace Services
 {
     public class AuthenticationService : IAuthenticationManager
     {
         private static IUserDAO _userDAO = new UserDAO();
-        public Guid? Login(string username, string password)
+        public LoginRequest Login(string username, string password)
         {
-            return _userDAO.Login(username, password);
+            LoginRequest request = new LoginRequest();
+            try
+            {
+                Guid? userID = _userDAO.Authenticate(username, password);
+                if (userID != null)
+                {
+                    request.IsSuccess = true;
+                    request.StatusCode = StatusCode.OK;
+                    request.UserID = userID;
+                }
+                else
+                {
+                    request.IsSuccess = false;
+                    request.StatusCode = StatusCode.UNAUTHORIZED;
+                }
+            }
+            catch (Exception ex) when (ex is SqlException || ex is EntityException)
+            {
+                request.IsSuccess = false;
+                request.StatusCode = StatusCode.SERVER_ERROR;
+            }
+            return request;
         }
 
         public Guid? SignIn(User svUser, Player svPlayer)

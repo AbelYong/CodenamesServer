@@ -38,7 +38,7 @@ namespace DataAccess.Tests.UserTests
             string password = "password";
             if (_userDAO != null)
             {
-                Guid? userID = _userDAO.Login(username, password);
+                Guid? userID = _userDAO.Authenticate(username, password);
                 Assert.That(userID, Is.Not.Null);
             }
         }
@@ -60,7 +60,7 @@ namespace DataAccess.Tests.UserTests
             password = "password";
             if (_userDAO != null)
             {
-                Guid? userID = _userDAO.Login(username, password);
+                Guid? userID = _userDAO.Authenticate(username, password);
                 Assert.That(userID, Is.Null);
             }
         }

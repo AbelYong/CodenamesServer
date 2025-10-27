@@ -2,6 +2,7 @@
 using System.Runtime.Serialization;
 using System.ServiceModel;
 using Services.DTO;
+using Services.DTO.Request;
 
 namespace Services
 {
@@ -9,7 +10,7 @@ namespace Services
     public interface IAuthenticationManager
     {
         [OperationContract]
-        Guid? Login(string username, string password);
+        LoginRequest Login(string username, string password);
 
         [OperationContract]
         Guid? SignIn(User svUser, Player svPlayer);

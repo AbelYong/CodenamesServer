@@ -10,7 +10,7 @@ namespace DataAccess.Users
 {
     public class UserDAO : IUserDAO
     {
-        public Guid? Login(string username, string password)
+        public Guid? Authenticate(string username, string password)
         {
             try
             {
@@ -29,14 +29,7 @@ namespace DataAccess.Users
                 //TODO log
                 System.Console.WriteLine("SqlException");
                 System.Console.WriteLine(sqlex.Message);
-                return null;
-            }
-            catch (InvalidCastException icex)
-            {
-                //TODO log
-                System.Console.WriteLine("CastException");
-                System.Console.WriteLine(icex.Message);
-                return null;
+                throw;
             }
         }
 

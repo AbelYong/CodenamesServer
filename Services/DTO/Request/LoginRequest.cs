@@ -5,15 +5,16 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Services.DTO
+namespace Services.DTO.Request
 {
     [DataContract]
-    public class RequestResult
+    public class LoginRequest : Request
     {
         [DataMember]
-        public bool IsSuccess { get; set; }
-
-        [DataMember]
-        public string Message { get; set; }
+        public Guid? UserID { get; set; }
+        public LoginRequest()
+        {
+            
+        }
     }
 }

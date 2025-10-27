@@ -59,9 +59,12 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DTO\Player.cs" />
+    <Compile Include="DTO\DataContract\Player.cs" />
+    <Compile Include="DTO\Request\LoginRequest.cs" />
+    <Compile Include="DTO\Request\Request.cs" />
     <Compile Include="DTO\RequestResult.cs" />
-    <Compile Include="DTO\User.cs" />
+    <Compile Include="DTO\DataContract\User.cs" />
+    <Compile Include="DTO\Request\StatusCode.cs" />
     <Compile Include="EmailService.cs" />
     <Compile Include="FriendService.cs" />
     <Compile Include="IAuthenticationManager.cs" />
