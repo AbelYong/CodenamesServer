@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.ConstrainedExecution;
 using System.ServiceModel;
 using System.Text;
 using System.Threading;
@@ -17,6 +18,7 @@ namespace Host
             ServiceHost userHost = new ServiceHost(typeof(Services.UserService));
             ServiceHost friendHost = new ServiceHost(typeof(Services.FriendService));
             ServiceHost emailHost = new ServiceHost(typeof(Services.EmailService));
+            ServiceHost sessionHost = new ServiceHost(typeof(Services.Contracts.SessionService));
 
             try
             {
@@ -24,6 +26,7 @@ namespace Host
                 userHost.Open();
                 friendHost.Open();
                 emailHost.Open();
+                sessionHost.Open();
 
                 Console.CancelKeyPress += (sender, eArgs) => {
                     eArgs.Cancel = true;
@@ -44,6 +47,15 @@ namespace Host
                 authenticationHost.Abort();
                 userHost.Abort();
                 friendHost.Abort();
+                sessionHost.Abort();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("An exception occured: {0}", ex.Message);
+                authenticationHost.Abort();
+                userHost.Abort();
+                friendHost.Abort();
+                sessionHost.Abort();
             }
         }
     }

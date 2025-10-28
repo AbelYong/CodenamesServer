@@ -3,7 +3,7 @@ using System.ServiceModel;
 
 namespace Services.Contracts
 {
-    [ServiceContract(CallbackContract = typeof(ISocialCallback))]
+    [ServiceContract(CallbackContract = typeof(ISessionCallback))]
     public interface ISessionManager
     {
         [OperationContract]

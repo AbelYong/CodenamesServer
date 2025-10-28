@@ -6,7 +6,7 @@ using System.ServiceModel;
 namespace Services.Contracts
 {
     [ServiceContract]
-    public interface ISocialCallback
+    public interface ISessionCallback
     {
         [OperationContract(IsOneWay = true)]
         void NotifyFriendOnline(Player player);

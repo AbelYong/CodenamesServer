@@ -11,7 +11,7 @@ namespace Services.Contracts
     public class SessionService : ISessionManager
     {
         private static FriendService friendService = new FriendService();
-        private readonly Dictionary<Player, ISocialCallback> _playersOnline = new Dictionary<Player, ISocialCallback>();
+        private readonly Dictionary<Player, ISessionCallback> _playersOnline = new Dictionary<Player, ISessionCallback>();
         
         public void Connect(Player player)
         {
@@ -20,12 +20,12 @@ namespace Services.Contracts
                 return;
             }
 
-            var currentClientChannel = OperationContext.Current.GetCallbackChannel<ISocialCallback>();
+            var currentClientChannel = OperationContext.Current.GetCallbackChannel<ISessionCallback>();
 
             Guid playerID = (Guid)player.PlayerID;
             List<Player> friends = friendService.GetFriends(playerID);
 
-            Dictionary<Player, ISocialCallback> playersOnlineSnapshot = new Dictionary<Player, ISocialCallback>();
+            Dictionary<Player, ISessionCallback> playersOnlineSnapshot = new Dictionary<Player, ISessionCallback>();
 
             lock (_playersOnline)
             {
@@ -41,10 +41,10 @@ namespace Services.Contracts
                 }
             }
 
-            Dictionary<Player, ISocialCallback> friendCallbacks = GetFriendsOnline(friends, playersOnlineSnapshot);
+            Dictionary<Player, ISessionCallback> friendCallbacks = GetFriendsOnline(friends, playersOnlineSnapshot);
 
-            List<ISocialCallback> friendChannels = friendCallbacks.Values.ToList();
-            foreach (ISocialCallback friendChannel in friendChannels)
+            List<ISessionCallback> friendChannels = friendCallbacks.Values.ToList();
+            foreach (ISessionCallback friendChannel in friendChannels)
             {
                 friendChannel.NotifyFriendOnline(player);
             }
@@ -63,7 +63,7 @@ namespace Services.Contracts
             Guid playerID = (Guid)player.PlayerID;
             List<Player> friends = friendService.GetFriends(playerID);
 
-            Dictionary<Player, ISocialCallback> playersOnlineSnapshot = new Dictionary<Player, ISocialCallback>();
+            Dictionary<Player, ISessionCallback> playersOnlineSnapshot = new Dictionary<Player, ISessionCallback>();
 
             lock (_playersOnline)
             {
@@ -77,18 +77,18 @@ namespace Services.Contracts
                 }
             }
 
-            Dictionary<Player, ISocialCallback> friendCallbacks = GetFriendsOnline(friends, playersOnlineSnapshot);
+            Dictionary<Player, ISessionCallback> friendCallbacks = GetFriendsOnline(friends, playersOnlineSnapshot);
 
-            List<ISocialCallback> onlineFriendsChannels = friendCallbacks.Values.ToList();
-            foreach (ISocialCallback friendChannel in onlineFriendsChannels)
+            List<ISessionCallback> onlineFriendsChannels = friendCallbacks.Values.ToList();
+            foreach (ISessionCallback friendChannel in onlineFriendsChannels)
             {
                 friendChannel.NotifyFriendOffline(playerID);
             }
         }
 
-        private static Dictionary<Player, ISocialCallback> GetFriendsOnline(List<Player> friends, Dictionary<Player, ISocialCallback> playersOnline)
+        private static Dictionary<Player, ISessionCallback> GetFriendsOnline(List<Player> friends, Dictionary<Player, ISessionCallback> playersOnline)
         {
-            Dictionary<Player, ISocialCallback> friendCallbacks = new Dictionary<Player, ISocialCallback>();
+            Dictionary<Player, ISessionCallback> friendCallbacks = new Dictionary<Player, ISessionCallback>();
             
             HashSet<Player> friendSet = new HashSet<Player>(friends);
             
