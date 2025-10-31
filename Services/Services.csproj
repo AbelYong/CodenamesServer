@@ -75,7 +75,7 @@
     <Compile Include="Contracts\IEmailManager.cs" />
     <Compile Include="Contracts\IFriendManager.cs" />
     <Compile Include="Contracts\IUserManager.cs" />
-    <Compile Include="Operations\EmailOperations.cs" />
+    <Compile Include="Operations\EmailOperation.cs" />
     <Compile Include="Contracts\UserService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Contracts\AuthenticationService.cs" />

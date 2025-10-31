@@ -69,7 +69,7 @@ namespace Services
 
                 if (userAgg == null) return;
 
-                string code = EmailOperations.GenerateSixDigitCode();
+                string code = EmailOperation.GenerateSixDigitCode();
 
                 var pr = new DA.PasswordReset
                 {
@@ -226,7 +226,7 @@ namespace Services
                 var salt = Guid.NewGuid();
                 var passHash = ComputePasswordHashInSql(db, pwd, salt);
 
-                string code = EmailOperations.GenerateSixDigitCode();
+                string code = EmailOperation.GenerateSixDigitCode();
                 var codeHash = Sha512(code);
 
                 var req = new DA.RegistrationRequest
@@ -248,7 +248,7 @@ namespace Services
                 db.RegistrationRequests.Add(req);
                 db.SaveChanges();
 
-                EmailOperations.SendVerificationEmail(svUser.Email, code);
+                EmailOperation.SendVerificationEmail(svUser.Email, code);
 
                 return new BeginRegistrationResult
                 {

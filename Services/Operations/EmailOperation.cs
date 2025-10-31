@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Services.Operations
 {
-    public static class EmailOperations
+    public static class EmailOperation
     {
         public static string GenerateSixDigitCode()
         {

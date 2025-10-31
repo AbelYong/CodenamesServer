@@ -23,7 +23,7 @@ namespace Services
             {
                 try
                 {
-                    string code = EmailOperations.GenerateSixDigitCode();
+                    string code = EmailOperation.GenerateSixDigitCode();
                     DateTimeOffset expiration = DateTimeOffset.UtcNow.AddMinutes(VERICATION_TIMEOUT_MINUTES);
 
                     var info = new VerificationInfo
@@ -39,7 +39,7 @@ namespace Services
                     };
                     _cache.Set(email, info, policy);
 
-                    EmailOperations.SendVerificationEmail(email, code);
+                    EmailOperation.SendVerificationEmail(email, code);
                     result.IsSuccess = true;
                 }
                 catch (Exception ex) when (ex is SmtpException || ex is SmtpFailedRecipientException)
