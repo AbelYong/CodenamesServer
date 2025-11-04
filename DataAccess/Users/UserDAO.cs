@@ -93,7 +93,7 @@ namespace DataAccess.Users
         /// Checks if the email is already in use.
         /// </summary>
         /// <param name="username">The email to verify.</param>
-        /// <returns>True if no matching email was found, otherwise returns false.</returns>
+        /// <returns>True if no matching email was found; false otherwise.</returns>
         /// <exception cref="System.Data.SqlClient.SqlException">
         /// Thrown if the database operation failed.
         /// </exception>
@@ -101,8 +101,8 @@ namespace DataAccess.Users
         {
             using (var context = new codenamesEntities())
             {
-                bool EmailInUse = context.Users.Any(u => u.email == email);
-                return !EmailInUse;
+                bool emailInUse = context.Users.Any(u => u.email == email);
+                return !emailInUse;
             }
         }
     }

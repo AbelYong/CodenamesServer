@@ -51,6 +51,7 @@ namespace Services.Contracts
 
             List<Player> onlineFriends = friendCallbacks.Keys.ToList();
             currentClientChannel.ReceiveOnlineFriends(onlineFriends);
+            System.Console.WriteLine("{0} has connected", player.Username);
         }
 
         public void Disconnect(Player player)
@@ -84,6 +85,7 @@ namespace Services.Contracts
             {
                 friendChannel.NotifyFriendOffline(playerID);
             }
+            System.Console.WriteLine("{0} has disconnected", player.Username);
         }
 
         private static Dictionary<Player, ISessionCallback> GetFriendsOnline(List<Player> friends, Dictionary<Player, ISessionCallback> playersOnline)

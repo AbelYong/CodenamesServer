@@ -5,13 +5,13 @@ using System;
 namespace DataAccess.Tests.UserTests
 {
     [TestFixture]
-    public class LoginTest
+    public class AuthenticationTest
     {
         private UserDAO _userDAO;
         private Player _player;
 
-        [SetUp]
-        public void Setup()
+        [OneTimeSetUp]
+        public void OnetimeSetup()
         {
             _userDAO = new UserDAO();
             _player = new Player();
@@ -22,8 +22,8 @@ namespace DataAccess.Tests.UserTests
             _userDAO.SignIn(_player, password);
         }
 
-        [TearDown]
-        public void TearDown()
+        [OneTimeTearDown]
+        public void OnetimeTearDown()
         {
             if (_userDAO != null)
             {
@@ -32,7 +32,7 @@ namespace DataAccess.Tests.UserTests
         }
 
         [Test]
-        public void Login_CorrectCredentials_ReturnId()
+        public void Authenticate_CorrectCredentials_ReturnId()
         {
             string username = "tester";
             string password = "password";
@@ -43,7 +43,6 @@ namespace DataAccess.Tests.UserTests
             }
         }
 
-        [Test]
         [TestCase("wrongUsername", "password", TestName = "Incorrect Username")]
         [TestCase("tester", "wrongPassword", TestName ="Incorrect Password")]
         [TestCase("Tester", "password", TestName="Wrongly cased username")]
@@ -54,7 +53,7 @@ namespace DataAccess.Tests.UserTests
             TestName ="Too long name and password"
             )
         ]
-        public void Login_IncorrectCredentials_ReturnNull(string username, string password)
+        public void Authenticate_IncorrectCredentials_ReturnNull(string username, string password)
         {
             username = "Tester";
             password = "password";

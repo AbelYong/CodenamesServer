@@ -125,7 +125,7 @@ namespace DataAccess.Users
         /// </summary>
         /// <param name="username">The username to verify.</param>
         /// <returns>True if no matching username was found, otherwise returns false.</returns>
-        /// <exception cref="System.Data.SqlClient.SqlException">
+        /// <exception cref="System.Data.Entity.Core.EntityException">
         /// Thrown if the database operation failed.
         /// </exception>
         private static bool ValidateUsernameNotDuplicated(string username)
