@@ -43,6 +43,11 @@ jobs:
         run: |
           New-Item -Path ${{ runner.temp }}\scanner -ItemType Directory
           dotnet tool update dotnet-sonarscanner --tool-path ${{ runner.temp }}\scanner
+      - name: Create dummy connectionStrings.Local.config
+        shell: powershell
+        run: |
+          # Create .config file with minimum structure so msbuild doesn't fail
+          New-Item -Path "D:\a\CodenamesServer\CodenamesServer\DataAccess\connectionStrings.Local.config" -ItemType File -Value "<connectionStrings></connectionStrings>"    
       - name: Build and analyze
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
