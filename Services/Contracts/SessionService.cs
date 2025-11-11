@@ -1,4 +1,5 @@
 ﻿using Services.DTO;
+using Services.DTO.Request;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,17 +14,19 @@ namespace Services.Contracts
         private static FriendService friendService = new FriendService();
         private readonly Dictionary<Player, ISessionCallback> _playersOnline = new Dictionary<Player, ISessionCallback>();
         
-        public void Connect(Player player)
+        public CommunicationRequest Connect(Player player)
         {
+            CommunicationRequest request = new CommunicationRequest();
             if (player == null || !player.PlayerID.HasValue)
             {
-                return;
+                request.IsSuccess = false;
+                request.StatusCode = StatusCode.MISSING_DATA;
+                return request;
             }
 
             var currentClientChannel = OperationContext.Current.GetCallbackChannel<ISessionCallback>();
 
             Guid playerID = (Guid)player.PlayerID;
-            List<Player> friends = friendService.GetFriends(playerID);
 
             Dictionary<Player, ISessionCallback> playersOnlineSnapshot = new Dictionary<Player, ISessionCallback>();
 
@@ -31,7 +34,9 @@ namespace Services.Contracts
             {
                 if (_playersOnline.ContainsKey(player))
                 {
-                    //TODO handle duplicated logins
+                    request.IsSuccess = false;
+                    request.StatusCode= StatusCode.UNAUTHORIZED;
+                    return request;
                 }
                 else
                 {
@@ -41,17 +46,35 @@ namespace Services.Contracts
                 }
             }
 
+            List<Player> friends = friendService.GetFriends(playerID);
             Dictionary<Player, ISessionCallback> friendCallbacks = GetFriendsOnline(friends, playersOnlineSnapshot);
 
             List<ISessionCallback> friendChannels = friendCallbacks.Values.ToList();
+            NotifyOnlineFriends(friendChannels, player);
+
+            List<Player> onlineFriends = friendCallbacks.Keys.ToList();
+            currentClientChannel.ReceiveOnlineFriends(onlineFriends);
+            request.IsSuccess = true;
+            request.StatusCode = StatusCode.OK;
+            System.Console.WriteLine("{0} has connected", player.Username);
+            return request;
+        }
+
+        private static Dictionary<Player, ISessionCallback> GetFriendsOnline(List<Player> friends, Dictionary<Player, ISessionCallback> playersOnline)
+        {
+            HashSet<Player> friendSet = new HashSet<Player>(friends);
+
+            return playersOnline
+                .Where(player => friendSet.Contains(player.Key))
+                .ToDictionary(player => player.Key, player => player.Value);
+        }
+
+        private static void NotifyOnlineFriends(List<ISessionCallback> friendChannels, Player player)
+        {
             foreach (ISessionCallback friendChannel in friendChannels)
             {
                 friendChannel.NotifyFriendOnline(player);
             }
-
-            List<Player> onlineFriends = friendCallbacks.Keys.ToList();
-            currentClientChannel.ReceiveOnlineFriends(onlineFriends);
-            System.Console.WriteLine("{0} has connected", player.Username);
         }
 
         public void Disconnect(Player player)
@@ -86,22 +109,6 @@ namespace Services.Contracts
                 friendChannel.NotifyFriendOffline(playerID);
             }
             System.Console.WriteLine("{0} has disconnected", player.Username);
-        }
-
-        private static Dictionary<Player, ISessionCallback> GetFriendsOnline(List<Player> friends, Dictionary<Player, ISessionCallback> playersOnline)
-        {
-            Dictionary<Player, ISessionCallback> friendCallbacks = new Dictionary<Player, ISessionCallback>();
-            
-            HashSet<Player> friendSet = new HashSet<Player>(friends);
-            
-            foreach (var playerOnline in playersOnline)
-            {
-                if (friendSet.Contains(playerOnline.Key))
-                {
-                    friendCallbacks.Add(playerOnline.Key, playerOnline.Value);
-                }
-            }
-            return friendCallbacks;
         }
     }
 }

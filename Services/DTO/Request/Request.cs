@@ -3,6 +3,7 @@
 namespace Services.DTO.Request
 {
     [DataContract]
+    [KnownType(typeof(CommunicationRequest))]
     [KnownType(typeof(LoginRequest))]
     public abstract class Request
     {

@@ -68,6 +68,7 @@
     <Compile Include="DTO\Request\Request.cs" />
     <Compile Include="DTO\RequestResult.cs" />
     <Compile Include="DTO\DataContract\User.cs" />
+    <Compile Include="DTO\Request\CommunicationRequest.cs" />
     <Compile Include="DTO\Request\StatusCode.cs" />
     <Compile Include="Contracts\EmailService.cs" />
     <Compile Include="Contracts\FriendService.cs" />

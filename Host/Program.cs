@@ -12,21 +12,23 @@ namespace Host
     internal static class Program
     {
         private static ManualResetEvent _quitEvent = new ManualResetEvent(false);
+        private static ServiceHost _authenticationHost;
+        private static ServiceHost _sessionHost;
+        private static ServiceHost _userHost;
+        private static ServiceHost _friendHost;
+        private static ServiceHost _emailHost;
+
         static void Main(string[] args)
         {
-            ServiceHost authenticationHost = new ServiceHost(typeof(Services.AuthenticationService));
-            ServiceHost userHost = new ServiceHost(typeof(Services.UserService));
-            ServiceHost friendHost = new ServiceHost(typeof(Services.FriendService));
-            ServiceHost emailHost = new ServiceHost(typeof(Services.EmailService));
-            ServiceHost sessionHost = new ServiceHost(typeof(Services.Contracts.SessionService));
+            _authenticationHost = new ServiceHost(typeof(Services.AuthenticationService));
+            _userHost = new ServiceHost(typeof(Services.UserService));
+            _friendHost = new ServiceHost(typeof(Services.FriendService));
+            _emailHost = new ServiceHost(typeof(Services.EmailService));
+            _sessionHost = new ServiceHost(typeof(Services.Contracts.SessionService));
 
             try
             {
-                authenticationHost.Open();
-                userHost.Open();
-                friendHost.Open();
-                emailHost.Open();
-                sessionHost.Open();
+                StartServices();
 
                 Console.CancelKeyPress += (sender, eArgs) => {
                     eArgs.Cancel = true;
@@ -36,27 +38,45 @@ namespace Host
                 Console.WriteLine("Running... press Ctrl+C to exit.");
                 _quitEvent.WaitOne();
 
-                authenticationHost.Close();
-                userHost.Close();
-                friendHost.Close();
-                emailHost.Close();
+                CloseServices();
             }
             catch (CommunicationException cex)
             {
                 Console.WriteLine("An exception occured: {0}", cex.Message);
-                authenticationHost.Abort();
-                userHost.Abort();
-                friendHost.Abort();
-                sessionHost.Abort();
+                AbortServices();
             }
             catch (Exception ex)
             {
                 Console.WriteLine("An exception occured: {0}", ex.Message);
-                authenticationHost.Abort();
-                userHost.Abort();
-                friendHost.Abort();
-                sessionHost.Abort();
+                AbortServices();
             }
+        }
+
+        private static void StartServices()
+        {
+            _authenticationHost.Open();
+            _sessionHost.Open();
+            _userHost.Open();
+            _friendHost.Open();
+            _emailHost.Open();
+        }
+
+        private static void CloseServices()
+        {
+            _authenticationHost.Close();
+            _sessionHost.Close();
+            _userHost.Close();
+            _friendHost.Close();
+            _emailHost.Close();
+        }
+
+        private static void AbortServices()
+        {
+            _authenticationHost.Abort();
+            _sessionHost.Abort();
+            _userHost.Abort();
+            _friendHost.Abort();
+            _emailHost.Abort();
         }
     }
 }

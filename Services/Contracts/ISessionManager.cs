@@ -1,4 +1,5 @@
 ﻿using Services.DTO;
+using Services.DTO.Request;
 using System.ServiceModel;
 
 namespace Services.Contracts
@@ -7,7 +8,7 @@ namespace Services.Contracts
     public interface ISessionManager
     {
         [OperationContract]
-        void Connect(Player player);
+        CommunicationRequest Connect(Player player);
 
         [OperationContract(IsOneWay = true)]
         void Disconnect(Player player);
