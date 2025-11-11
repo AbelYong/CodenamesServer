@@ -47,13 +47,12 @@ namespace Services.Contracts
             }
 
             List<Player> friends = friendService.GetFriends(playerID);
+
             Dictionary<Player, ISessionCallback> friendCallbacks = GetFriendsOnline(friends, playersOnlineSnapshot);
+            NotifyConnectToOnlineFriends(friendCallbacks, player);
+            KeyValuePair<Player, ISessionCallback> playerCallback = new KeyValuePair<Player, ISessionCallback> (player, currentClientChannel);
+            SendOnlineFriends(friends, playerCallback);
 
-            List<ISessionCallback> friendChannels = friendCallbacks.Values.ToList();
-            NotifyOnlineFriends(friendChannels, player);
-
-            List<Player> onlineFriends = friendCallbacks.Keys.ToList();
-            currentClientChannel.ReceiveOnlineFriends(onlineFriends);
             request.IsSuccess = true;
             request.StatusCode = StatusCode.OK;
             System.Console.WriteLine("{0} has connected", player.Username);
@@ -69,11 +68,39 @@ namespace Services.Contracts
                 .ToDictionary(player => player.Key, player => player.Value);
         }
 
-        private static void NotifyOnlineFriends(List<ISessionCallback> friendChannels, Player player)
+        private void NotifyConnectToOnlineFriends(Dictionary<Player, ISessionCallback> friendCallbacks, Player player)
         {
-            foreach (ISessionCallback friendChannel in friendChannels)
+            Dictionary<Player, ISessionCallback> faultedChannels = new Dictionary<Player, ISessionCallback>();
+            foreach (KeyValuePair<Player, ISessionCallback> friendChannel in friendCallbacks)
             {
-                friendChannel.NotifyFriendOnline(player);
+                try
+                {
+                    friendChannel.Value.NotifyFriendOnline(player);
+                }
+                catch (Exception ex) when (ex is CommunicationException || ex is EndpointNotFoundException || ex is CommunicationObjectFaultedException)
+                {
+                    faultedChannels.Add(friendChannel.Key, friendChannel.Value);
+                    if (friendChannel.Value is ICommunicationObject communicationObject)
+                    {
+                        communicationObject.Abort();
+                    }
+                }
+            }
+            RemoveFaultedChannels(faultedChannels);
+        }
+
+        private static void SendOnlineFriends(List<Player> onlineFriends, KeyValuePair<Player, ISessionCallback> playerCallback)
+        {
+            try
+            {
+                playerCallback.Value.ReceiveOnlineFriends(onlineFriends);
+            }
+            catch (Exception ex) when (ex is CommunicationException || ex is EndpointNotFoundException || ex is CommunicationObjectFaultedException)
+            {
+                if (playerCallback.Value is ICommunicationObject communicationObject)
+                {
+                    communicationObject.Abort();
+                }
             }
         }
 
@@ -102,13 +129,45 @@ namespace Services.Contracts
             }
 
             Dictionary<Player, ISessionCallback> friendCallbacks = GetFriendsOnline(friends, playersOnlineSnapshot);
+            NotifyDisconnectToOnlineFriends(friendCallbacks, playerID);
 
-            List<ISessionCallback> onlineFriendsChannels = friendCallbacks.Values.ToList();
-            foreach (ISessionCallback friendChannel in onlineFriendsChannels)
-            {
-                friendChannel.NotifyFriendOffline(playerID);
-            }
             System.Console.WriteLine("{0} has disconnected", player.Username);
+        }
+
+        private void NotifyDisconnectToOnlineFriends(Dictionary<Player, ISessionCallback> friendCallbacks, Guid playerID)
+        {
+            Dictionary<Player, ISessionCallback> faultedChannels = new Dictionary<Player, ISessionCallback>();
+            foreach (KeyValuePair<Player, ISessionCallback> friendChannel in friendCallbacks)
+            {
+                try
+                {
+                    friendChannel.Value.NotifyFriendOffline(playerID);
+                }
+                catch (Exception ex) when (ex is CommunicationException || ex is EndpointNotFoundException || ex is CommunicationObjectFaultedException)
+                {
+                    faultedChannels.Add(friendChannel.Key, friendChannel.Value);
+                    if (friendChannel.Value is ICommunicationObject communicationObject)
+                    {
+                        communicationObject.Abort();
+                    }
+                }
+            }
+            RemoveFaultedChannels(faultedChannels);
+        }
+
+        private void RemoveFaultedChannels(Dictionary<Player, ISessionCallback> faultedChannels)
+        {
+            bool channelsFaulted = faultedChannels.Count > 0;
+            if (channelsFaulted)
+            {
+                lock (_playersOnline)
+                {
+                    foreach (KeyValuePair<Player, ISessionCallback> friendChannel in faultedChannels)
+                    {
+                        _playersOnline.Remove(friendChannel.Key);
+                    }
+                }
+            }
         }
     }
 }
