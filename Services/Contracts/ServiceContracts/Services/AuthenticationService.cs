@@ -15,8 +15,9 @@ using DA = DataAccess;
 using Services.Operations;
 using Services.DTO.Request;
 using System.Data.Entity.Core;
+using Services.Contracts.ServiceContracts.Managers;
 
-namespace Services
+namespace Services.Contracts.ServiceContracts.Services
 {
     public class AuthenticationService : IAuthenticationManager
     {

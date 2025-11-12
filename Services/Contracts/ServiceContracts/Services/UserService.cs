@@ -8,8 +8,9 @@ using System.ServiceModel;
 using System.Text;
 using Services.DTO;
 using DataAccess.Properties.Langs;
+using Services.Contracts.ServiceContracts.Managers;
 
-namespace Services
+namespace Services.Contracts.ServiceContracts.Services
 {
     public class UserService : IUserManager
     {

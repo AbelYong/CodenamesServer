@@ -6,8 +6,9 @@ using Services.DTO;
 using System.Net.Mail;
 using DataAccess.Properties.Langs;
 using DataAccess.Users;
+using Services.Contracts.ServiceContracts.Managers;
 
-namespace Services
+namespace Services.Contracts.ServiceContracts.Services
 {
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.PerCall)]
     public class EmailService : IEmailManager

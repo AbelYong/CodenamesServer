@@ -1,17 +1,18 @@
-﻿using Services.DTO;
+﻿using Services.Contracts.ServiceContracts.Managers;
+using Services.DTO;
 using Services.DTO.Request;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.ServiceModel;
 
-namespace Services.Contracts
+namespace Services.Contracts.ServiceContracts.Services
 {
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single,
         ConcurrencyMode = ConcurrencyMode.Reentrant)]
     public class SessionService : ISessionManager
     {
-        private static FriendService friendService = new FriendService();
+        private static readonly FriendService friendService = new FriendService();
         private readonly Dictionary<Player, ISessionCallback> _playersOnline = new Dictionary<Player, ISessionCallback>();
         
         public CommunicationRequest Connect(Player player)

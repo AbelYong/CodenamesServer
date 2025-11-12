@@ -20,11 +20,11 @@ namespace Host
 
         static void Main(string[] args)
         {
-            _authenticationHost = new ServiceHost(typeof(Services.AuthenticationService));
-            _userHost = new ServiceHost(typeof(Services.UserService));
+            _authenticationHost = new ServiceHost(typeof(Services.Contracts.ServiceContracts.Services.AuthenticationService));
+            _userHost = new ServiceHost(typeof(Services.Contracts.ServiceContracts.Services.UserService));
             _friendHost = new ServiceHost(typeof(Services.FriendService));
-            _emailHost = new ServiceHost(typeof(Services.EmailService));
-            _sessionHost = new ServiceHost(typeof(Services.Contracts.SessionService));
+            _emailHost = new ServiceHost(typeof(Services.Contracts.ServiceContracts.Services.EmailService));
+            _sessionHost = new ServiceHost(typeof(Services.Contracts.ServiceContracts.Services.SessionService));
 
             try
             {

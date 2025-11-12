@@ -2,7 +2,7 @@
 using Services.DTO.Request;
 using System.ServiceModel;
 
-namespace Services.Contracts
+namespace Services.Contracts.ServiceContracts.Managers
 {
     [ServiceContract(CallbackContract = typeof(ISessionCallback))]
     public interface ISessionManager

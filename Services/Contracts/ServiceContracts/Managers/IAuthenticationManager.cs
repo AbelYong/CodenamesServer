@@ -4,7 +4,7 @@ using System.ServiceModel;
 using Services.DTO;
 using Services.DTO.Request;
 
-namespace Services
+namespace Services.Contracts.ServiceContracts.Managers
 {
     [ServiceContract]
     public interface IAuthenticationManager

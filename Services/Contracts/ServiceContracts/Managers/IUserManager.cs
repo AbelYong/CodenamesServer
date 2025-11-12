@@ -3,7 +3,7 @@ using System.Runtime.Serialization;
 using System.ServiceModel;
 using Services.DTO;
 
-namespace Services
+namespace Services.Contracts.ServiceContracts.Managers
 {
     [ServiceContract]
     public interface IUserManager
