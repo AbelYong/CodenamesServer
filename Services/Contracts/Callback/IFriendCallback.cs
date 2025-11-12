@@ -10,7 +10,7 @@ namespace Services
     /// Defines the notifications that the Server can send to the Client.
     /// </summary>
     [ServiceContract]
-    public interface IFriendManagerCallback
+    public interface IFriendCallback
     {
         /// <summary>
         /// Notifies the client that it has received a new friend request.

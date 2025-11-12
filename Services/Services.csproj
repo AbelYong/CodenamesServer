@@ -63,7 +63,7 @@
     <Compile Include="Contracts\ServiceContracts\Managers\ISessionManager.cs" />
     <Compile Include="Contracts\ServiceContracts\Services\SessionService.cs" />
     <Compile Include="Contracts\Callback\ISessionCallback.cs" />
-    <Compile Include="Contracts\IFriendManagerCallback.cs" />
+    <Compile Include="Contracts\Callback\IFriendCallback.cs" />
     <Compile Include="DTO\DataContract\Player.cs" />
     <Compile Include="DTO\Request\LoginRequest.cs" />
     <Compile Include="DTO\Request\Request.cs" />
@@ -72,10 +72,10 @@
     <Compile Include="DTO\Request\CommunicationRequest.cs" />
     <Compile Include="DTO\Request\StatusCode.cs" />
     <Compile Include="Contracts\ServiceContracts\Services\EmailService.cs" />
-    <Compile Include="Contracts\FriendService.cs" />
+    <Compile Include="Contracts\ServiceContracts\Services\FriendService.cs" />
     <Compile Include="Contracts\ServiceContracts\Managers\IAuthenticationManager.cs" />
     <Compile Include="Contracts\ServiceContracts\Managers\IEmailManager.cs" />
-    <Compile Include="Contracts\IFriendManager.cs" />
+    <Compile Include="Contracts\ServiceContracts\Managers\IFriendManager.cs" />
     <Compile Include="Contracts\ServiceContracts\Managers\IUserManager.cs" />
     <Compile Include="Operations\EmailOperation.cs" />
     <Compile Include="Contracts\ServiceContracts\Services\UserService.cs" />

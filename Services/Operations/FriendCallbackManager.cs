@@ -11,17 +11,20 @@ namespace Services.Operations
     /// </summary>
     public static class FriendCallbackManager
     {
-        private static readonly Dictionary<Guid, IFriendManagerCallback> _clients =
-            new Dictionary<Guid, IFriendManagerCallback>();
+        private static readonly Dictionary<Guid, IFriendCallback> _clients =
+            new Dictionary<Guid, IFriendCallback>();
 
         /// <summary>
         /// Registers a new client (player) and its callback channel.
         /// </summary>
         /// <param name="playerId">The ID of the player connecting.</param>
         /// <param name="callback">The client's callback channel.</param>
-        public static void Register(Guid playerId, IFriendManagerCallback callback)
+        public static void Register(Guid playerId, IFriendCallback callback)
         {
-            if (playerId == Guid.Empty) return;
+            if (playerId == Guid.Empty)
+            {
+                return;
+            }
 
             lock (_clients)
             {
@@ -35,7 +38,10 @@ namespace Services.Operations
         /// <param name="playerId">The ID of the player to unregister.</param>
         public static void Unregister(Guid playerId)
         {
-            if (playerId == Guid.Empty) return;
+            if (playerId == Guid.Empty)
+            {
+                return;
+            }
 
             lock (_clients)
             {
@@ -51,13 +57,16 @@ namespace Services.Operations
         /// </summary>
         /// <param name="playerId">The ID of the player to notify.</param>
         /// <returns>The callback channel, or null if not connected.</returns>
-        public static IFriendManagerCallback GetCallback(Guid playerId)
+        public static IFriendCallback GetCallback(Guid playerId)
         {
-            if (playerId == Guid.Empty) return null;
+            if (playerId == Guid.Empty)
+            {
+                return null;
+            }
 
             lock (_clients)
             {
-                _clients.TryGetValue(playerId, out IFriendManagerCallback callback);
+                _clients.TryGetValue(playerId, out IFriendCallback callback);
                 return callback;
             }
         }
@@ -68,7 +77,7 @@ namespace Services.Operations
         /// </summary>
         /// <param name="playerId">The ID of the player to notify.</param>
         /// <param name="action">The action to execute in their callback channel.</param>
-        public static void InvokeCallback(Guid playerId, Action<IFriendManagerCallback> action)
+        public static void InvokeCallback(Guid playerId, Action<IFriendCallback> action)
         {
             var callback = GetCallback(playerId);
             if (callback != null)
@@ -77,7 +86,7 @@ namespace Services.Operations
                 {
                     action(callback);
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     Unregister(playerId);
                 }

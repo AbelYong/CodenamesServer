@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.ServiceModel;
-using DataAccess.Users; // Ya tienes este
+using DataAccess.Users;
 using Services.DTO;
 using Services.Operations;
 
@@ -20,14 +20,17 @@ namespace Services
         private static readonly IPlayerDAO _playerDAO = new PlayerDAO();
 
         private Guid _playerId;
-        private IFriendManagerCallback _callback;
+        private IFriendCallback _callback;
 
         public void Connect(Guid mePlayerId)
         {
-            if (mePlayerId == Guid.Empty) return;
+            if (mePlayerId == Guid.Empty)
+            {
+                return;
+            }
 
             _playerId = mePlayerId;
-            _callback = OperationContext.Current.GetCallbackChannel<IFriendManagerCallback>();
+            _callback = OperationContext.Current.GetCallbackChannel<IFriendCallback>();
 
             FriendCallbackManager.Register(_playerId, _callback);
 

@@ -8,7 +8,7 @@ namespace Services
     /// <summary>
     /// Main contract for managing friends and requests in real time.
     /// </summary>
-    [ServiceContract(CallbackContract = typeof(IFriendManagerCallback))]
+    [ServiceContract(CallbackContract = typeof(IFriendCallback))]
     public interface IFriendManager
     {
         /// <summary>
