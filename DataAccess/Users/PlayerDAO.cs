@@ -33,6 +33,24 @@ namespace DataAccess.Users
             }
         }
 
+        /// <summary>
+        /// Gets a Player entity by its ID, including its associated User.
+        /// </summary>
+        /// <param name="playerId">The ID of the player to search for.</param>
+        /// <returns>The Player entity, or null if not found.</returns>
+        public Player GetPlayerById(Guid playerId)
+        {
+            if (playerId == Guid.Empty) return null;
+
+            using (var db = new codenamesEntities())
+            {
+                return db.Players
+                         .Include(p => p.User)
+                         .AsNoTracking()
+                         .FirstOrDefault(p => p.playerID == playerId);
+            }
+        }
+
         public OperationResult UpdateProfile(Player updatedPlayer)
         {
             OperationResult result = new OperationResult();
