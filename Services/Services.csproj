@@ -66,7 +66,7 @@
     <Compile Include="Contracts\ServiceContracts\Managers\ISessionManager.cs" />
     <Compile Include="Contracts\ServiceContracts\Services\SessionService.cs" />
     <Compile Include="Contracts\Callback\ISessionCallback.cs" />
-    <Compile Include="DTO\DataContract\GameMode.cs" />
+    <Compile Include="DTO\DataContract\Gamemode.cs" />
     <Compile Include="DTO\DataContract\Match.cs" />
     <Compile Include="DTO\DataContract\MatchConfiguration.cs" />
     <Compile Include="DTO\DataContract\MatchRules.cs" />

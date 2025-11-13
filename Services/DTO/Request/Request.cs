@@ -5,6 +5,7 @@ namespace Services.DTO.Request
     [DataContract]
     [KnownType(typeof(CommunicationRequest))]
     [KnownType(typeof(LoginRequest))]
+    [KnownType(typeof(MatchRequest))]
     public abstract class Request
     {
         [DataMember]
