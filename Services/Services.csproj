@@ -70,6 +70,7 @@
     <Compile Include="DTO\DataContract\Match.cs" />
     <Compile Include="DTO\DataContract\MatchConfiguration.cs" />
     <Compile Include="DTO\DataContract\MatchRules.cs" />
+    <Compile Include="Contracts\Callback\IFriendCallback.cs" />
     <Compile Include="DTO\DataContract\Player.cs" />
     <Compile Include="DTO\Request\LoginRequest.cs" />
     <Compile Include="DTO\Request\MatchRequest.cs" />
@@ -79,14 +80,15 @@
     <Compile Include="DTO\Request\CommunicationRequest.cs" />
     <Compile Include="DTO\Request\StatusCode.cs" />
     <Compile Include="Contracts\ServiceContracts\Services\EmailService.cs" />
-    <Compile Include="Contracts\FriendService.cs" />
+    <Compile Include="Contracts\ServiceContracts\Services\FriendService.cs" />
     <Compile Include="Contracts\ServiceContracts\Managers\IAuthenticationManager.cs" />
     <Compile Include="Contracts\ServiceContracts\Managers\IEmailManager.cs" />
-    <Compile Include="Contracts\IFriendManager.cs" />
+    <Compile Include="Contracts\ServiceContracts\Managers\IFriendManager.cs" />
     <Compile Include="Contracts\ServiceContracts\Managers\IUserManager.cs" />
     <Compile Include="Operations\EmailOperation.cs" />
     <Compile Include="Contracts\ServiceContracts\Services\UserService.cs" />
     <Compile Include="Operations\MatchmakingOperation.cs" />
+    <Compile Include="Operations\FriendCallbackManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Contracts\ServiceContracts\Services\AuthenticationService.cs" />
   </ItemGroup>
