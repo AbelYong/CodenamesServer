@@ -25,10 +25,7 @@ namespace DataAccess.Tests.UserTests
         [OneTimeTearDown]
         public void OnetimeTearDown()
         {
-            if (_userDAO != null)
-            {
-                UserDAO.DeleteUser(_player);
-            }
+            PlayerDAO.DeletePlayer(_player);
         }
 
         [Test]

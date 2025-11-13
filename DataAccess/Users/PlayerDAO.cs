@@ -120,6 +120,95 @@ namespace DataAccess.Users
             return result;
         }
 
+        public static void DeletePlayer(Player playerToDelete)
+        {
+            try
+            {
+                using (var context = new codenamesEntities())
+                {
+                    Player player = (from p in context.Players
+                                     where p.username == playerToDelete.username
+                                     select p).FirstOrDefault();
+                    if (player != null)
+                    {
+                        Guid userID = player.userID;
+                        User user = (from u in context.Users
+                                     where u.userID == userID
+                                     select u).FirstOrDefault();
+                        context.Players.Remove(player);
+                        context.Users.Remove(user);
+                        context.SaveChanges();
+                    }
+                }
+            }
+            catch (SqlException sqlex)
+            {
+                //TODO log
+                System.Console.WriteLine(sqlex.Message);
+            }
+        }
+
+        private static bool ValidatePlayerProfile(Player player)
+        {
+            if (player == null)
+            {
+                return false;
+            }
+            if (!ValidateIdentificationData(player))
+            {
+                return false;
+            }
+            return true;
+        }
+
+        private static bool ValidateIdentificationData(Player player)
+        {
+            const int MAX_USERNAME_LENGTH = 20;
+            const int MAX_EMAIL_LENGTH = 30;
+            if (string.IsNullOrEmpty(player.User.email) || player.User.email.Length > MAX_EMAIL_LENGTH)
+            {
+                return false;
+            }
+            if (string.IsNullOrEmpty(player.username) || player.username.Length > MAX_USERNAME_LENGTH)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        private static bool ValidatePersonalData(Player player)
+        {
+            const int MAX_NAME_LENGTH = 20;
+            const int MAX_LASTNAME_LENGTH = 30;
+            if (player.name.Length > MAX_NAME_LENGTH)
+            {
+                return false;
+            }
+            if (player.lastName.Length > MAX_LASTNAME_LENGTH)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        private static bool ValidateSocialMediaData(Player player)
+        {
+            const int SOCIAL_MEDIA_LENGTH = 30;
+            if (player.facebookUsername.Length > SOCIAL_MEDIA_LENGTH)
+            {
+                return false;
+            }
+            if (player.instagramUsername.Length > SOCIAL_MEDIA_LENGTH)
+            {
+                return false;
+            }
+            if (player.discordUsername.Length > SOCIAL_MEDIA_LENGTH)
+            {
+                return false;
+            }
+            return true;
+        }
+
         /// <summary>
         /// Checks if the username is already in use.
         /// </summary>
@@ -128,7 +217,7 @@ namespace DataAccess.Users
         /// <exception cref="System.Data.Entity.Core.EntityException">
         /// Thrown if the database operation failed.
         /// </exception>
-        private static bool ValidateUsernameNotDuplicated(string username)
+        public static bool ValidateUsernameNotDuplicated(string username)
         {
             using (var context = new codenamesEntities())
             {

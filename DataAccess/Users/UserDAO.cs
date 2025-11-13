@@ -61,34 +61,6 @@ namespace DataAccess.Users
             }
         }
 
-        public static void DeleteUser(Player playerToDelete)
-        {
-            try
-            {
-                using (var context = new codenamesEntities())
-                {
-                    Player player = (from p in context.Players
-                                     where p.username == playerToDelete.username
-                                     select p).FirstOrDefault();
-                    if (player != null)
-                    {
-                        Guid userID = player.userID;
-                        User user = (from u in context.Users
-                                     where u.userID == userID
-                                     select u).FirstOrDefault();
-                        context.Players.Remove(player);
-                        context.Users.Remove(user);
-                        context.SaveChanges();
-                    }
-                }
-            } 
-            catch(SqlException sqlex)
-            {
-                //TODO log
-                System.Console.WriteLine(sqlex.Message);
-            }
-        }
-
         /// <summary>
         /// Checks if the email is already in use.
         /// </summary>
