@@ -2,6 +2,7 @@
 using Services.DTO;
 using Services.DTO.Request;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.ServiceModel;
@@ -13,7 +14,7 @@ namespace Services.Contracts.ServiceContracts.Services
     public class SessionService : ISessionManager
     {
         private static readonly FriendService friendService = new FriendService();
-        private readonly Dictionary<Player, ISessionCallback> _playersOnline = new Dictionary<Player, ISessionCallback>();
+        private readonly ConcurrentDictionary<Player, ISessionCallback> _playersOnline = new ConcurrentDictionary<Player, ISessionCallback>();
         
         public CommunicationRequest Connect(Player player)
         {
@@ -41,7 +42,7 @@ namespace Services.Contracts.ServiceContracts.Services
                 }
                 else
                 {
-                    _playersOnline.Add(player, currentClientChannel);
+                    _playersOnline.TryAdd(player, currentClientChannel);
 
                     playersOnlineSnapshot = _playersOnline.ToDictionary(session => session.Key, session => session.Value);
                 }
@@ -117,9 +118,10 @@ namespace Services.Contracts.ServiceContracts.Services
 
             Dictionary<Player, ISessionCallback> playersOnlineSnapshot = new Dictionary<Player, ISessionCallback>();
 
+            ISessionCallback removedClientChannel;
             lock (_playersOnline)
             {
-                if (_playersOnline.Remove(player))
+                if (_playersOnline.TryRemove(player, out removedClientChannel))
                 {
                     playersOnlineSnapshot = _playersOnline.ToDictionary(session => session.Key, session => session.Value);
                 }
@@ -159,13 +161,14 @@ namespace Services.Contracts.ServiceContracts.Services
         private void RemoveFaultedChannels(Dictionary<Player, ISessionCallback> faultedChannels)
         {
             bool channelsFaulted = faultedChannels.Count > 0;
+            ISessionCallback faultedChannel;
             if (channelsFaulted)
             {
                 lock (_playersOnline)
                 {
                     foreach (KeyValuePair<Player, ISessionCallback> friendChannel in faultedChannels)
                     {
-                        _playersOnline.Remove(friendChannel.Key);
+                        _playersOnline.TryRemove(friendChannel.Key, out faultedChannel);
                     }
                 }
             }
