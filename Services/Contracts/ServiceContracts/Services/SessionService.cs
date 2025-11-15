@@ -53,7 +53,8 @@ namespace Services.Contracts.ServiceContracts.Services
             Dictionary<Player, ISessionCallback> friendCallbacks = GetFriendsOnline(friends, playersOnlineSnapshot);
             NotifyConnectToOnlineFriends(friendCallbacks, player);
             KeyValuePair<Player, ISessionCallback> playerCallback = new KeyValuePair<Player, ISessionCallback> (player, currentClientChannel);
-            SendOnlineFriends(friends, playerCallback);
+            List<Player> onlineFriends = friendCallbacks.Keys.ToList();
+            SendOnlineFriends(onlineFriends, playerCallback);
 
             request.IsSuccess = true;
             request.StatusCode = StatusCode.OK;
