@@ -9,7 +9,8 @@ using System.ServiceModel;
 
 namespace Services.Contracts.ServiceContracts.Services
 {
-    [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single,
+    [ServiceBehavior(
+        InstanceContextMode = InstanceContextMode.Single,
         ConcurrencyMode = ConcurrencyMode.Reentrant)]
     public class SessionService : ISessionManager
     {
@@ -34,26 +35,23 @@ namespace Services.Contracts.ServiceContracts.Services
 
             lock (_playersOnline)
             {
-                if (_playersOnline.ContainsKey(player))
+                if (!_playersOnline.TryAdd(player, currentClientChannel))
                 {
                     request.IsSuccess = false;
-                    request.StatusCode= StatusCode.UNAUTHORIZED;
+                    request.StatusCode = StatusCode.UNAUTHORIZED;
                     return request;
                 }
-                else
-                {
-                    _playersOnline.TryAdd(player, currentClientChannel);
 
-                    playersOnlineSnapshot = _playersOnline.ToDictionary(session => session.Key, session => session.Value);
-                }
+                playersOnlineSnapshot = _playersOnline.ToDictionary(session => session.Key, session => session.Value);
             }
 
             List<Player> friends = friendService.GetFriends(playerID);
 
-            Dictionary<Player, ISessionCallback> friendCallbacks = GetFriendsOnline(friends, playersOnlineSnapshot);
+            Dictionary<Player, ISessionCallback> friendCallbacks = GetFriendsOnlineChannels(friends, playersOnlineSnapshot);
             NotifyConnectToOnlineFriends(friendCallbacks, player);
             KeyValuePair<Player, ISessionCallback> playerCallback = new KeyValuePair<Player, ISessionCallback> (player, currentClientChannel);
-            SendOnlineFriends(friends, playerCallback);
+            List<Player> onlineFriends = friendCallbacks.Keys.ToList();
+            SendOnlineFriends(onlineFriends, playerCallback);
 
             request.IsSuccess = true;
             request.StatusCode = StatusCode.OK;
@@ -61,7 +59,7 @@ namespace Services.Contracts.ServiceContracts.Services
             return request;
         }
 
-        private static Dictionary<Player, ISessionCallback> GetFriendsOnline(List<Player> friends, Dictionary<Player, ISessionCallback> playersOnline)
+        private static Dictionary<Player, ISessionCallback> GetFriendsOnlineChannels(List<Player> friends, Dictionary<Player, ISessionCallback> playersOnline)
         {
             HashSet<Player> friendSet = new HashSet<Player>(friends);
 
@@ -131,7 +129,7 @@ namespace Services.Contracts.ServiceContracts.Services
                 }
             }
 
-            Dictionary<Player, ISessionCallback> friendCallbacks = GetFriendsOnline(friends, playersOnlineSnapshot);
+            Dictionary<Player, ISessionCallback> friendCallbacks = GetFriendsOnlineChannels(friends, playersOnlineSnapshot);
             NotifyDisconnectToOnlineFriends(friendCallbacks, playerID);
 
             System.Console.WriteLine("{0} has disconnected", player.Username);
@@ -158,19 +156,95 @@ namespace Services.Contracts.ServiceContracts.Services
             RemoveFaultedChannels(faultedChannels);
         }
 
+        public void NotifyNewFriendship(Player friendA, Player friendB)
+        {
+            bool isAOnline = _playersOnline.TryGetValue(friendA, out ISessionCallback channelA);
+            bool isBOnline = _playersOnline.TryGetValue(friendB, out ISessionCallback channelB);
+
+            if (isAOnline)
+            {
+                try
+                {
+                    channelA.NotifyFriendOnline(friendB);
+                }
+                catch (CommunicationException)
+                {
+                    RemoveFaultedChannel(friendA);
+                }
+            }
+
+            if (isBOnline)
+            {
+                try
+                {
+                    channelB.NotifyFriendOnline(friendA);
+                }
+                catch (CommunicationException)
+                {
+                    RemoveFaultedChannel(friendB);
+                }
+            }
+        }
+
+        public void NotifyFriendshipEnded(Player friendA, Player friendB)
+        {
+            bool isAOnline = _playersOnline.TryGetValue(friendA, out ISessionCallback channelA);
+            bool isBOnline = _playersOnline.TryGetValue(friendB, out ISessionCallback channelB);
+
+            if (isAOnline)
+            {
+                try
+                {
+                    channelA.NotifyFriendOffline(friendB.PlayerID.Value);
+                }
+                catch (CommunicationException)
+                {
+                    RemoveFaultedChannel(friendA);
+                }
+            }
+
+            if (isBOnline)
+            {
+                try
+                {
+                    channelB.NotifyFriendOffline(friendA.PlayerID.Value);
+                }
+                catch (CommunicationException)
+                {
+                    RemoveFaultedChannel(friendB);
+                }
+            }
+        }
+
+        private void RemoveFaultedChannel(Player player)
+        {
+            if (_playersOnline.TryGetValue(player, out ISessionCallback faultedChannel))
+            {
+                // 1. Crear el KeyValuePair que queremos eliminar
+                KeyValuePair<Player, ISessionCallback> entryToRemove = new KeyValuePair<Player, ISessionCallback>(player, faultedChannel);
+
+                // 2. Castear el diccionario y llamar a .Remove()
+                bool removed = ((ICollection<KeyValuePair<Player, ISessionCallback>>)_playersOnline)
+                    .Remove(entryToRemove);
+
+                // 3. Si tuvo éxito (la llave Y el valor coincidían), abortar el canal
+                if (removed && faultedChannel is ICommunicationObject communicationObject)
+                {
+                    communicationObject.Abort();
+                }
+            }
+        }
+
         private void RemoveFaultedChannels(Dictionary<Player, ISessionCallback> faultedChannels)
         {
-            bool channelsFaulted = faultedChannels.Count > 0;
-            ISessionCallback faultedChannel;
-            if (channelsFaulted)
+            var collection = (ICollection<KeyValuePair<Player, ISessionCallback>>)_playersOnline;
+
+            foreach (KeyValuePair<Player, ISessionCallback> failedEntry in faultedChannels)
             {
-                lock (_playersOnline)
-                {
-                    foreach (KeyValuePair<Player, ISessionCallback> friendChannel in faultedChannels)
-                    {
-                        _playersOnline.TryRemove(friendChannel.Key, out faultedChannel);
-                    }
-                }
+                // Esta operación es atómica y segura.
+                // Solo eliminará la entrada si la llave Y el valor (el canal fallido)
+                // todavía coinciden con lo que está en el diccionario.
+                collection.Remove(failedEntry);
             }
         }
     }

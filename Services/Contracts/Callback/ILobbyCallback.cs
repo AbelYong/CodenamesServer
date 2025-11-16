@@ -1,4 +1,4 @@
-﻿using Services.DTO.DataContract;
+﻿using Services.DTO;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,18 +9,15 @@ using System.Threading.Tasks;
 namespace Services.Contracts.Callback
 {
     [ServiceContract]
-    public interface IMatchmakingCallback
+    public interface ILobbyCallback
     {
         [OperationContract(IsOneWay = true)]
-        void NotifyRequestPending(Guid RequesterID, Guid CompanionID);
+        void NotifyMatchInvitationReceived(Player fromPlayer, string lobbyCode);
 
         [OperationContract(IsOneWay = true)]
-        void NotifyMatchReady(Match match);
+        void NotifyMatchInvitationAccepted(Player byPlayer);
 
         [OperationContract(IsOneWay = true)]
-        void NotifyPlayersReady(Guid matchID);
-
-        [OperationContract(IsOneWay = true)]
-        void NotifyMatchCanceled(Guid matchID);
+        void NotifyPartyAbandoned(Guid leavingPlayerID);
     }
 }

@@ -1,0 +1,318 @@
+﻿using DataAccess.Users;
+using Services.Contracts.Callback;
+using Services.Contracts.ServiceContracts.Managers;
+using Services.DTO;
+using Services.DTO.DataContract;
+using Services.DTO.Request;
+using Services.Operations;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+using System.ServiceModel;
+using System.Text;
+
+namespace Services.Contracts.ServiceContracts.Services
+{
+    [ServiceBehavior(
+        InstanceContextMode = InstanceContextMode.Single,
+        ConcurrencyMode = ConcurrencyMode.Multiple)]
+    public class LobbyService : ILobbyManager
+    {
+        private readonly PlayerDAO _playerDAO;
+        private readonly ConcurrentDictionary<Guid, ILobbyCallback> _connectedPlayers;
+        private readonly ConcurrentDictionary<string, Party> _lobbies;
+        private readonly ConcurrentDictionary<Guid, string> _playerLobbyMap;
+        private static readonly Random _random = new Random();
+
+        public LobbyService()
+        {
+            _playerDAO = new PlayerDAO();
+            _connectedPlayers = new ConcurrentDictionary<Guid, ILobbyCallback>();
+            _lobbies = new ConcurrentDictionary<string, Party>();
+            _playerLobbyMap = new ConcurrentDictionary<Guid, string>();
+        }
+
+        public CommunicationRequest Connect(Guid playerID)
+        {
+            CommunicationRequest request = new CommunicationRequest();
+            ILobbyCallback _currentClientChannel = OperationContext.Current.GetCallbackChannel<ILobbyCallback>();
+            bool hasConnected = _connectedPlayers.TryAdd(playerID, _currentClientChannel);
+            if (hasConnected)
+            {
+                request.IsSuccess = true;
+                request.StatusCode = StatusCode.OK;
+            }
+            else
+            {
+                request.IsSuccess = false;
+                request.StatusCode = StatusCode.UNAUTHORIZED;
+            }
+            return request;
+        }
+
+        public void Disconnect(Guid playerID)
+        {
+            bool hasDisconnected = _connectedPlayers.TryRemove(playerID, out _);
+            if (hasDisconnected)
+            {
+                if (_playerLobbyMap.TryRemove(playerID, out string lobbyCode) &&
+                    _lobbies.TryGetValue(lobbyCode, out Party party))
+                {
+                    AbandonParty(party, playerID);
+                }
+            }
+        }
+
+        private void AbandonParty(Party party, Guid leavingPlayerID)
+        {
+            //Remove whoever abandoned
+            _playerLobbyMap.TryRemove(leavingPlayerID, out _);
+
+            //If the player who abandoned is the party's host, also remove their lobby and notify the guest
+            if (party.PartyHost.PlayerID == leavingPlayerID)
+            {
+                _lobbies.TryRemove(party.LobbyCode, out _);
+
+                if (party.PartyGuest != null)
+                {
+                    _playerLobbyMap.TryRemove((Guid)party.PartyGuest.PlayerID, out _);
+                    NotifyPlayerLeft(leavingPlayerID, (Guid)party.PartyGuest.PlayerID);
+                }
+            }
+            else if (party.PartyGuest != null && party.PartyGuest.PlayerID == leavingPlayerID)
+            {
+                Guid partyHostID = (Guid)party.PartyHost.PlayerID;
+                party.PartyGuest = null; //Free the guest slot
+                NotifyPlayerLeft(leavingPlayerID, partyHostID);
+            }
+        }
+
+        private void NotifyPlayerLeft(Guid leavingPlayerID, Guid toNotifyID)
+        {
+            try
+            {
+                if (_connectedPlayers.TryGetValue(toNotifyID, out ILobbyCallback channelToNotify))
+                {
+                    channelToNotify.NotifyPartyAbandoned(leavingPlayerID);
+                }
+            }
+            catch (CommunicationException)
+            {
+                RemoveFaultedChannel(toNotifyID);
+            }
+        }
+
+        public CreateLobbyRequest CreateParty(Guid playerID)
+        {
+            CreateLobbyRequest request = new CreateLobbyRequest();
+            bool isPlayerInParty = VerifyIsPlayerInParty(playerID);
+            if (!isPlayerInParty)
+            {
+                Player host = Player.AssembleSvPlayer(_playerDAO.GetPlayerById(playerID));
+                string code = GetRandomLobbyCode();
+                Party party = new Party(host, code);
+                if (_lobbies.TryAdd(code, party))
+                {
+                    _playerLobbyMap.TryAdd(playerID, code);
+                    request.LobbyCode = code;
+                    request.IsSuccess = true;
+                    request.StatusCode = StatusCode.CREATED;
+                }
+                else
+                {
+                    request.IsSuccess = false;
+                    request.StatusCode = StatusCode.SERVER_ERROR;
+                }
+            }
+            else
+            {
+                request.IsSuccess = false;
+                request.StatusCode = StatusCode.UNALLOWED;
+            }
+            return request;
+        }
+
+        private bool VerifyIsPlayerInParty(Guid playerID)
+        {
+            return _playerLobbyMap.ContainsKey(playerID);
+        }
+
+        public CommunicationRequest InviteToParty(Guid hostPlayerID, Guid friendToInviteID, string lobbyCode)
+        {
+            CommunicationRequest request = VerifyPlayerCanInvite(hostPlayerID, lobbyCode);
+            if (!request.IsSuccess)
+            {
+                return request;
+            }
+
+            Player partyHost = Player.AssembleSvPlayer(_playerDAO.GetPlayerById(hostPlayerID));
+            string friendEmailAddress = _playerDAO.GetEmailByPlayerID(friendToInviteID);
+            if (partyHost != null)
+            {
+                bool isFriendOnline = _connectedPlayers.TryGetValue(friendToInviteID, out ILobbyCallback friendChannel);
+                if (isFriendOnline)
+                {
+                    try
+                    {
+                        friendChannel.NotifyMatchInvitationReceived(partyHost, lobbyCode);
+                    }
+                    catch (CommunicationException)
+                    {
+                        //This one is true, because even if CommunicationEx was thrown invitation was sent through email
+                        request.IsSuccess = true;
+                        request.StatusCode = StatusCode.CLIENT_UNREACHABLE;
+                    }
+                }
+                EmailOperation.SendGameInvitationEmail(partyHost.Username, friendEmailAddress, lobbyCode);
+                request.IsSuccess = true;
+                request.StatusCode = StatusCode.OK;
+            }
+            else
+            {
+                request.IsSuccess = false;
+                request.StatusCode = StatusCode.NOT_FOUND;
+            }
+            return request;
+        }
+
+        private CommunicationRequest VerifyPlayerCanInvite(Guid partyHostID, string lobbyCode)
+        {
+            CommunicationRequest request = new CommunicationRequest();
+            bool partyFound = _lobbies.TryGetValue(lobbyCode, out Party party);
+
+            if (!partyFound)
+            {
+                request.IsSuccess = false;
+                request.StatusCode = StatusCode.NOT_FOUND;
+                return request;
+            }
+
+            if (party.PartyHost.PlayerID != partyHostID)
+            {
+                request.IsSuccess = false;
+                request.StatusCode = StatusCode.UNAUTHORIZED;
+                return request;
+            }
+
+            if (party.PartyGuest != null)
+            {
+                request.IsSuccess = false;
+                request.StatusCode = StatusCode.UNALLOWED;
+                return request;
+            }
+
+            request.IsSuccess = true;
+            request.StatusCode = StatusCode.OK;
+            return request;
+        }
+
+        public JoinPartyRequest JoinParty(Guid joiningPlayerID, string lobbyCode)
+        {
+            JoinPartyRequest request = new JoinPartyRequest();
+            bool isGuestOnline = _connectedPlayers.TryGetValue(joiningPlayerID, out _);
+            
+            if (!isGuestOnline)
+            {
+                request.IsSuccess = false;
+                request.StatusCode = StatusCode.CLIENT_DISCONNECT;
+                return request;
+            }
+
+            Player joiningPlayer = Player.AssembleSvPlayer(_playerDAO.GetPlayerById(joiningPlayerID));
+            if (joiningPlayer == null)
+            {
+                request.IsSuccess = false;
+                request.StatusCode = StatusCode.MISSING_DATA;
+                return request;
+            }
+
+            if (!_lobbies.TryGetValue(lobbyCode, out Party party))
+            {
+                request.IsSuccess = false;
+                request.StatusCode = StatusCode.NOT_FOUND;
+                return request;
+            }
+
+            lock (party)
+            {
+                if (party.PartyGuest != null)
+                {
+                    request.IsSuccess = false;
+                    request.StatusCode = StatusCode.CONFLICT; // Party is full
+                    return request;
+                }
+
+                // Slot is free. Take it.
+                party.PartyGuest = joiningPlayer;
+                _playerLobbyMap.TryAdd(joiningPlayerID, lobbyCode);
+            }
+
+            Guid partyHostID = (Guid)party.PartyHost.PlayerID;
+            bool wasHostReached = NotifyJoinedToParty(partyHostID, joiningPlayer);
+            if (!wasHostReached)
+            {
+                // Party host is disconnected. Rollback the join.
+                party.PartyGuest = null;
+                _playerLobbyMap.TryRemove(joiningPlayerID, out _);
+
+                request.IsSuccess = false;
+                request.StatusCode = StatusCode.CLIENT_UNREACHABLE;
+                return request;
+            }
+
+            request.IsSuccess = true;
+            request.StatusCode = StatusCode.OK;
+            request.Party = party;
+            return request;
+        }
+
+        private bool NotifyJoinedToParty(Guid partyHostID, Player joiningFriend)
+        {
+            try
+            {
+                if (_connectedPlayers.TryGetValue(partyHostID, out ILobbyCallback hostChannel))
+                {
+                    hostChannel.NotifyMatchInvitationAccepted(joiningFriend);
+                    return true;
+                }
+            }
+            catch (CommunicationException)
+            {
+                RemoveFaultedChannel(partyHostID);
+            }
+            return false;
+        }
+
+        private void RemoveFaultedChannel(Guid playerID)
+        {
+            _connectedPlayers.TryRemove(playerID, out ILobbyCallback faultedChannel);
+            if (faultedChannel is ICommunicationObject communicationObject)
+            {
+                communicationObject?.Abort();
+            }
+        }
+
+        public void LeaveParty(Guid playerID, string lobbyCode)
+        {
+            bool partyFound = _lobbies.TryGetValue(lobbyCode, out Party party);
+            if (partyFound)
+            {
+                AbandonParty(party, playerID);
+            }
+        }
+
+        private static string GetRandomLobbyCode()
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            const int codeLength = 6;
+            StringBuilder code = new StringBuilder();
+            for (int i = 0; i < codeLength; i++)
+            {
+                int index = _random.Next(chars.Length);
+                code.Append(chars[index]);
+            }
+            return code.ToString();
+        }
+    }
+}

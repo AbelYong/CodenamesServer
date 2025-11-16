@@ -51,6 +51,22 @@ namespace DataAccess.Users
             }
         }
 
+        public string GetEmailByPlayerID(Guid playerId)
+        {
+            if (playerId == Guid.Empty)
+            {
+                return null;
+            }
+
+            using (var db = new codenamesEntities())
+            {
+                Player player = db.Players.Include(p => p.User)
+                    .AsNoTracking()
+                    .FirstOrDefault(p => p.playerID == playerId);
+                return player != null ? player.User.email : string.Empty;
+            }
+        }
+
         public OperationResult UpdateProfile(Player updatedPlayer)
         {
             OperationResult result = new OperationResult();

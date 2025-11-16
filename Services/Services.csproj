@@ -61,7 +61,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Contracts\Callback\IMatchmakingCallback.cs" />
+    <Compile Include="Contracts\Callback\ILobbyCallback.cs" />
     <Compile Include="Contracts\ServiceContracts\Managers\IMatchmakingManager.cs" />
+    <Compile Include="Contracts\ServiceContracts\Managers\ILobbyManager.cs" />
+    <Compile Include="Contracts\ServiceContracts\Services\LobbyService.cs" />
     <Compile Include="Contracts\ServiceContracts\Services\MatchmakingService.cs" />
     <Compile Include="Contracts\ServiceContracts\Managers\ISessionManager.cs" />
     <Compile Include="Contracts\ServiceContracts\Services\SessionService.cs" />
@@ -71,9 +74,11 @@
     <Compile Include="DTO\DataContract\MatchConfiguration.cs" />
     <Compile Include="DTO\DataContract\MatchRules.cs" />
     <Compile Include="Contracts\Callback\IFriendCallback.cs" />
+    <Compile Include="DTO\DataContract\Party.cs" />
     <Compile Include="DTO\DataContract\Player.cs" />
+    <Compile Include="DTO\Request\CreateLobbyRequest.cs" />
+    <Compile Include="DTO\Request\JoinPartyRequest.cs" />
     <Compile Include="DTO\Request\LoginRequest.cs" />
-    <Compile Include="DTO\Request\MatchRequest.cs" />
     <Compile Include="DTO\Request\Request.cs" />
     <Compile Include="DTO\RequestResult.cs" />
     <Compile Include="DTO\DataContract\User.cs" />

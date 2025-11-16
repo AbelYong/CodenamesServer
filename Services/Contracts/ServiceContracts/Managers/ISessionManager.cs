@@ -12,5 +12,11 @@ namespace Services.Contracts.ServiceContracts.Managers
 
         [OperationContract(IsOneWay = true)]
         void Disconnect(Player player);
+
+        [OperationContract(IsOneWay = true)]
+        void NotifyNewFriendship(Player friendA, Player friendB);
+
+        [OperationContract(IsOneWay = true)]
+        void NotifyFriendshipEnded(Player friendA, Player friendB);
     }
 }

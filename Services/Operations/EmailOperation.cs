@@ -1,4 +1,6 @@
-﻿using DataAccess.Properties.Langs;
+﻿using DataAccess;
+using DataAccess.Properties.Langs;
+using Services.DTO;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -25,31 +27,47 @@ namespace Services.Operations
 
         public static void SendVerificationEmail(string address, string code)
         {
-            var fromAddr = ConfigurationManager.AppSettings["SmtpFromAddress"] ?? "no-reply@example.com";
-            var fromName = ConfigurationManager.AppSettings["SmtpFromName"] ?? "Codenames";
+            string subject = Lang.verifyEmailSubjectVerify;
+            string body = string.Format(Lang.verifyEmailBodyVerify, code);
+            SendEmail(address, subject, body);
+        }
 
-            var host = ConfigurationManager.AppSettings["SmtpHost"] ?? "smtp.gmail.com";
-            int port = int.TryParse(ConfigurationManager.AppSettings["SmtpPort"], out var p) ? p : 587;
-            bool ssl = !bool.TryParse(ConfigurationManager.AppSettings["SmtpEnableSsl"], out var s) || s;
-            var user = ConfigurationManager.AppSettings["SmtpUser"];
-            var pass = ConfigurationManager.AppSettings["SmtpPass"];
+        public static void SendGameInvitationEmail(string fromUsername, string toAddress, string lobbyCode)
+        {
+            string subject = "Invitation to play Codenames";
+            string body = string.Format("{0} has invited you to play a match, use the code {1} to join them", fromUsername, lobbyCode);
+            SendEmail(toAddress, subject, body);
+        }
 
+        private static void SendEmail(string address, string subject, string body)
+        {
             using (var msg = new MailMessage())
             {
-                msg.From = new MailAddress(fromAddr, fromName);
+                msg.From = new MailAddress(EmailConfig.fromAddr, EmailConfig.fromName);
                 msg.To.Add(address);
-                msg.Subject = Lang.verifyEmailSubjectVerify;
-                msg.Body = string.Format(Lang.verifyEmailBodyVerify, code);
+                msg.Subject = subject;
+                msg.Body = body;
                 msg.IsBodyHtml = false;
 
-                using (var smtp = new SmtpClient(host, port))
+                using (var smtp = new SmtpClient(EmailConfig.host, EmailConfig.port))
                 {
-                    smtp.EnableSsl = ssl;
+                    smtp.EnableSsl = true;
                     smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
-                    smtp.Credentials = new NetworkCredential(user, pass);
+                    smtp.Credentials = new NetworkCredential(EmailConfig.user, EmailConfig.pass);
                     smtp.Send(msg);
                 }
             }
+        }
+
+        private static class EmailConfig
+        {
+            public static readonly string fromAddr = ConfigurationManager.AppSettings["SmtpFromAddress"] ?? "no-reply@example.com";
+            public static readonly string fromName = ConfigurationManager.AppSettings["SmtpFromName"] ?? "Codenames";
+
+            public static readonly string host = ConfigurationManager.AppSettings["SmtpHost"] ?? "smtp.gmail.com";
+            public static readonly int port = int.TryParse(ConfigurationManager.AppSettings["SmtpPort"], out var p) ? p : 587;
+            public static readonly string user = ConfigurationManager.AppSettings["SmtpUser"];
+            public static readonly string pass = ConfigurationManager.AppSettings["SmtpPass"];
         }
     }
 }

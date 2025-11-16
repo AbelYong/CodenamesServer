@@ -16,6 +16,9 @@ namespace Services.Operations
         public static Match GenerateMatch(MatchConfiguration configuration)
         {
             Match match = new Match();
+            match.MatchID = Guid.NewGuid();
+            match.Requester = configuration.Requester;
+            match.Companion = configuration.Companion;
             SetMatchRules(match, configuration);
             GenerateBoards(match);
             match.SelectedWords = SelectWordList();
