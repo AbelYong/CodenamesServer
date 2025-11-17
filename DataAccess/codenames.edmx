@@ -77,6 +77,16 @@
           <Property Name="createdAt" Type="datetimeoffset" Precision="2" Nullable="false" />
           <Property Name="expiresAt" Type="datetimeoffset" Precision="2" Nullable="false" />
         </EntityType>
+        <EntityType Name="Report">
+          <Key>
+            <PropertyRef Name="reportID" />
+          </Key>
+          <Property Name="reportID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="reporterUserID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="reportedUserID" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="reason" Type="varchar" MaxLength="255" Nullable="false" />
+          <Property Name="reportDatetime" Type="datetimeoffset" Precision="2" Nullable="false" />
+        </EntityType>
         <EntityType Name="Scoreboard">
           <Key>
             <PropertyRef Name="playerID" />
@@ -167,6 +177,30 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Association Name="FK_Report_ReportedUser">
+          <End Role="User" Type="Self.User" Multiplicity="1" />
+          <End Role="Report" Type="Self.Report" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="userID" />
+            </Principal>
+            <Dependent Role="Report">
+              <PropertyRef Name="reportedUserID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Report_ReporterUser">
+          <End Role="User" Type="Self.User" Multiplicity="1" />
+          <End Role="Report" Type="Self.Report" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="userID" />
+            </Principal>
+            <Dependent Role="Report">
+              <PropertyRef Name="reporterUserID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         <Association Name="FK_Scoreboard_Player">
           <End Role="Player" Type="Self.Player" Multiplicity="1" />
           <End Role="Scoreboard" Type="Self.Scoreboard" Multiplicity="0..1" />
@@ -199,6 +233,7 @@
           <EntitySet Name="PasswordReset" EntityType="Self.PasswordReset" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Player" EntityType="Self.Player" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="RegistrationRequests" EntityType="Self.RegistrationRequests" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Report" EntityType="Self.Report" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Scoreboard" EntityType="Self.Scoreboard" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="User" EntityType="Self.User" Schema="dbo" store:Type="Tables" />
           <AssociationSet Name="FK_Address_Player" Association="Self.FK_Address_Player">
@@ -224,6 +259,14 @@
           <AssociationSet Name="FK_Player_User" Association="Self.FK_Player_User">
             <End Role="User" EntitySet="User" />
             <End Role="Player" EntitySet="Player" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Report_ReportedUser" Association="Self.FK_Report_ReportedUser">
+            <End Role="User" EntitySet="User" />
+            <End Role="Report" EntitySet="Report" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Report_ReporterUser" Association="Self.FK_Report_ReporterUser">
+            <End Role="User" EntitySet="User" />
+            <End Role="Report" EntitySet="Report" />
           </AssociationSet>
           <AssociationSet Name="FK_Scoreboard_Player" Association="Self.FK_Scoreboard_Player">
             <End Role="Player" EntitySet="Player" />
@@ -307,6 +350,8 @@
           <NavigationProperty Name="Bans" Relationship="Self.FK_Ban_User" FromRole="User" ToRole="Ban" />
           <NavigationProperty Name="Players" Relationship="Self.FK_Player_User" FromRole="User" ToRole="Player" />
           <NavigationProperty Name="PasswordResets" Relationship="codenamesModel.FK_PasswordReset_User" FromRole="User" ToRole="PasswordReset" />
+          <NavigationProperty Name="Reports" Relationship="codenamesModel.FK_Report_ReportedUser" FromRole="User" ToRole="Report" />
+          <NavigationProperty Name="Reports1" Relationship="codenamesModel.FK_Report_ReporterUser" FromRole="User" ToRole="Report" />
         </EntityType>
         <Association Name="FK_Address_Player">
           <End Role="Player" Type="Self.Player" Multiplicity="1" />
@@ -430,6 +475,15 @@
             <End Role="PasswordReset" EntitySet="PasswordResets" />
           </AssociationSet>
           <EntitySet Name="RegistrationRequests" EntityType="codenamesModel.RegistrationRequest" />
+          <EntitySet Name="Reports" EntityType="codenamesModel.Report" />
+          <AssociationSet Name="FK_Report_ReportedUser" Association="codenamesModel.FK_Report_ReportedUser">
+            <End Role="User" EntitySet="Users" />
+            <End Role="Report" EntitySet="Reports" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Report_ReporterUser" Association="codenamesModel.FK_Report_ReporterUser">
+            <End Role="User" EntitySet="Users" />
+            <End Role="Report" EntitySet="Reports" />
+          </AssociationSet>
         </EntityContainer>
         <EntityType Name="PasswordReset">
           <Key>
@@ -473,6 +527,42 @@
           <Property Name="createdAt" Type="DateTimeOffset" Nullable="false" Precision="2" />
           <Property Name="expiresAt" Type="DateTimeOffset" Nullable="false" Precision="2" />
         </EntityType>
+        <EntityType Name="Report">
+          <Key>
+            <PropertyRef Name="reportID" />
+          </Key>
+          <Property Name="reportID" Type="Guid" Nullable="false" />
+          <Property Name="reporterUserID" Type="Guid" Nullable="false" />
+          <Property Name="reportedUserID" Type="Guid" Nullable="false" />
+          <Property Name="reason" Type="String" Nullable="false" MaxLength="255" FixedLength="false" Unicode="false" />
+          <Property Name="reportDatetime" Type="DateTimeOffset" Nullable="false" Precision="2" />
+          <NavigationProperty Name="User" Relationship="codenamesModel.FK_Report_ReportedUser" FromRole="Report" ToRole="User" />
+          <NavigationProperty Name="User1" Relationship="codenamesModel.FK_Report_ReporterUser" FromRole="Report" ToRole="User" />
+        </EntityType>
+        <Association Name="FK_Report_ReportedUser">
+          <End Type="codenamesModel.User" Role="User" Multiplicity="1" />
+          <End Type="codenamesModel.Report" Role="Report" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="userID" />
+            </Principal>
+            <Dependent Role="Report">
+              <PropertyRef Name="reportedUserID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Report_ReporterUser">
+          <End Type="codenamesModel.User" Role="User" Multiplicity="1" />
+          <End Type="codenamesModel.Report" Role="Report" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="userID" />
+            </Principal>
+            <Dependent Role="Report">
+              <PropertyRef Name="reporterUserID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
       </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
@@ -578,6 +668,17 @@
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
+          <EntitySetMapping Name="Reports">
+            <EntityTypeMapping TypeName="codenamesModel.Report">
+              <MappingFragment StoreEntitySet="Report">
+                <ScalarProperty Name="reportDatetime" ColumnName="reportDatetime" />
+                <ScalarProperty Name="reason" ColumnName="reason" />
+                <ScalarProperty Name="reportedUserID" ColumnName="reportedUserID" />
+                <ScalarProperty Name="reporterUserID" ColumnName="reporterUserID" />
+                <ScalarProperty Name="reportID" ColumnName="reportID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
           </EntityContainerMapping>
       </Mapping>
     </edmx:Mappings>
@@ -592,8 +693,8 @@
     <Options>
       <DesignerInfoPropertySet>
         <DesignerProperty Name="ValidateOnBuild" Value="true" />
-        <DesignerProperty Name="EnablePluralization" Value="true" />
-        <DesignerProperty Name="IncludeForeignKeysInModel" Value="true" />
+        <DesignerProperty Name="EnablePluralization" Value="False" />
+        <DesignerProperty Name="IncludeForeignKeysInModel" Value="False" />
         <DesignerProperty Name="UseLegacyProvider" Value="false" />
         <DesignerProperty Name="CodeGenerationStrategy" Value="Ninguno" />
       </DesignerInfoPropertySet>

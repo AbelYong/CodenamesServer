@@ -22,14 +22,31 @@ namespace Services.Contracts.ServiceContracts.Services
     public class AuthenticationService : IAuthenticationManager
     {
         private static IUserDAO _userDAO = new UserDAO();
+        private static IBanDAO _banDAO = new BanDAO();
+
+        public AuthenticationService()
+        {
+            _userDAO = new UserDAO();
+            _banDAO = new BanDAO();
+        }
         public LoginRequest Login(string username, string password)
         {
             LoginRequest request = new LoginRequest();
             try
             {
                 Guid? userID = _userDAO.Authenticate(username, password);
+
                 if (userID != null)
                 {
+                    var activeBan = _banDAO.GetActiveBan(userID.Value);
+
+                    if (activeBan != null)
+                    {
+                        request.IsSuccess = false;
+                        request.StatusCode = StatusCode.ACCOUNT_BANNED;
+                        return request;
+                    }
+
                     request.IsSuccess = true;
                     request.StatusCode = StatusCode.OK;
                     request.UserID = userID;

@@ -88,9 +88,15 @@
     <Compile Include="RegistrationRequest.cs">
       <DependentUpon>codenames.tt</DependentUpon>
     </Compile>
+    <Compile Include="Report.cs">
+      <DependentUpon>codenames.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Users\BanDAO.cs" />
     <Compile Include="Users\FriendDAO.cs" />
+    <Compile Include="Users\IBanDAO.cs" />
     <Compile Include="Users\IFriendDAO.cs" />
     <Compile Include="Users\IPlayerDAO.cs" />
+    <Compile Include="Users\IReportDAO.cs" />
     <Compile Include="Users\IUserDAO.cs" />
     <Compile Include="Player.cs">
       <DependentUpon>codenames.tt</DependentUpon>
@@ -102,6 +108,7 @@
     <Compile Include="User.cs">
       <DependentUpon>codenames.tt</DependentUpon>
     </Compile>
+    <Compile Include="Users\ReportDAO.cs" />
     <Compile Include="Util\OperationResult.cs" />
     <Compile Include="Users\PlayerDAO.cs" />
     <Compile Include="Users\UserDAO.cs" />
