@@ -8,11 +8,15 @@
         CREATED,
         //Means a request succesfully updated an object
         UPDATED,
-        CONFLICT, 
+        CONFLICT,
+        //Means a request failed because one client requested to cancel the operation
+        CLIENT_CANCEL,
         //Means a request failed because the requester client could not be reached
         CLIENT_DISCONNECT,
         //Means a request failed because a client, who is not the requester, could  not be reached
         CLIENT_UNREACHABLE,
+        //Means a request failed because one client didn't answer in time
+        CLIENT_TIMEOUT,
         //General code that means a request cannot be fulfilled because critical data was not provided
         MISSING_DATA,
         //General code that means a request cannot be fulfilled because the provided data is flawed

@@ -78,7 +78,7 @@ namespace Services.Contracts.ServiceContracts.Services
 
         private void CancelMatch(Guid matchID, Guid playerToNotifyID)
         {
-            NotifyMatchCanceled(playerToNotifyID, matchID);
+            NotifyMatchCanceled(playerToNotifyID, matchID, StatusCode.CLIENT_CANCEL);
 
             _matchesAwaitingConfirmation.TryRemove(matchID, out MatchConfirmation confirmation);
             confirmation?.TimeoutTimer?.Dispose();
@@ -213,11 +213,11 @@ namespace Services.Contracts.ServiceContracts.Services
 
                 if (sendToRequesterSuccess)
                 {
-                    NotifyMatchCanceled(requesterID, match.MatchID);
+                    NotifyMatchCanceled(requesterID, match.MatchID, StatusCode.CLIENT_UNREACHABLE);
                 }
                 if (sendToCompanionSuccess)
                 {
-                    NotifyMatchCanceled(companionID, match.MatchID);
+                    NotifyMatchCanceled(companionID, match.MatchID, StatusCode.CLIENT_UNREACHABLE);
                 }
                 request.IsSuccess = false;
                 request.StatusCode = StatusCode.CLIENT_UNREACHABLE;
@@ -269,8 +269,8 @@ namespace Services.Contracts.ServiceContracts.Services
                 Guid requesterId = (Guid)matchToCancel.Requester.PlayerID;
                 Guid companionId = (Guid)matchToCancel.Companion.PlayerID;
 
-                NotifyMatchCanceled(requesterId, matchID);
-                NotifyMatchCanceled(companionId, matchID);
+                NotifyMatchCanceled(requesterId, matchID, StatusCode.CLIENT_TIMEOUT);
+                NotifyMatchCanceled(companionId, matchID, StatusCode.CLIENT_TIMEOUT);
             }
         }
 
@@ -283,13 +283,13 @@ namespace Services.Contracts.ServiceContracts.Services
             }
         }
 
-        private void NotifyMatchCanceled(Guid playerToNotifyID, Guid matchID)
+        private void NotifyMatchCanceled(Guid playerToNotifyID, Guid matchID, StatusCode reason)
         {
             if (_connectedPlayers.TryGetValue(playerToNotifyID, out IMatchmakingCallback channel))
             {
                 try
                 {
-                    channel?.NotifyMatchCanceled(matchID);
+                    channel?.NotifyMatchCanceled(matchID, reason);
                 }
                 catch (CommunicationException)
                 {
@@ -339,6 +339,7 @@ namespace Services.Contracts.ServiceContracts.Services
             if (shouldNotify)
             {
                 NotifyPlayersReady(matchID);
+                _pendingMatches.TryRemove(matchID, out _);
             }
         }
 

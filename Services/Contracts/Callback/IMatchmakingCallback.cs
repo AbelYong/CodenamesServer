@@ -1,4 +1,5 @@
-﻿using Services.DTO.DataContract;
+﻿using Services.DTO;
+using Services.DTO.DataContract;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +13,7 @@ namespace Services.Contracts.Callback
     public interface IMatchmakingCallback
     {
         [OperationContract(IsOneWay = true)]
-        void NotifyRequestPending(Guid RequesterID, Guid CompanionID);
+        void NotifyRequestPending(Guid requesterID, Guid companionID);
 
         [OperationContract(IsOneWay = true)]
         void NotifyMatchReady(Match match);
@@ -21,6 +22,6 @@ namespace Services.Contracts.Callback
         void NotifyPlayersReady(Guid matchID);
 
         [OperationContract(IsOneWay = true)]
-        void NotifyMatchCanceled(Guid matchID);
+        void NotifyMatchCanceled(Guid matchID, StatusCode reason);
     }
 }
