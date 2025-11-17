@@ -20,6 +20,8 @@ namespace DataAccess
             this.Bans = new HashSet<Ban>();
             this.Players = new HashSet<Player>();
             this.PasswordResets = new HashSet<PasswordReset>();
+            this.Reports = new HashSet<Report>();
+            this.Reports1 = new HashSet<Report>();
         }
     
         public System.Guid userID { get; set; }
@@ -33,5 +35,9 @@ namespace DataAccess
         public virtual ICollection<Player> Players { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<PasswordReset> PasswordResets { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<Report> Reports { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<Report> Reports1 { get; set; }
     }
 }

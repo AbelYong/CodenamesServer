@@ -24,6 +24,14 @@
         UNALLOWED,
         SERVER_ERROR,
         SERVER_UNAVAIBLE,
-        SERVER_TIMEOUT
+        SERVER_TIMEOUT,
+        //Means that someone tried to log in and is banned.
+        ACCOUNT_BANNED,
+        //Means a report was successful
+        REPORT_CREATED,
+        //Means that the user to be reported has already been reported before (non-repudiation)
+        REPORT_DUPLICATED,
+        //Means the user was reported and the accumulation resulted in an immediate ban (Kick + Ban)
+        USER_KICKED_AND_BANNED
     }
 }

@@ -14,9 +14,16 @@ namespace Services.Contracts.ServiceContracts.Services
         ConcurrencyMode = ConcurrencyMode.Reentrant)]
     public class SessionService : ISessionManager
     {
+        public static SessionService Instance { get; private set; }
+
         private static readonly FriendService friendService = new FriendService();
         private readonly ConcurrentDictionary<Player, ISessionCallback> _playersOnline = new ConcurrentDictionary<Player, ISessionCallback>();
         
+        public SessionService()
+        {
+            Instance = this;
+        }
+
         public CommunicationRequest Connect(Player player)
         {
             CommunicationRequest request = new CommunicationRequest();
@@ -220,14 +227,11 @@ namespace Services.Contracts.ServiceContracts.Services
         {
             if (_playersOnline.TryGetValue(player, out ISessionCallback faultedChannel))
             {
-                // 1. Crear el KeyValuePair que queremos eliminar
                 KeyValuePair<Player, ISessionCallback> entryToRemove = new KeyValuePair<Player, ISessionCallback>(player, faultedChannel);
 
-                // 2. Castear el diccionario y llamar a .Remove()
                 bool removed = ((ICollection<KeyValuePair<Player, ISessionCallback>>)_playersOnline)
                     .Remove(entryToRemove);
 
-                // 3. Si tuvo éxito (la llave Y el valor coincidían), abortar el canal
                 if (removed && faultedChannel is ICommunicationObject communicationObject)
                 {
                     communicationObject.Abort();
@@ -241,11 +245,42 @@ namespace Services.Contracts.ServiceContracts.Services
 
             foreach (KeyValuePair<Player, ISessionCallback> failedEntry in faultedChannels)
             {
-                // Esta operación es atómica y segura.
-                // Solo eliminará la entrada si la llave Y el valor (el canal fallido)
-                // todavía coinciden con lo que está en el diccionario.
                 collection.Remove(failedEntry);
             }
+        }
+
+        /// <summary>
+        /// Allows other services (like ModerationService) to kick a connected user.
+        /// </summary>
+        public void KickUser(Guid userID, BanReason reason)
+        {
+            var entry = _playersOnline.FirstOrDefault(p => p.Key.PlayerID == userID);
+
+            if (entry.Key != null)
+            {
+                ISessionCallback callback = entry.Value;
+                try
+                {
+                    callback.NotifyKicked(reason);
+                }
+                catch (CommunicationException) { }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error sending kick notification: {ex.Message}");
+                }
+
+                Disconnect(entry.Key);
+            }
+        }
+
+        /// <summary>
+        /// Helper to identify a user ID based on their callback channel.
+        /// Used by ModerationService to verify the reporter.
+        /// </summary>
+        public Guid GetPlayerIdByCallback(ISessionCallback callback)
+        {
+            var entry = _playersOnline.FirstOrDefault(x => x.Value == callback);
+            return entry.Key != null && entry.Key.PlayerID.HasValue ? entry.Key.PlayerID.Value : Guid.Empty;
         }
     }
 }
