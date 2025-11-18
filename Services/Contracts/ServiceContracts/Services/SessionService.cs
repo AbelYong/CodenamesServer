@@ -274,13 +274,11 @@ namespace Services.Contracts.ServiceContracts.Services
         }
 
         /// <summary>
-        /// Helper to identify a user ID based on their callback channel.
-        /// Used by ModerationService to verify the reporter.
+        /// Checks if a player is currently logged in by their ID.
         /// </summary>
-        public Guid GetPlayerIdByCallback(ISessionCallback callback)
+        public bool IsPlayerOnline(Guid playerId)
         {
-            var entry = _playersOnline.FirstOrDefault(x => x.Value == callback);
-            return entry.Key != null && entry.Key.PlayerID.HasValue ? entry.Key.PlayerID.Value : Guid.Empty;
+            return _playersOnline.Keys.Any(p => p.PlayerID == playerId);
         }
     }
 }

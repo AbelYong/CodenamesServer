@@ -2,10 +2,10 @@
 using DataAccess.Users;
 using Services.Contracts;
 using Services.Contracts.ServiceContracts.Managers;
-using Services.Contracts.ServiceContracts.Services;
 using Services.DTO;
 using Services.DTO.Request;
 using System;
+using System.Data.Entity.Infrastructure;
 using System.ServiceModel;
 
 namespace Services.Contracts.ServiceContracts.Services
@@ -15,21 +15,20 @@ namespace Services.Contracts.ServiceContracts.Services
     {
         private readonly IReportDAO _reportDAO;
         private readonly IBanDAO _banDAO;
+        private readonly IPlayerDAO _playerDAO;
 
         public ModerationService()
         {
             _reportDAO = new ReportDAO();
             _banDAO = new BanDAO();
+            _playerDAO = new PlayerDAO();
         }
 
-        public CommunicationRequest ReportPlayer(Guid reportedUserID, string reason)
+        public CommunicationRequest ReportPlayer(Guid reporterPlayerID, Guid reportedPlayerID, string reason)
         {
             CommunicationRequest result = new CommunicationRequest();
 
-            var callbackChannel = OperationContext.Current.GetCallbackChannel<ISessionCallback>();
-            Guid reporterUserID = SessionService.Instance.GetPlayerIdByCallback(callbackChannel);
-
-            if (reporterUserID == Guid.Empty)
+            if (!SessionService.Instance.IsPlayerOnline(reporterPlayerID))
             {
                 result.IsSuccess = false;
                 result.StatusCode = StatusCode.UNAUTHORIZED;
@@ -38,6 +37,20 @@ namespace Services.Contracts.ServiceContracts.Services
 
             try
             {
+                var reporterEntity = _playerDAO.GetPlayerById(reporterPlayerID);
+                var reportedEntity = _playerDAO.GetPlayerById(reportedPlayerID);
+
+                if (reporterEntity == null || reportedEntity == null)
+                {
+                    result.IsSuccess = false;
+                    result.StatusCode = StatusCode.NOT_FOUND;
+                    return result;
+                }
+
+                Guid reporterUserID = reporterEntity.userID;
+                Guid reportedUserID = reportedEntity.userID;
+
+
                 if (_reportDAO.HasPlayerReportedTarget(reporterUserID, reportedUserID))
                 {
                     result.IsSuccess = false;
@@ -61,9 +74,9 @@ namespace Services.Contracts.ServiceContracts.Services
 
                 switch (reportCount)
                 {
-                    case 4: banDuration = TimeSpan.FromHours(1); break;
-                    case 6: banDuration = TimeSpan.FromHours(8); break;
-                    case 8: banDuration = TimeSpan.FromHours(12); break;
+                    case 3: banDuration = TimeSpan.FromHours(1); break;
+                    case 5: banDuration = TimeSpan.FromHours(8); break;
+                    case 7: banDuration = TimeSpan.FromHours(12); break;
                     case 10: isPermanent = true; break;
                 }
 
@@ -83,7 +96,8 @@ namespace Services.Contracts.ServiceContracts.Services
                     _banDAO.ApplyBan(ban);
 
                     BanReason kickReason = isPermanent ? BanReason.PermanentBan : BanReason.TemporaryBan;
-                    SessionService.Instance.KickUser(reportedUserID, kickReason);
+
+                    SessionService.Instance.KickUser(reportedPlayerID, kickReason);
 
                     result.IsSuccess = true;
                     result.StatusCode = StatusCode.USER_KICKED_AND_BANNED;
@@ -93,6 +107,11 @@ namespace Services.Contracts.ServiceContracts.Services
                     result.IsSuccess = true;
                     result.StatusCode = StatusCode.REPORT_CREATED;
                 }
+            }
+            catch (DbUpdateException)
+            {
+                result.IsSuccess = false;
+                result.StatusCode = StatusCode.REPORT_DUPLICATED;
             }
             catch (Exception ex)
             {

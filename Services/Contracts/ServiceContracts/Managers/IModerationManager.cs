@@ -15,6 +15,6 @@ namespace Services.Contracts.ServiceContracts.Managers
         /// <param name="reason">The reason for the report.</param>
         /// <returns>A RequestResult indicating the outcome (Success, Duplicate, Kicked, etc.).</returns>
         [OperationContract]
-        CommunicationRequest ReportPlayer(Guid reportedUserID, string reason);
+        CommunicationRequest ReportPlayer(Guid reporterUserID, Guid reportedUserID, string reason);
     }
 }
