@@ -29,6 +29,7 @@ namespace Services.Contracts.ServiceContracts.Services
             _userDAO = new UserDAO();
             _banDAO = new BanDAO();
         }
+
         public LoginRequest Login(string username, string password)
         {
             LoginRequest request = new LoginRequest();
@@ -61,6 +62,7 @@ namespace Services.Contracts.ServiceContracts.Services
             {
                 request.IsSuccess = false;
                 request.StatusCode = StatusCode.SERVER_ERROR;
+                ServerLogger.Log.Warn(ex.InnerException);
             }
             return request;
         }
