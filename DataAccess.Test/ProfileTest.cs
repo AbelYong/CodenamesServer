@@ -1,4 +1,5 @@
-﻿using DataAccess.Users;
+﻿using DataAccess.DataRequests;
+using DataAccess.Users;
 using DataAccess.Util;
 using NUnit.Framework;
 using NUnit.Framework.Internal;
@@ -72,8 +73,10 @@ namespace DataAccess.Test
         public void UpdateProfile_ToUsernameNotInUse_Success()
         {
             _player.username = "UsernameNotInUse";
+
             OperationResult result = _playerDAO.UpdateProfile(_player);
             Player updatedPlayer = _playerDAO.GetPlayerByUserID(_userID);
+
             Assert.That(result.Success && _player.username == updatedPlayer.username);
         }
 
@@ -81,35 +84,44 @@ namespace DataAccess.Test
         public void UpdateProfile_ToUsernameInUseCaseMatch_Failure()
         {
             _player.username = _auxPlayer.username;
+
             OperationResult result = _playerDAO.UpdateProfile(_player);
             Player updatedPlayer = _playerDAO.GetPlayerByUserID(_userID);
-            Assert.That(!result.Success && updatedPlayer.username == "profileTester");
+
+            Assert.That(
+                result.ErrorType == ErrorType.DUPLICATE && updatedPlayer.username == "profileTester");
         }
 
         [Test]
         public void UpdateProfile_ToUsernameInUseCaseMissmatch_Failure()
         {
             _player.username = "DuPlicatedUsernamE";
+            
             OperationResult result = _playerDAO.UpdateProfile(_player);
             Player updatedPlayer = _playerDAO.GetPlayerByUserID(_userID);
-            Assert.That(!result.Success && updatedPlayer.username == "profileTester");
+
+            Assert.That(result.ErrorType == ErrorType.DUPLICATE && updatedPlayer.username == "profileTester");
         }
 
         [Test]
         public void UpdateProfile_ToUsernameTooLong_Failure()
         {
             _player.username = "Too long player username";
+            
             OperationResult result = _playerDAO.UpdateProfile(_player);
             Player updatedPlayer = _playerDAO.GetPlayerByUserID(_userID);
-            Assert.That(!result.Success && updatedPlayer.username == "profileTester");
+            
+            Assert.That(result.ErrorType == ErrorType.INVALID_DATA && updatedPlayer.username == "profileTester");
         }
 
         [Test]
         public void UpdateProfile_ToEmailNotInUse_Success()
         {
             _player.User.email = "notInUse@email.com";
+
             OperationResult result = _playerDAO.UpdateProfile(_player);
             Player updatedPlayer = _playerDAO.GetPlayerByUserID(_userID);
+            
             Assert.That(result.Success && _player.User.email == updatedPlayer.User.email);
         }
 
@@ -117,17 +129,21 @@ namespace DataAccess.Test
         public void UpdateProfile_ToEmailInUse_Failure()
         {
             _player.User.email = _auxPlayer.User.email;
+            
             OperationResult result = _playerDAO.UpdateProfile( _player);
             Player UpdatedPlayer = _playerDAO.GetPlayerByUserID(_userID);
-            Assert.That(!result.Success && UpdatedPlayer.User.email == "profile@test.com");
+            
+            Assert.That(result.ErrorType == ErrorType.DUPLICATE && UpdatedPlayer.User.email == "profile@test.com");
         }
 
         [Test]
         public void UpdateProfile_UpdateName_Success()
         {
             _player.name = "profile";
+
             _playerDAO.UpdateProfile(_player);
             Player updatedPlayer = _playerDAO.GetPlayerByUserID(_userID);
+
             Assert.That(_player.name == updatedPlayer.name);
         }
 
@@ -135,8 +151,10 @@ namespace DataAccess.Test
         public void UpdateProfile_UpdateLastname_Success()
         {
             _player.lastName = "last name test";
+            
             _playerDAO.UpdateProfile(_player);
             Player updatedPlayer = _playerDAO.GetPlayerByUserID(_userID);
+            
             Assert.That(_player.lastName == updatedPlayer.lastName);
         }
 
@@ -144,8 +162,10 @@ namespace DataAccess.Test
         public void UpdateProfile_UpdateFacebook_Success()
         {
             _player.facebookUsername = "facebook";
+            
             _playerDAO.UpdateProfile(_player);
             Player updatedPlayer = _playerDAO.GetPlayerByUserID(_userID);
+            
             Assert.That(_player.facebookUsername == updatedPlayer.facebookUsername);
         }
 
@@ -153,8 +173,10 @@ namespace DataAccess.Test
         public void UpdateProfile_UpdateInstagram_Success()
         {
             _player.instagramUsername = "instagram";
+            
             _playerDAO.UpdateProfile(_player);
             Player updatedPlayer = _playerDAO.GetPlayerByUserID(_userID);
+            
             Assert.That(_player.instagramUsername == updatedPlayer.instagramUsername);
         }
 
@@ -162,8 +184,10 @@ namespace DataAccess.Test
         public void UpdateProfile_UpdateDiscord_Success()
         {
             _player.discordUsername = "discord";
+            
             _playerDAO.UpdateProfile(_player);
             Player updatedPlayer = _playerDAO.GetPlayerByUserID(_userID);
+            
             Assert.That(_player.discordUsername == updatedPlayer.discordUsername);
         }
     }

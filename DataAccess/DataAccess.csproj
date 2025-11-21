@@ -79,6 +79,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>codenames.edmx</DependentUpon>
     </Compile>
+    <Compile Include="DataRequests\PlayerRequest.cs" />
     <Compile Include="Friendship.cs">
       <DependentUpon>codenames.tt</DependentUpon>
     </Compile>
@@ -117,6 +118,8 @@
     </Compile>
     <Compile Include="Users\ReportDAO.cs" />
     <Compile Include="Util\DataAccessLogger.cs" />
+    <Compile Include="DataRequests\DataRequest.cs" />
+    <Compile Include="DataRequests\ErrorType.cs" />
     <Compile Include="Util\OperationResult.cs" />
     <Compile Include="Users\PlayerDAO.cs" />
     <Compile Include="Users\UserDAO.cs" />
@@ -159,6 +162,7 @@
       <LastGenOutput>Lang.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

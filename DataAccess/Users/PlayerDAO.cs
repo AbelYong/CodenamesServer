@@ -1,4 +1,5 @@
-﻿using DataAccess.Properties.Langs;
+﻿using DataAccess.DataRequests;
+using DataAccess.Properties.Langs;
 using DataAccess.Util;
 using System;
 using System.Collections.Generic;
@@ -29,8 +30,7 @@ namespace DataAccess.Users
             }
             catch (SqlException sqlex)
             {
-                //TODO log
-                Console.WriteLine("An error ocurred while trying to authenticate an user: {0}", sqlex.Message);
+                DataAccessLogger.Log.Error("An error ocurred while trying get an user by ID: ", sqlex);
                 return null;
             }
         }
@@ -83,8 +83,8 @@ namespace DataAccess.Users
             }
             catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex is SqlException)
             {
-                DataAccessLogger.Log.Error("Failed to verify if player is a guest: ", ex);
                 //We assume the player is a guest if its identity could not be verified
+                DataAccessLogger.Log.Error("Failed to verify if player is a guest: ", ex);
                 return true;
             }
         }
@@ -94,11 +94,25 @@ namespace DataAccess.Users
             OperationResult result = new OperationResult();
             try
             {
+                if (!ValidatePlayerProfile(updatedPlayer))
+                {
+                    result.Success = false;
+                    result.ErrorType = ErrorType.INVALID_DATA;
+                    return result;
+                }
+
                 using (var context = new codenamesEntities())
                 {
                     var dbUser = (from u in context.Users
                                   where u.userID == updatedPlayer.User.userID
                                   select u).FirstOrDefault();
+
+                    if (dbUser == null)
+                    {
+                        result.Success = false;
+                        result.ErrorType = ErrorType.NOT_FOUND;
+                        return result;
+                    }
 
                     result = HandleUserUpdate(updatedPlayer, dbUser);
                     if (!result.Success)
@@ -110,6 +124,13 @@ namespace DataAccess.Users
                                     where p.playerID == updatedPlayer.playerID
                                     select p).FirstOrDefault();
 
+                    if (dbPlayer == null)
+                    {
+                        result.Success = false;
+                        result.ErrorType = ErrorType.NOT_FOUND;
+                        return result;
+                    }
+
                     result = HandlePlayerUpdate(updatedPlayer, dbPlayer);
                     if (result.Success)
                     {
@@ -119,10 +140,9 @@ namespace DataAccess.Users
                     return result;
                 }
             }
-            catch (SqlException sqlex)
+            catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex is SqlException)
             {
-                //TODO log
-                Console.WriteLine("An error ocurred while trying to update an user's profile: {0}", sqlex.Message);
+                DataAccessLogger.Log.Error("An error ocurred while trying to update an player's profile: ", ex);
                 result.Success = false;
                 result.Message = Lang.profileUpdateServerSideIssue;
                 return result;
@@ -144,6 +164,7 @@ namespace DataAccess.Users
                 {
                     result.Success = false;
                     result.Message = Lang.errorEmailAddressInUse;
+                    result.ErrorType = ErrorType.DUPLICATE;
                     return result;
                 }
             }
@@ -157,15 +178,16 @@ namespace DataAccess.Users
             bool isUsernameValidationNeeded = (updatedPlayer.username != dbPlayer.username);
             if (isUsernameValidationNeeded)
             {
-                if (!ValidateUsernameNotDuplicated(updatedPlayer.username))
-                {
-                    result.Success = false;
-                    result.Message = Lang.errorUsernameInUse;
-                }
-                else
+                if (ValidateUsernameNotDuplicated(updatedPlayer.username))
                 {
                     result.Success = true;
                     result.Message = Lang.profileUpdateSuccess;
+                }
+                else
+                {
+                    result.Success = false;
+                    result.Message = Lang.errorUsernameInUse;
+                    result.ErrorType = ErrorType.DUPLICATE;
                 }
             }
             else
@@ -199,7 +221,6 @@ namespace DataAccess.Users
             }
             catch (SqlException sqlex)
             {
-                //TODO log
                 System.Console.WriteLine(sqlex.Message);
             }
         }
@@ -211,6 +232,14 @@ namespace DataAccess.Users
                 return false;
             }
             if (!ValidateIdentificationData(player))
+            {
+                return false;
+            }
+            if (!ValidatePersonalData(player))
+            {
+                return false;
+            }
+            if (!ValidateSocialMediaData(player))
             {
                 return false;
             }
@@ -236,11 +265,11 @@ namespace DataAccess.Users
         {
             const int MAX_NAME_LENGTH = 20;
             const int MAX_LASTNAME_LENGTH = 30;
-            if (player.name.Length > MAX_NAME_LENGTH)
+            if (!string.IsNullOrEmpty(player.name) && player.name.Length > MAX_NAME_LENGTH)
             {
                 return false;
             }
-            if (player.lastName.Length > MAX_LASTNAME_LENGTH)
+            if (!string.IsNullOrEmpty(player.lastName) && player.lastName.Length > MAX_LASTNAME_LENGTH)
             {
                 return false;
             }
@@ -250,15 +279,15 @@ namespace DataAccess.Users
         private static bool ValidateSocialMediaData(Player player)
         {
             const int SOCIAL_MEDIA_LENGTH = 30;
-            if (player.facebookUsername.Length > SOCIAL_MEDIA_LENGTH)
+            if (!string.IsNullOrEmpty(player.facebookUsername) && player.facebookUsername.Length > SOCIAL_MEDIA_LENGTH)
             {
                 return false;
             }
-            if (player.instagramUsername.Length > SOCIAL_MEDIA_LENGTH)
+            if (!string.IsNullOrEmpty(player.instagramUsername) && player.instagramUsername.Length > SOCIAL_MEDIA_LENGTH)
             {
                 return false;
             }
-            if (player.discordUsername.Length > SOCIAL_MEDIA_LENGTH)
+            if (!string.IsNullOrEmpty(player.discordUsername) && player.discordUsername.Length > SOCIAL_MEDIA_LENGTH)
             {
                 return false;
             }

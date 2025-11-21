@@ -480,7 +480,7 @@ namespace Services.Contracts.ServiceContracts.Services
                 bool isSpymasterOnline = _connectedPlayers.TryGetValue(match.CurrentSpymasterID, out IMatchCallback spymasterChannel);
                 try
                 {
-                    _scoreboardDAO.UpdateAssassinsPicked(senderID);
+                    _scoreboardDAO.UpdateAssassinsPicked(match.CurrentSpymasterID);
                     if (isSpymasterOnline)
                     {
                         spymasterChannel.NotifyAssassinPicked(match.GetMatchDuration);
@@ -494,7 +494,7 @@ namespace Services.Contracts.ServiceContracts.Services
                 bool isGuesserOnline = _connectedPlayers.TryGetValue(match.CurrentGuesserID, out  IMatchCallback guesserChannel);
                 try
                 {
-                    _scoreboardDAO.UpdateAssassinsPicked(senderID);
+                    _scoreboardDAO.UpdateAssassinsPicked(match.CurrentGuesserID);
                     if (isGuesserOnline)
                     {
                         guesserChannel.NotifyAssassinPicked(match.GetMatchDuration);
