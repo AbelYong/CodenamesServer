@@ -1,4 +1,5 @@
-﻿using DataAccess.Util;
+﻿using DataAccess.Users;
+using DataAccess.Util;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity.Core;
@@ -14,6 +15,11 @@ namespace DataAccess.Scoreboards
     {
         public bool UpdateMatchesWon(Guid playerID)
         {
+            if (PlayerDAO.VerifyIsPlayerGuest(playerID))
+            {
+                return true;
+            }
+
             try
             {
                 using (var context = new codenamesEntities())
@@ -120,7 +126,7 @@ namespace DataAccess.Scoreboards
             }
             catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex is SqlException)
             {
-                DataAccessLogger.Log.Warn("Failed to update number of assassins picked", ex);
+                DataAccessLogger.Log.Error("Failed to update number of assassins picked", ex);
                 return false;
             }
         }

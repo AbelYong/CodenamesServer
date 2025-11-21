@@ -3,6 +3,8 @@ using DataAccess.Util;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
+using System.Data.Entity.Core;
+using System.Data.Entity.Infrastructure;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Runtime.Remoting.Contexts;
@@ -64,6 +66,26 @@ namespace DataAccess.Users
                     .AsNoTracking()
                     .FirstOrDefault(p => p.playerID == playerId);
                 return player != null ? player.User.email : string.Empty;
+            }
+        }
+
+        public static bool VerifyIsPlayerGuest(Guid playerID)
+        {
+            try
+            {
+                using (var context = new codenamesEntities())
+                {
+                    var query = from p in context.Players
+                                where p.playerID == playerID
+                                select p;
+                    return !query.Any();
+                }
+            }
+            catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex is SqlException)
+            {
+                DataAccessLogger.Log.Error("Failed to verify if player is a guest: ", ex);
+                //We assume the player is a guest if its identity could not be verified
+                return true;
             }
         }
 

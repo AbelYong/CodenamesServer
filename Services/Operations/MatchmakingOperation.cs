@@ -63,21 +63,21 @@ namespace Services.Operations
 
         private static MatchRules GetCustomRules(MatchConfiguration configuration)
         {
-            const int MAX_TURN_TIMER = 60;
-            const int MAX_TIMER_TOKENS = 12;
-            const int MAX_BYSTANDER_TOKENS = 13;
+            int maxTurnTimer = MatchRules.MAX_TURN_TIMER;
+            int maxTimerTokens = MatchRules.MAX_TIMER_TOKENS;
+            int maxBystanderTokens = MatchRules.MAX_BYSTANDER_TOKENS;
 
             MatchRules rules = new MatchRules();
             rules.Gamemode = Gamemode.CUSTOM;
             
             int turnTimer = configuration.MatchRules.TurnTimer;
-            rules.TurnTimer = turnTimer < MAX_TURN_TIMER ? turnTimer : MAX_TURN_TIMER;
+            rules.TurnTimer = turnTimer < maxTurnTimer ? turnTimer : maxTurnTimer;
 
             int timerTokens = configuration.MatchRules.TimerTokens;
-            rules.TimerTokens = timerTokens < MAX_TIMER_TOKENS ? timerTokens : MAX_TIMER_TOKENS;
+            rules.TimerTokens = timerTokens < maxTimerTokens ? timerTokens : maxTimerTokens;
 
             int bystanderTokens = configuration.MatchRules.BystanderTokens;
-            rules.BystanderTokens = bystanderTokens < MAX_BYSTANDER_TOKENS ? bystanderTokens : MAX_BYSTANDER_TOKENS;
+            rules.BystanderTokens = bystanderTokens < maxBystanderTokens ? bystanderTokens : maxBystanderTokens;
 
             rules.SetMaxAssassins(_MAX_ASSASSINS);
             

@@ -20,6 +20,7 @@ namespace Host
         private static ServiceHost _lobbyHost;
         private static ServiceHost _matchmakingHost;
         private static ServiceHost _moderationHost;
+        private static ServiceHost _matchHost;
 
         static void Main(string[] args)
         {
@@ -32,6 +33,7 @@ namespace Host
             _lobbyHost = new ServiceHost(typeof(Services.Contracts.ServiceContracts.Services.LobbyService));
             _matchmakingHost = new ServiceHost(typeof(Services.Contracts.ServiceContracts.Services.MatchmakingService));
             _moderationHost = new ServiceHost(typeof(Services.Contracts.ServiceContracts.Services.ModerationService));
+            _matchHost = new ServiceHost(typeof(Services.Contracts.ServiceContracts.Services.MatchService));
 
             try
             {
@@ -69,6 +71,7 @@ namespace Host
             _lobbyHost.Open();
             _matchmakingHost.Open();
             _moderationHost.Open();
+            _matchHost.Open();
         }
 
         private static void CloseServices()
@@ -81,6 +84,7 @@ namespace Host
             _lobbyHost.Close();
             _matchmakingHost.Close();
             _moderationHost.Close();
+            _matchHost.Close();
         }
 
         private static void AbortServices()
@@ -93,6 +97,7 @@ namespace Host
             _lobbyHost.Abort();
             _matchmakingHost.Abort();
             _moderationHost.Abort();
+            _matchHost.Abort();
         }
     }
 }

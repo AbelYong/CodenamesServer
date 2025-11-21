@@ -5,6 +5,12 @@ namespace Services.DTO.DataContract
     [DataContract]
     public class MatchRules
     {
+        public const int MAX_TURN_TIMER = 60;
+        public const int MAX_TIMER_TOKENS = 12;
+        public const int MAX_BYSTANDER_TOKENS = 13;
+        public const int TIMER_TOKENS_TO_TAKE_NON_CUSTOM = 1;
+        public const int TIMER_TOKENS_TO_TAKE_CUSTOM = 2;
+
         [DataMember]
         public Gamemode Gamemode { get; set; }
 

@@ -64,14 +64,17 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Contracts\Callback\IMatchCallback.cs" />
     <Compile Include="Contracts\Callback\IMatchmakingCallback.cs" />
     <Compile Include="Contracts\Callback\ILobbyCallback.cs" />
     <Compile Include="Contracts\ServiceContracts\Managers\IMatchmakingManager.cs" />
     <Compile Include="Contracts\ServiceContracts\Managers\ILobbyManager.cs" />
+    <Compile Include="Contracts\ServiceContracts\Managers\IMatchManager.cs" />
     <Compile Include="Contracts\ServiceContracts\Managers\IModerationManager.cs" />
     <Compile Include="Contracts\ServiceContracts\Services\LobbyService.cs" />
     <Compile Include="Contracts\ServiceContracts\Services\MatchmakingService.cs" />
     <Compile Include="Contracts\ServiceContracts\Managers\ISessionManager.cs" />
+    <Compile Include="Contracts\ServiceContracts\Services\MatchService.cs" />
     <Compile Include="Contracts\ServiceContracts\Services\ModerationService.cs" />
     <Compile Include="Contracts\ServiceContracts\Services\SessionService.cs" />
     <Compile Include="Contracts\Callback\ISessionCallback.cs" />
@@ -79,10 +82,12 @@
     <Compile Include="DTO\DataContract\Gamemode.cs" />
     <Compile Include="DTO\DataContract\Match.cs" />
     <Compile Include="DTO\DataContract\MatchConfiguration.cs" />
+    <Compile Include="DTO\DataContract\MatchRoleType.cs" />
     <Compile Include="DTO\DataContract\MatchRules.cs" />
     <Compile Include="Contracts\Callback\IFriendCallback.cs" />
     <Compile Include="DTO\DataContract\Party.cs" />
     <Compile Include="DTO\DataContract\Player.cs" />
+    <Compile Include="DTO\DataContract\TokenType.cs" />
     <Compile Include="DTO\Request\CreateLobbyRequest.cs" />
     <Compile Include="DTO\Request\JoinPartyRequest.cs" />
     <Compile Include="DTO\Request\LoginRequest.cs" />
