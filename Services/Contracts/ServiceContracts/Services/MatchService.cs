@@ -491,6 +491,20 @@ namespace Services.Contracts.ServiceContracts.Services
                     RemoveFaultedChannel(spymasterChannel);
                     ServerLogger.Log.Warn("Could not notify assassin picked: ", ex);
                 }
+                bool isGuesserOnline = _connectedPlayers.TryGetValue(match.CurrentGuesserID, out  IMatchCallback guesserChannel);
+                try
+                {
+                    _scoreboardDAO.UpdateAssassinsPicked(senderID);
+                    if (isGuesserOnline)
+                    {
+                        guesserChannel.NotifyAssassinPicked(match.GetMatchDuration);
+                    }
+                }
+                catch (CommunicationException ex)
+                {
+                    RemoveFaultedChannel(guesserChannel);
+                    ServerLogger.Log.Warn("Could not notify assassin picked: ", ex);
+                }
                 RemoveMatch(match);
             }
         }
