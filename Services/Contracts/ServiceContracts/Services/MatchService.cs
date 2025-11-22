@@ -481,16 +481,21 @@ namespace Services.Contracts.ServiceContracts.Services
         {
             _playersOngoingMatchesMap.TryGetValue(senderID, out Guid matchID);
             bool matchFound = _matches.TryGetValue(matchID, out OngoingMatch match);
+            bool assassinsUpdated;
             if (matchFound)
             {
                 match.StopTimer();
                 bool isSpymasterOnline = _connectedPlayers.TryGetValue(match.CurrentSpymasterID, out IMatchCallback spymasterChannel);
                 try
                 {
-                    _scoreboardDAO.UpdateAssassinsPicked(match.CurrentSpymasterID);
+                    assassinsUpdated = _scoreboardDAO.UpdateAssassinsPicked(match.CurrentSpymasterID);
                     if (isSpymasterOnline)
                     {
                         spymasterChannel.NotifyAssassinPicked(match.GetMatchDuration);
+                        if (!assassinsUpdated)
+                        {
+                            spymasterChannel.NotifyStatsCouldNotBeSaved();
+                        }
                     }
                 }
                 catch (CommunicationException ex)
@@ -501,10 +506,14 @@ namespace Services.Contracts.ServiceContracts.Services
                 bool isGuesserOnline = _connectedPlayers.TryGetValue(match.CurrentGuesserID, out  IMatchCallback guesserChannel);
                 try
                 {
-                    _scoreboardDAO.UpdateAssassinsPicked(match.CurrentGuesserID);
+                    assassinsUpdated = _scoreboardDAO.UpdateAssassinsPicked(match.CurrentGuesserID);
                     if (isGuesserOnline)
                     {
                         guesserChannel.NotifyAssassinPicked(match.GetMatchDuration);
+                        if (!assassinsUpdated)
+                        {
+                            spymasterChannel.NotifyStatsCouldNotBeSaved();
+                        }
                     }
                 }
                 catch (CommunicationException ex)
