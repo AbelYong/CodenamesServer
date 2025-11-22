@@ -248,7 +248,14 @@ namespace Services.Contracts.ServiceContracts.Services
                         NotifyTurnChange(matchID, ongoingMatch.CurrentGuesserID);
                         break;
                     case MatchRoleType.GUESSER:
-                        HandleRoleSwitch(ongoingMatch);
+                        if (ongoingMatch.TimerTokens >= 1)
+                        {
+                            HandleRoleSwitch(ongoingMatch);
+                        }
+                        else
+                        {
+                            HandleMatchLostTimeout(ongoingMatch);
+                        }
                         break;
                 }
             }
