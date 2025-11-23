@@ -85,14 +85,19 @@ namespace Services.Contracts.ServiceContracts.Services
                 {
                     friendChannel.Value.NotifyFriendOnline(player);
                 }
-                catch (Exception ex) when (ex is CommunicationException || ex is EndpointNotFoundException || ex is CommunicationObjectFaultedException)
+                catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
                 {
                     faultedChannels.Add(friendChannel.Key, friendChannel.Value);
                     if (friendChannel.Value is ICommunicationObject communicationObject)
                     {
                         communicationObject.Abort();
                     }
+                    ServerLogger.Log.Warn("Exception while notifying friend online to a player: ", ex);
                 }
+                catch (Exception ex)
+                {
+                    ServerLogger.Log.Error("Unexpected exception while notifying friend online to a player: ", ex);
+                } 
             }
             RemoveFaultedChannels(faultedChannels);
         }
@@ -103,12 +108,17 @@ namespace Services.Contracts.ServiceContracts.Services
             {
                 playerCallback.Value.ReceiveOnlineFriends(onlineFriends);
             }
-            catch (Exception ex) when (ex is CommunicationException || ex is EndpointNotFoundException || ex is CommunicationObjectFaultedException)
+            catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
             {
                 if (playerCallback.Value is ICommunicationObject communicationObject)
                 {
                     communicationObject.Abort();
                 }
+                ServerLogger.Log.Warn("Exception while sending online friends to a player: ", ex);
+            }
+            catch (Exception ex)
+            {
+                ServerLogger.Log.Error("Unexpected exception while sending online friends to a player: ", ex);
             }
         }
 
@@ -124,10 +134,9 @@ namespace Services.Contracts.ServiceContracts.Services
 
             Dictionary<Player, ISessionCallback> playersOnlineSnapshot = new Dictionary<Player, ISessionCallback>();
 
-            ISessionCallback removedClientChannel;
             lock (_playersOnline)
             {
-                if (_playersOnline.TryRemove(player, out removedClientChannel))
+                if (_playersOnline.TryRemove(player, out ISessionCallback _))
                 {
                     playersOnlineSnapshot = _playersOnline.ToDictionary(session => session.Key, session => session.Value);
                 }
@@ -152,13 +161,18 @@ namespace Services.Contracts.ServiceContracts.Services
                 {
                     friendChannel.Value.NotifyFriendOffline(playerID);
                 }
-                catch (Exception ex) when (ex is CommunicationException || ex is EndpointNotFoundException || ex is CommunicationObjectFaultedException)
+                catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
                 {
                     faultedChannels.Add(friendChannel.Key, friendChannel.Value);
                     if (friendChannel.Value is ICommunicationObject communicationObject)
                     {
                         communicationObject.Abort();
                     }
+                    ServerLogger.Log.Warn("Exception while sending disconnect notification: ", ex);
+                }
+                catch (Exception ex)
+                {
+                    ServerLogger.Log.Error("Unexpected exception while sending disconnect notification: ", ex);
                 }
             }
             RemoveFaultedChannels(faultedChannels);
@@ -175,9 +189,14 @@ namespace Services.Contracts.ServiceContracts.Services
                 {
                     channelA.NotifyFriendOnline(friendB);
                 }
-                catch (CommunicationException)
+                catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
                 {
                     RemoveFaultedChannel(friendA);
+                    ServerLogger.Log.Warn("Exception while sending new friendship notification:", ex);
+                }
+                catch (Exception ex)
+                {
+                    ServerLogger.Log.Error("Unexpected exception while sending new friendship notification: ", ex);
                 }
             }
 
@@ -187,9 +206,14 @@ namespace Services.Contracts.ServiceContracts.Services
                 {
                     channelB.NotifyFriendOnline(friendA);
                 }
-                catch (CommunicationException)
+                catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
                 {
                     RemoveFaultedChannel(friendB);
+                    ServerLogger.Log.Warn("Exception while sending new friendship notification:", ex);
+                }
+                catch (Exception ex)
+                {
+                    ServerLogger.Log.Error("Unexpected exception while sending new friendship notification: ", ex);
                 }
             }
         }
@@ -205,9 +229,14 @@ namespace Services.Contracts.ServiceContracts.Services
                 {
                     channelA.NotifyFriendOffline(friendB.PlayerID.Value);
                 }
-                catch (CommunicationException)
+                catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
                 {
                     RemoveFaultedChannel(friendA);
+                    ServerLogger.Log.Warn("Exception while sending friendship ended notification:", ex);
+                }
+                catch (Exception ex)
+                {
+                    ServerLogger.Log.Error("Unexpected exception while sending friendship ended notification: ", ex);
                 }
             }
 
@@ -217,9 +246,14 @@ namespace Services.Contracts.ServiceContracts.Services
                 {
                     channelB.NotifyFriendOffline(friendA.PlayerID.Value);
                 }
-                catch (CommunicationException)
+                catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
                 {
                     RemoveFaultedChannel(friendB);
+                    ServerLogger.Log.Warn("Exception while sending friendship ended notification:", ex);
+                }
+                catch (Exception ex)
+                {
+                    ServerLogger.Log.Error("Unexpected exception while sending friendship ended notification: ", ex);
                 }
             }
         }
@@ -261,10 +295,14 @@ namespace Services.Contracts.ServiceContracts.Services
                 {
                     callback.NotifyKicked(reason);
                 }
-                catch (CommunicationException ex)
+                catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
                 {
                     RemoveFaultedChannel(onlinePlayer.Key);
-                    ServerLogger.Log.Warn("Error sending kick notification:", ex);
+                    ServerLogger.Log.Warn("Exception while sending kick notification:", ex);
+                }
+                catch (Exception ex)
+                {
+                    ServerLogger.Log.Warn("Unexpected exception while sending kick notification:", ex);
                 }
                 Disconnect(onlinePlayer.Key);
             }
