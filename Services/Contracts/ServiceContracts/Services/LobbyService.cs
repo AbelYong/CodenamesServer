@@ -7,8 +7,6 @@ using Services.DTO.Request;
 using Services.Operations;
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 using System.ServiceModel;
 using System.Text;
 
@@ -64,7 +62,6 @@ namespace Services.Contracts.ServiceContracts.Services
 
         private void AbandonParty(Party party, Guid leavingPlayerID)
         {
-            //Remove whoever abandoned
             _playerLobbyMap.TryRemove(leavingPlayerID, out _);
 
             //If the player who abandoned is the party's host, also remove their lobby and notify the guest
@@ -95,9 +92,14 @@ namespace Services.Contracts.ServiceContracts.Services
                     channelToNotify.NotifyPartyAbandoned(leavingPlayerID);
                 }
             }
-            catch (CommunicationException)
+            catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
             {
                 RemoveFaultedChannel(toNotifyID);
+                ServerLogger.Log.Warn("Exception while sending player left lobby notification", ex);
+            }
+            catch (Exception ex)
+            {
+                ServerLogger.Log.Error("Unexpected exception while sending player left lobby notification", ex);
             }
         }
 
@@ -167,11 +169,16 @@ namespace Services.Contracts.ServiceContracts.Services
                         {
                             friendChannel.NotifyMatchInvitationReceived(partyHost, lobbyCode);
                         }
-                        catch (CommunicationException)
+                        catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
                         {
                             //This one is true, because even if CommunicationEx was thrown invitation was sent through email
                             request.IsSuccess = true;
                             request.StatusCode = StatusCode.CLIENT_UNREACHABLE;
+                            ServerLogger.Log.Warn("Exception while sending lobby invitation: ", ex);
+                        }
+                        catch (Exception ex)
+                        {
+                            ServerLogger.Log.Error("Unexpected exception while sending lobby invitation: ", ex);
                         }
                     }
                     EmailOperation.SendGameInvitationEmail(partyHost.Username, friendEmailAddress, lobbyCode);
@@ -261,7 +268,6 @@ namespace Services.Contracts.ServiceContracts.Services
                         return request;
                     }
 
-                    // Slot is free. Take it.
                     party.PartyGuest = joiningPlayer;
                     _playerLobbyMap.TryAdd(joiningPlayerID, lobbyCode);
                 }
@@ -296,9 +302,14 @@ namespace Services.Contracts.ServiceContracts.Services
                     return true;
                 }
             }
-            catch (CommunicationException)
+            catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
             {
                 RemoveFaultedChannel(partyHostID);
+                ServerLogger.Log.Warn("Exception while sending player joined party notification", ex);
+            }
+            catch (Exception ex)
+            {
+                ServerLogger.Log.Error("Unexpected exception while sending player joined party notification: ", ex);
             }
             return false;
         }
