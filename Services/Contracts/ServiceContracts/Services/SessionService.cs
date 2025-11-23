@@ -1,6 +1,7 @@
 ﻿using Services.Contracts.ServiceContracts.Managers;
 using Services.DTO;
 using Services.DTO.Request;
+using Services.Operations;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -248,34 +249,27 @@ namespace Services.Contracts.ServiceContracts.Services
                 collection.Remove(failedEntry);
             }
         }
-
-        /// <summary>
-        /// Allows other services (like ModerationService) to kick a connected user.
-        /// </summary>
+        
         public void KickUser(Guid userID, BanReason reason)
         {
-            var entry = _playersOnline.FirstOrDefault(p => p.Key.PlayerID == userID);
+            var onlinePlayer = _playersOnline.FirstOrDefault(p => p.Key.PlayerID == userID);
 
-            if (entry.Key != null)
+            if (onlinePlayer.Key != null)
             {
-                ISessionCallback callback = entry.Value;
+                ISessionCallback callback = onlinePlayer.Value;
                 try
                 {
                     callback.NotifyKicked(reason);
                 }
-                catch (CommunicationException) { }
-                catch (Exception ex)
+                catch (CommunicationException ex)
                 {
-                    Console.WriteLine($"Error sending kick notification: {ex.Message}");
+                    RemoveFaultedChannel(onlinePlayer.Key);
+                    ServerLogger.Log.Warn("Error sending kick notification:", ex);
                 }
-
-                Disconnect(entry.Key);
+                Disconnect(onlinePlayer.Key);
             }
         }
 
-        /// <summary>
-        /// Checks if a player is currently logged in by their ID.
-        /// </summary>
         public bool IsPlayerOnline(Guid playerId)
         {
             return _playersOnline.Keys.Any(p => p.PlayerID == playerId);
