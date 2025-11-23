@@ -1,4 +1,5 @@
 ﻿using Services.Contracts.Callback;
+using Services.DTO;
 using Services.DTO.DataContract;
 using Services.DTO.Request;
 using System;
@@ -20,13 +21,13 @@ namespace Services.Contracts.ServiceContracts.Managers
         void Disconnect(Guid playerID);
 
         [OperationContract(IsOneWay = false)]
-        CreateLobbyRequest CreateParty(Guid playerID);
+        CreateLobbyRequest CreateParty(Player player);
 
         [OperationContract(IsOneWay = false)]
-        CommunicationRequest InviteToParty(Guid hostPlayerID, Guid friendToInviteID, string lobbyCode);
+        CommunicationRequest InviteToParty(Player partyHost, Guid friendToInviteID, string lobbyCode);
 
         [OperationContract(IsOneWay = false)]
-        JoinPartyRequest JoinParty(Guid joiningPlayerID, string lobbyCode);
+        JoinPartyRequest JoinParty(Player joiningPlayer, string lobbyCode);
 
         [OperationContract(IsOneWay = true)]
         void LeaveParty(Guid playerID, string lobbyCode);

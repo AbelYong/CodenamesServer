@@ -53,19 +53,27 @@ namespace DataAccess.Users
             }
         }
 
-        public string GetEmailByPlayerID(Guid playerId)
+        public static string GetEmailByPlayerID(Guid playerId)
         {
             if (playerId == Guid.Empty)
             {
                 return null;
             }
 
-            using (var db = new codenamesEntities())
+            try
             {
-                Player player = db.Players.Include(p => p.User)
-                    .AsNoTracking()
-                    .FirstOrDefault(p => p.playerID == playerId);
-                return player != null ? player.User.email : string.Empty;
+                using (var db = new codenamesEntities())
+                {
+                    Player player = db.Players.Include(p => p.User)
+                        .AsNoTracking()
+                        .FirstOrDefault(p => p.playerID == playerId);
+                    return player != null ? player.User.email : string.Empty;
+                }
+            }
+            catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex is SqlException)
+            {
+                DataAccessLogger.Log.Error("Failed to get a player's email: ", ex);
+                return string.Empty;
             }
         }
 
