@@ -9,7 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Services", "Services\Servic
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataAccess", "DataAccess\DataAccess.csproj", "{CA97D811-0274-46E9-AC41-E6E8C8845363}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataAccess.Test", "DataAccess.Test\DataAccess.Test.csproj", "{B4657CC6-573E-4E59-9F36-E96DF62E49F6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataAccess.Tests", "DataAccess.Test\DataAccess.Tests.csproj", "{B4657CC6-573E-4E59-9F36-E96DF62E49F6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Services.Tests", "Services.Tests\Services.Tests.csproj", "{A846976C-AC8A-454B-9CF7-2ED9E8B205C6}"
 EndProject
