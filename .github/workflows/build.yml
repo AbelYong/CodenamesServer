@@ -48,11 +48,17 @@ jobs:
         run: |
           # Create .config file with minimum structure so msbuild doesn't fail
           New-Item -Path "D:\a\CodenamesServer\CodenamesServer\DataAccess\connectionStrings.Local.config" -ItemType File -Value "<connectionStrings></connectionStrings>"    
-      - name: Build and analyze
+      - name: Install Coverage Tool
+        run: dotnet tool install --global dotnet-coverage
+      - name: Build, Test and Analyze with Coverage
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         shell: powershell
         run: |
-          ${{ runner.temp }}\scanner\dotnet-sonarscanner begin /k:"AbelYong_CodenamesServer" /o:"abelyong-lis2025" /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+          ${{ runner.temp }}\scanner\dotnet-sonarscanner begin /k:"AbelYong_CodenamesServer" /o:"abelyong-lis2025" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.cs.vstest.reportsPaths="TestResults/*.trx" /d:sonar.cs.vscoveragexml.reportsPaths="coverage.xml"
+          
           msbuild.exe CodenamesServer.sln /t:Rebuild /p:Configuration=Release
+          
+          dotnet-coverage collect "vstest.console.exe DataAccess.Tests\bin\Release\DataAccess.Tests.dll Services.Tests\bin\Release\Services.Tests.dll /Logger:trx /ResultsDirectory:TestResults" -f xml -o "coverage.xml"
+          
           ${{ runner.temp }}\scanner\dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
