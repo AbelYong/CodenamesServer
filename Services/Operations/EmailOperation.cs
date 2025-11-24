@@ -1,5 +1,4 @@
-﻿using DataAccess;
-using DataAccess.Properties.Langs;
+﻿using DataAccess.Properties.Langs;
 using Services.DTO;
 using System;
 using System.Collections.Generic;
@@ -8,12 +7,17 @@ using System.Linq;
 using System.Net;
 using System.Net.Mail;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Services.Operations
 {
     public static class EmailOperation
     {
+        private static readonly Regex GmailRegex =
+            new Regex(@"^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@gmail\.com$",
+                      RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(100));
+
         public static string GenerateSixDigitCode()
         {
             using (var code = System.Security.Cryptography.RandomNumberGenerator.Create())
@@ -27,16 +31,22 @@ namespace Services.Operations
 
         public static void SendVerificationEmail(string address, string code)
         {
-            string subject = Lang.verifyEmailSubjectVerify;
-            string body = string.Format(Lang.verifyEmailBodyVerify, code);
-            SendEmail(address, subject, body);
+            if (GmailRegex.IsMatch(address))
+            {
+                string subject = Lang.verifyEmailSubjectVerify;
+                string body = string.Format(Lang.verifyEmailBodyVerify, code);
+                SendEmail(address, subject, body);
+            }
         }
 
         public static void SendGameInvitationEmail(string fromUsername, string toAddress, string lobbyCode)
         {
-            string subject = "Invitation to play Codenames";
-            string body = string.Format("{0} has invited you to play a match, use the code {1} to join them", fromUsername, lobbyCode);
-            SendEmail(toAddress, subject, body);
+            if (GmailRegex.IsMatch(toAddress))
+            {
+                string subject = "Invitation to play Codenames";
+                string body = string.Format("{0} has invited you to play a match, use the code {1} to join them", fromUsername, lobbyCode);
+                SendEmail(toAddress, subject, body);
+            }
         }
 
         private static void SendEmail(string address, string subject, string body)
