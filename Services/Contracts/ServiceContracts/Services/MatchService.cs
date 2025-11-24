@@ -247,9 +247,24 @@ namespace Services.Contracts.ServiceContracts.Services
                     case MatchRoleType.SPYMASTER:
                         NotifyTurnChange(matchID, ongoingMatch.CurrentGuesserID);
                         break;
+
                     case MatchRoleType.GUESSER:
                         if (ongoingMatch.TimerTokens >= 1)
                         {
+                            ongoingMatch.TimerTokens--;
+
+                            if (_connectedPlayers.TryGetValue(ongoingMatch.CurrentSpymasterID, out IMatchCallback spymasterChannel))
+                            {
+                                try
+                                {
+                                    spymasterChannel.NotifyBystanderPicked(TokenType.TIMER, ongoingMatch.TimerTokens);
+                                }
+                                catch (CommunicationException ex)
+                                {
+                                    ServerLogger.Log.Warn("The spymaster could not be notified.", ex);
+                                }
+                            }
+
                             HandleRoleSwitch(ongoingMatch);
                         }
                         else
@@ -394,7 +409,7 @@ namespace Services.Contracts.ServiceContracts.Services
             bool matchFound = _matches.TryGetValue(matchID, out OngoingMatch ongoingMatch);
             if (matchFound)
             {
-                _connectedPlayers.TryGetValue(matchID, out IMatchCallback spymasterChannel);
+                _connectedPlayers.TryGetValue(ongoingMatch.CurrentSpymasterID, out IMatchCallback spymasterChannel);
                 int currentTokens;
                 switch (tokenToUpdate)
                 {
