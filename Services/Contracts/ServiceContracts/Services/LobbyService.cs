@@ -160,36 +160,28 @@ namespace Services.Contracts.ServiceContracts.Services
                 }
 
                 string friendEmailAddress = PlayerDAO.GetEmailByPlayerID(friendToInviteID);
-                if (partyHost != null)
+                bool isFriendOnline = _connectedPlayers.TryGetValue(friendToInviteID, out ILobbyCallback friendChannel);
+                if (isFriendOnline)
                 {
-                    bool isFriendOnline = _connectedPlayers.TryGetValue(friendToInviteID, out ILobbyCallback friendChannel);
-                    if (isFriendOnline)
+                    try
                     {
-                        try
-                        {
-                            friendChannel.NotifyMatchInvitationReceived(partyHost, lobbyCode);
-                        }
-                        catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
-                        {
-                            //This one is true, because even if CommunicationEx was thrown invitation was sent through email
-                            request.IsSuccess = true;
-                            request.StatusCode = StatusCode.CLIENT_UNREACHABLE;
-                            ServerLogger.Log.Warn("Exception while sending lobby invitation: ", ex);
-                        }
-                        catch (Exception ex)
-                        {
-                            ServerLogger.Log.Error("Unexpected exception while sending lobby invitation: ", ex);
-                        }
+                        friendChannel.NotifyMatchInvitationReceived(partyHost, lobbyCode);
                     }
-                    EmailOperation.SendGameInvitationEmail(partyHost.Username, friendEmailAddress, lobbyCode);
-                    request.IsSuccess = true;
-                    request.StatusCode = StatusCode.OK;
+                    catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
+                    {
+                        //This one is true, because even if CommunicationEx was thrown invitation was sent through email
+                        request.IsSuccess = true;
+                        request.StatusCode = StatusCode.CLIENT_UNREACHABLE;
+                        ServerLogger.Log.Warn("Exception while sending lobby invitation: ", ex);
+                    }
+                    catch (Exception ex)
+                    {
+                        ServerLogger.Log.Error("Unexpected exception while sending lobby invitation: ", ex);
+                    }
                 }
-                else
-                {
-                    request.IsSuccess = false;
-                    request.StatusCode = StatusCode.NOT_FOUND;
-                }
+                EmailOperation.SendGameInvitationEmail(partyHost.Username, friendEmailAddress, lobbyCode);
+                request.IsSuccess = true;
+                request.StatusCode = StatusCode.OK;
             }
             else
             {
