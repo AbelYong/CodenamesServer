@@ -45,9 +45,14 @@ namespace DataAccess.Scoreboards
                     }
                 }
             }
-            catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex is SqlException)
+            catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex.InnerException is SqlException)
             {
-                DataAccessLogger.Log.Warn("Failed to update number of assassins picked: ", ex);
+                DataAccessLogger.Log.Warn("Failed to update number of mathces won: ", ex);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                DataAccessLogger.Log.Error("Unexpected exception while updating number of matches won: ", ex);
                 return false;
             }
         }
@@ -90,9 +95,14 @@ namespace DataAccess.Scoreboards
                     }
                 }
             }
-            catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex is SqlException)
+            catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex.InnerException is SqlException)
             {
-                DataAccessLogger.Log.Warn("Failed to update fastest game: ", ex);
+                DataAccessLogger.Log.Warn("Failed to update fastest match record: ", ex);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                DataAccessLogger.Log.Error("Unexpected exception while updating fastest match record: ", ex);
                 return false;
             }
         }
@@ -124,9 +134,14 @@ namespace DataAccess.Scoreboards
                     }
                 }
             }
-            catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex is SqlException)
+            catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex.InnerException is SqlException)
             {
-                DataAccessLogger.Log.Error("Failed to update number of assassins picked", ex);
+                DataAccessLogger.Log.Error("Failed to update number of assassins picked: ", ex);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                DataAccessLogger.Log.Error("Unexpected exception while updating number of assassins picked: ", ex);
                 return false;
             }
         }
