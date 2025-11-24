@@ -246,6 +246,8 @@ namespace Services.Contracts.ServiceContracts.Services
                 {
                     case MatchRoleType.SPYMASTER:
                         NotifyTurnChange(matchID, ongoingMatch.CurrentGuesserID);
+
+                        NotifyTurnChange(matchID, ongoingMatch.CurrentSpymasterID);
                         break;
 
                     case MatchRoleType.GUESSER:
@@ -261,7 +263,19 @@ namespace Services.Contracts.ServiceContracts.Services
                                 }
                                 catch (CommunicationException ex)
                                 {
-                                    ServerLogger.Log.Warn("The spymaster could not be notified.", ex);
+                                    ServerLogger.Log.Warn("Unable to communicate with the Spymaster", ex);
+                                }
+                            }
+
+                            if (_connectedPlayers.TryGetValue(ongoingMatch.CurrentGuesserID, out IMatchCallback guesserChannel))
+                            {
+                                try
+                                {
+                                    guesserChannel.NotifyBystanderPicked(TokenType.TIMER, ongoingMatch.TimerTokens);
+                                }
+                                catch (CommunicationException ex)
+                                {
+                                    ServerLogger.Log.Warn("Unable to communicate with Guesser", ex);
                                 }
                             }
 
