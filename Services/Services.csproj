@@ -79,6 +79,10 @@
     <Compile Include="Contracts\ServiceContracts\Services\SessionService.cs" />
     <Compile Include="Contracts\Callback\ISessionCallback.cs" />
     <Compile Include="DTO\BanReason.cs" />
+    <Compile Include="DTO\DataContract\AgentPickedNotification.cs" />
+    <Compile Include="DTO\DataContract\AssassinPickedNotification.cs" />
+    <Compile Include="DTO\DataContract\BoardCoordinates.cs" />
+    <Compile Include="DTO\DataContract\BystanderPickedNotification.cs" />
     <Compile Include="DTO\DataContract\Gamemode.cs" />
     <Compile Include="DTO\DataContract\Match.cs" />
     <Compile Include="DTO\DataContract\MatchConfiguration.cs" />

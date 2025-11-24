@@ -17,13 +17,13 @@ namespace Services.Contracts.Callback
         void NotifyRolesChanged();
 
         [OperationContract(IsOneWay = true)]
-        void NotifyAgentPicked(int newTurnLength);
+        void NotifyAgentPicked(AgentPickedNotification notification);
 
         [OperationContract(IsOneWay = true)]
-        void NotifyBystanderPicked(TokenType tokenToUpdate, int remainingTokens);
+        void NotifyBystanderPicked(BystanderPickedNotification notification);
 
         [OperationContract(IsOneWay = true)]
-        void NotifyAssassinPicked(string finalMatchLength);
+        void NotifyAssassinPicked(AssassinPickedNotification notification);
 
         [OperationContract(IsOneWay = true)]
         void NotifyMatchWon(string finalMatchLength);

@@ -252,19 +252,6 @@ namespace Services.Contracts.ServiceContracts.Services
                         if (ongoingMatch.TimerTokens >= 1)
                         {
                             ongoingMatch.TimerTokens--;
-
-                            if (_connectedPlayers.TryGetValue(ongoingMatch.CurrentSpymasterID, out IMatchCallback spymasterChannel))
-                            {
-                                try
-                                {
-                                    spymasterChannel.NotifyBystanderPicked(TokenType.TIMER, ongoingMatch.TimerTokens);
-                                }
-                                catch (CommunicationException ex)
-                                {
-                                    ServerLogger.Log.Warn("The spymaster could not be notified.", ex);
-                                }
-                            }
-
                             HandleRoleSwitch(ongoingMatch);
                         }
                         else
@@ -344,9 +331,14 @@ namespace Services.Contracts.ServiceContracts.Services
             }
         }
 
-        public void NotifyPickedAgent(Guid senderID, int newTurnLength)
+        public void NotifyPickedAgent(AgentPickedNotification notification)
         {
-            _playersOngoingMatchesMap.TryGetValue(senderID, out Guid matchID);
+            if (notification  == null)
+            {
+                return;
+            }
+
+            _playersOngoingMatchesMap.TryGetValue(notification.SenderID, out Guid matchID);
             bool matchFound = _matches.TryGetValue(matchID, out OngoingMatch ongoingMatch);
             if (matchFound)
             {
@@ -356,8 +348,9 @@ namespace Services.Contracts.ServiceContracts.Services
                     ongoingMatch.RemainingAgents--;
                     if (ongoingMatch.RemainingAgents > 0)
                     {
-                        newTurnLength = newTurnLength < MatchRules.MAX_TURN_TIMER ? newTurnLength : MatchRules.MAX_TURN_TIMER;
-                        spymasterChannel.NotifyAgentPicked(newTurnLength);
+                        notification.NewTurnLength = notification.NewTurnLength < MatchRules.MAX_TURN_TIMER ? 
+                            notification.NewTurnLength : MatchRules.MAX_TURN_TIMER;
+                        spymasterChannel.NotifyAgentPicked(notification);
                     }
                     else
                     {
@@ -403,40 +396,47 @@ namespace Services.Contracts.ServiceContracts.Services
             }
         }
 
-        public void NotifyPickedBystander(Guid senderID, TokenType tokenToUpdate)
+        public void NotifyPickedBystander(BystanderPickedNotification notification)
         {
-            _playersOngoingMatchesMap.TryGetValue(senderID, out Guid matchID);
+            if (notification == null)
+            {
+                return;
+            }
+
+            _playersOngoingMatchesMap.TryGetValue(notification.SenderID, out Guid matchID);
             bool matchFound = _matches.TryGetValue(matchID, out OngoingMatch ongoingMatch);
             if (matchFound)
             {
                 _connectedPlayers.TryGetValue(ongoingMatch.CurrentSpymasterID, out IMatchCallback spymasterChannel);
                 int currentTokens;
-                switch (tokenToUpdate)
+                switch (notification.TokenToUpdate)
                 {
                     case TokenType.TIMER:
                         currentTokens = ongoingMatch.TimerTokens;
                         currentTokens = ongoingMatch.Gamemode != Gamemode.CUSTOM ? 
                             currentTokens - MatchRules.TIMER_TOKENS_TO_TAKE_NON_CUSTOM : currentTokens - MatchRules.TIMER_TOKENS_TO_TAKE_CUSTOM;
                         ongoingMatch.TimerTokens = currentTokens;
-                        HandleTimerTokenUpdate(ongoingMatch, currentTokens, spymasterChannel);
+                        notification.RemainingTokens = currentTokens;
+                        HandleTimerTokenUpdate(ongoingMatch, notification, spymasterChannel);
                         break;
                     case TokenType.BYSTANDER:
                         currentTokens = ongoingMatch.BystanderTokens;
                         currentTokens--;
                         ongoingMatch.BystanderTokens = currentTokens;
-                        HandleBystanderTokenUpdate(ongoingMatch, currentTokens, spymasterChannel);
+                        notification.RemainingTokens = currentTokens;
+                        HandleBystanderTokenUpdate(ongoingMatch, notification, spymasterChannel);
                         break;
                 }
             }
         }
 
-        private void HandleTimerTokenUpdate(OngoingMatch match, int remainingTokens, IMatchCallback spymasterChannel)
+        private void HandleTimerTokenUpdate(OngoingMatch match, BystanderPickedNotification notification, IMatchCallback spymasterChannel)
         {
-            if (remainingTokens > 0)
+            if (match.TimerTokens > 0)
             {
                 try
                 {
-                    spymasterChannel.NotifyBystanderPicked(TokenType.TIMER, remainingTokens);
+                    spymasterChannel.NotifyBystanderPicked(notification);
                     HandleRoleSwitch(match);
                 }
                 catch (CommunicationException ex)
@@ -461,11 +461,11 @@ namespace Services.Contracts.ServiceContracts.Services
             RemoveMatch(match);
         }
 
-        private void HandleBystanderTokenUpdate(OngoingMatch match, int remainingTokens, IMatchCallback spymasterChannel)
+        private void HandleBystanderTokenUpdate(OngoingMatch match, BystanderPickedNotification notification, IMatchCallback spymasterChannel)
         {
             try
             {
-                spymasterChannel.NotifyBystanderPicked(TokenType.BYSTANDER, remainingTokens);
+                spymasterChannel.NotifyBystanderPicked(notification);
                 HandleRoleSwitch(match);
             }
             catch (CommunicationException ex)
@@ -492,9 +492,13 @@ namespace Services.Contracts.ServiceContracts.Services
             }
         }
 
-        public void NotifyPickedAssassin(Guid senderID)
+        public void NotifyPickedAssassin(AssassinPickedNotification notification)
         {
-            _playersOngoingMatchesMap.TryGetValue(senderID, out Guid matchID);
+            if (notification == null)
+            {
+                return;
+            }
+            _playersOngoingMatchesMap.TryGetValue(notification.SenderID, out Guid matchID);
             bool matchFound = _matches.TryGetValue(matchID, out OngoingMatch match);
             bool assassinsUpdated;
             if (matchFound)
@@ -506,7 +510,7 @@ namespace Services.Contracts.ServiceContracts.Services
                     assassinsUpdated = _scoreboardDAO.UpdateAssassinsPicked(match.CurrentSpymasterID);
                     if (isSpymasterOnline)
                     {
-                        spymasterChannel.NotifyAssassinPicked(match.GetMatchDuration);
+                        spymasterChannel.NotifyAssassinPicked(notification);
                         if (!assassinsUpdated)
                         {
                             spymasterChannel.NotifyStatsCouldNotBeSaved();
@@ -524,7 +528,7 @@ namespace Services.Contracts.ServiceContracts.Services
                     assassinsUpdated = _scoreboardDAO.UpdateAssassinsPicked(match.CurrentGuesserID);
                     if (isGuesserOnline)
                     {
-                        guesserChannel.NotifyAssassinPicked(match.GetMatchDuration);
+                        guesserChannel.NotifyAssassinPicked(notification);
                         if (!assassinsUpdated)
                         {
                             spymasterChannel.NotifyStatsCouldNotBeSaved();

@@ -6,6 +6,7 @@ namespace Services.DTO.Request
     [KnownType(typeof(CommunicationRequest))]
     [KnownType(typeof(LoginRequest))]
     [KnownType(typeof(CreateLobbyRequest))]
+    [KnownType(typeof(JoinPartyRequest))]
     public abstract class Request
     {
         [DataMember]

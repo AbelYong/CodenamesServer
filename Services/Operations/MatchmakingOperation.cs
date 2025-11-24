@@ -1,10 +1,7 @@
 ﻿using Services.DTO.DataContract;
 using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Services.Operations
 {
@@ -107,8 +104,6 @@ namespace Services.Operations
             // Configuration for generating the board
             const int MAX_ROWS = 5;
             const int MAX_COLUMNS = 5;
-            const int MATCHING_AGENTS = 3;
-            int localBystanders = GetLocalBystanders(match.Rules.Gamemode);
 
             int[,] boardPlayerOne = new int[MAX_ROWS, MAX_COLUMNS];
             int[,] boardPlayerTwo = new int[MAX_ROWS, MAX_COLUMNS];
@@ -117,45 +112,29 @@ namespace Services.Operations
             int numberOfColumns = boardPlayerOne.GetLength(1);
             int totalSpots = numberOfRows * numberOfColumns;
 
-            //Generating board one
-            List<int> boardOnePositions = Enumerable.Range(0, totalSpots).ToList();
-            Shuffle(boardOnePositions);
+            List<int> keycardPlayerOne = Enumerable.Repeat(0, totalSpots).ToList();
+            List<int> keycardPlayerTwo = Enumerable.Repeat(0, totalSpots).ToList();
 
-            SetAssassins(boardOnePositions, boardPlayerOne, match.Rules.MaxAssassins);
-            SetBystanders(boardOnePositions, boardPlayerOne, match.Rules.MaxAssassins, localBystanders);
+            if (match.Rules.Gamemode != Gamemode.COUNTERINTELLIGENCE)
+            {
+                SetBystandersOnKeycard(keycardPlayerOne, KeycardNumber.KEYCARD_ONE);
+                SetBystandersOnKeycard(keycardPlayerTwo, KeycardNumber.KEYCARD_TWO);
+                SetAssassinsOnKeycard(keycardPlayerOne, KeycardNumber.KEYCARD_ONE);
+                SetAssassinsOnKeycard(keycardPlayerTwo, KeycardNumber.KEYCARD_TWO);
+            }
+            else
+            {
+                SetCounterintelligenceKeycard(keycardPlayerOne, KeycardNumber.KEYCARD_ONE);
+                SetCounterintelligenceKeycard(keycardPlayerTwo, KeycardNumber.KEYCARD_TWO);
+            }
 
-            //Generating board two, last three positions should always be agents
-            List<int> sharedPositions = boardOnePositions.GetRange(totalSpots - MATCHING_AGENTS, MATCHING_AGENTS);
-            List<int> boardTwoPositions = Enumerable.Range(0, totalSpots).ToList();
-            boardTwoPositions.RemoveAll(x => sharedPositions.Contains(x));
-            Shuffle(boardTwoPositions);
-
-            SetAssassins(boardTwoPositions, boardPlayerTwo, match.Rules.MaxAssassins);
-            SetBystanders(boardTwoPositions, boardPlayerTwo, match.Rules.MaxAssassins, localBystanders);
+            List<int> boardPositions = Enumerable.Range(0, totalSpots).ToList();
+            Shuffle(boardPositions);
+            SetBoard(boardPlayerOne, boardPositions, keycardPlayerOne, totalSpots);
+            SetBoard(boardPlayerTwo, boardPositions, keycardPlayerTwo, totalSpots);
 
             match.BoardPlayerOne = ConvertToJagged(boardPlayerOne);
             match.BoardPlayerTwo = ConvertToJagged(boardPlayerTwo);
-        }
-
-        private static int GetLocalBystanders(Gamemode gameMode)
-        {
-            int localBystanders;
-            switch (gameMode)
-            {
-                case Gamemode.NORMAL:
-                    localBystanders = 13;
-                    break;
-                case Gamemode.CUSTOM:
-                    localBystanders = 13;
-                    break;
-                case Gamemode.COUNTERINTELLIGENCE:
-                    localBystanders = 0;
-                    break;
-                default:
-                    localBystanders = 13;
-                    break;
-            }
-            return localBystanders;
         }
 
         private static void Shuffle(List<int> positions)
@@ -173,31 +152,106 @@ namespace Services.Operations
             }
         }
 
-        private static void SetAssassins(List<int> positions, int[,] board, int maxAssassins)
+        private static void SetBystandersOnKeycard(List<int> keycard, KeycardNumber keycardNum)
         {
-            int numberOfColumns = board.GetLength(1);
-            const int ASSASSIN_CODE = 2;
-            for (int i = 0; i < maxAssassins; i++)
+            const int BYSTANDER_CODE = 1;
+            const int KEYCARD_ONE_START = 1;
+            const int KEYCARD_TWO_START = 9;
+            int startPosition = keycardNum == KeycardNumber.KEYCARD_ONE ? KEYCARD_ONE_START : KEYCARD_TWO_START;
+            const int KEYCARD_ONE_END = 5;
+            const int KEYCARD_TWO_END = 13;
+            int endPosition = keycardNum == KeycardNumber.KEYCARD_ONE ? KEYCARD_ONE_END : KEYCARD_TWO_END;
+            
+            for (int i = startPosition; i <=  endPosition; i++)
             {
-                int flatIndex = positions[i];
-                int row = flatIndex / numberOfColumns;
-                int column = flatIndex % numberOfColumns;
-                board[row, column] = ASSASSIN_CODE;
+                keycard[i] = BYSTANDER_CODE;
+            }
+
+            if (keycardNum == KeycardNumber.KEYCARD_ONE)
+            {
+                const int ODD_ONE_POSITION = 15;
+                keycard[ODD_ONE_POSITION] = BYSTANDER_CODE;
+            }
+
+            const int SHARED_SECOND_START = 17;
+            startPosition = SHARED_SECOND_START;
+            const int KEYCARD_ONE_SECOND_END = 23;
+            const int KEYCARD_TWO_SECOND_END = 24;
+            endPosition = keycardNum == KeycardNumber.KEYCARD_ONE ? KEYCARD_ONE_SECOND_END: KEYCARD_TWO_SECOND_END;
+            
+            for (int i = startPosition; i <= endPosition; i++)
+            {
+                keycard[i] = BYSTANDER_CODE;
             }
         }
 
-        private static void SetBystanders(List<int> positions, int[,] board, int maxAssassins, int maxBystanders)
+        private static void SetAssassinsOnKeycard(List<int> keycard, KeycardNumber keycardNum)
+        {
+            const int ASSASSIN_CODE = 2;
+
+            switch (keycardNum)
+            {
+                case KeycardNumber.KEYCARD_ONE:
+                    const int KEYCARD_ONE_FIRST_ASSASSIN = 0;
+                    keycard[KEYCARD_ONE_FIRST_ASSASSIN] = ASSASSIN_CODE;
+
+                    const int KEYCARD_ONE_SECOND_ASSASSIN = 16;
+                    keycard[KEYCARD_ONE_SECOND_ASSASSIN] = ASSASSIN_CODE;
+                    
+                    const int KEYCARD_ONE_THIRD_ASSASSIN = 24;
+                    keycard[KEYCARD_ONE_THIRD_ASSASSIN] = ASSASSIN_CODE;
+                    break;
+                case KeycardNumber.KEYCARD_TWO:
+                    const int KEYCARD_TWO_FIRST_ASSASSIN = 14;
+                    keycard[KEYCARD_TWO_FIRST_ASSASSIN] = ASSASSIN_CODE;
+                    
+                    const int KEYCARD_TWO_SECOND_ASSASSIN = 15;
+                    keycard[KEYCARD_TWO_SECOND_ASSASSIN] = ASSASSIN_CODE;
+
+                    const int KEYCARD_TWO_THIRD_ASSASSIN = 16;
+                    keycard[KEYCARD_TWO_THIRD_ASSASSIN] = ASSASSIN_CODE;
+                    break;
+            }
+        }
+
+        private static void SetCounterintelligenceKeycard(List<int> keycard, KeycardNumber keycardNum)
+        {
+            const int ASSASSIN_CODE = 2;
+            const int KEYCARD_ONE_START = 1;
+            const int KEYCARD_TWO_START = 9;
+            int startPosition = keycardNum == KeycardNumber.KEYCARD_ONE ? KEYCARD_ONE_START : KEYCARD_TWO_START;
+            const int KEYCARD_ONE_END = 5;
+            const int KEYCARD_TWO_END = 24;
+            int endPosition = keycardNum == KeycardNumber.KEYCARD_ONE ? KEYCARD_ONE_END : KEYCARD_TWO_END;
+            
+            for (int i = startPosition; i <= endPosition; i++)
+            {
+                keycard[i] = ASSASSIN_CODE;
+            }
+
+            if (keycardNum == KeycardNumber.KEYCARD_ONE)
+            {
+                const int KEYCARD_ONE_SECOND_START = 15;
+                const int KEYCARD_ONE_SECOND_END = 24;
+                startPosition = KEYCARD_ONE_SECOND_START;
+                endPosition = KEYCARD_ONE_SECOND_END;
+                for (int i = startPosition; i <= endPosition; i++)
+                {
+                    keycard[i] = ASSASSIN_CODE;
+                }
+            }
+        }
+
+        private static void SetBoard(int[,] board, List<int> positions, List<int> keycard, int totalSpots)
         {
             int numberOfColumns = board.GetLength(1);
-            const int BYSTANDER_CODE = 1;
-            int startIndex = maxAssassins;
-            int endIndex = startIndex + maxBystanders;
-            for (int i = startIndex; i < endIndex; i++)
+
+            for (int i = 0; i < totalSpots; i++)
             {
                 int flatIndex = positions[i];
                 int row = flatIndex / numberOfColumns;
                 int column = flatIndex % numberOfColumns;
-                board[row, column] = BYSTANDER_CODE;
+                board[row, column] = keycard[i];
             }
         }
 
@@ -228,6 +282,12 @@ namespace Services.Operations
                 }
             }
             return jaggedArray;
+        }
+
+        private enum KeycardNumber
+        {
+            KEYCARD_ONE,
+            KEYCARD_TWO
         }
     }
 }

@@ -25,12 +25,12 @@ namespace Services.Contracts.ServiceContracts.Managers
         void NotifyTurnTimeout(Guid senderID, MatchRoleType currentRole);
 
         [OperationContract(IsOneWay = true)]
-        void NotifyPickedAgent(Guid senderID, int newTurnLength);
+        void NotifyPickedAgent(AgentPickedNotification notification);
 
         [OperationContract(IsOneWay = true)]
-        void NotifyPickedBystander(Guid senderID, TokenType tokenToUpdate);
+        void NotifyPickedBystander(BystanderPickedNotification notification);
 
         [OperationContract(IsOneWay = true)]
-        void NotifyPickedAssassin(Guid senderID);
+        void NotifyPickedAssassin(AssassinPickedNotification notification);
     }
 }
