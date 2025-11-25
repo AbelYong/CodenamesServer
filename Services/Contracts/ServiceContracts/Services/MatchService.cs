@@ -246,6 +246,8 @@ namespace Services.Contracts.ServiceContracts.Services
                 {
                     case MatchRoleType.SPYMASTER:
                         NotifyTurnChange(matchID, ongoingMatch.CurrentGuesserID);
+
+                        NotifyTurnChange(matchID, ongoingMatch.CurrentSpymasterID);
                         break;
 
                     case MatchRoleType.GUESSER:
