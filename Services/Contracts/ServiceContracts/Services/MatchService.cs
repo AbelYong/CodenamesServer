@@ -7,11 +7,8 @@ using Services.DTO.Request;
 using Services.Operations;
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.ServiceModel;
-using System.Threading.Tasks;
 
 namespace Services.Contracts.ServiceContracts.Services
 {
@@ -110,26 +107,29 @@ namespace Services.Contracts.ServiceContracts.Services
                 return request;
             }
             bool matchExists = _matches.TryGetValue(match.MatchID, out OngoingMatch ongoingMatch);
-            if (matchExists)
+            lock (_matches)
             {
-                if (match.Requester.PlayerID == playerID)
+                if (matchExists)
                 {
-                    return JoinMatchAsRequester(ongoingMatch, playerID);
-                }
-                else if (match.Companion.PlayerID == playerID)
-                {
-                    return JoinMatchAsCompanion(ongoingMatch, playerID);
+                    if (match.Requester.PlayerID == playerID)
+                    {
+                        return JoinMatchAsRequester(ongoingMatch, playerID);
+                    }
+                    else if (match.Companion.PlayerID == playerID)
+                    {
+                        return JoinMatchAsCompanion(ongoingMatch, playerID);
+                    }
+                    else
+                    {
+                        request.IsSuccess = false;
+                        request.StatusCode = StatusCode.WRONG_DATA;
+                        return request;
+                    }
                 }
                 else
                 {
-                    request.IsSuccess = false;
-                    request.StatusCode= StatusCode.WRONG_DATA;
-                    return request;
+                    return StartMatch(match, playerID);
                 }
-            }
-            else
-            {
-                return StartMatch(match, playerID);
             }
         }
 
@@ -249,15 +249,9 @@ namespace Services.Contracts.ServiceContracts.Services
                         break;
 
                     case MatchRoleType.GUESSER:
-                        if (ongoingMatch.TimerTokens >= 1)
-                        {
-                            ongoingMatch.TimerTokens--;
-                            HandleRoleSwitch(ongoingMatch);
-                        }
-                        else
-                        {
-                            HandleMatchLostTimeout(ongoingMatch);
-                        }
+                        ongoingMatch.TimerTokens--;
+                        NotifyGuesserTurnTimeout(ongoingMatch.CurrentSpymasterID, ongoingMatch.TimerTokens);
+                        HandleRoleSwitch(ongoingMatch);
                         break;
                 }
             }
@@ -276,6 +270,21 @@ namespace Services.Contracts.ServiceContracts.Services
                     HandleMatchAbandoned(matchID, toNotifyID);
                     RemoveFaultedChannel(sendToChannel);
                     ServerLogger.Log.Warn("Turn change due to timeout could not be notified", ex);
+                }
+            }
+        }
+
+        private void NotifyGuesserTurnTimeout(Guid spymasterID, int timerTokens)
+        {
+            if (_connectedPlayers.TryGetValue(spymasterID, out IMatchCallback spymasterChannel))
+            {
+                try
+                {
+                    spymasterChannel.NotifyGuesserTurnTimeout(timerTokens);
+                }
+                catch (CommunicationException ex)
+                {
+                    ServerLogger.Log.Warn("Failed to send guesser turn timeout notification", ex);
                 }
             }
         }
@@ -404,27 +413,39 @@ namespace Services.Contracts.ServiceContracts.Services
             }
 
             _playersOngoingMatchesMap.TryGetValue(notification.SenderID, out Guid matchID);
-            bool matchFound = _matches.TryGetValue(matchID, out OngoingMatch ongoingMatch);
-            if (matchFound)
+            if (_matches.TryGetValue(matchID, out OngoingMatch ongoingMatch))
             {
                 _connectedPlayers.TryGetValue(ongoingMatch.CurrentSpymasterID, out IMatchCallback spymasterChannel);
-                int currentTokens;
-                switch (notification.TokenToUpdate)
+                int currentTimerTokens = ongoingMatch.TimerTokens;
+                switch (ongoingMatch.Gamemode)
                 {
-                    case TokenType.TIMER:
-                        currentTokens = ongoingMatch.TimerTokens;
-                        currentTokens = ongoingMatch.Gamemode != Gamemode.CUSTOM ? 
-                            currentTokens - MatchRules.TIMER_TOKENS_TO_TAKE_NON_CUSTOM : currentTokens - MatchRules.TIMER_TOKENS_TO_TAKE_CUSTOM;
-                        ongoingMatch.TimerTokens = currentTokens;
-                        notification.RemainingTokens = currentTokens;
-                        HandleTimerTokenUpdate(ongoingMatch, notification, spymasterChannel);
+                    case Gamemode.CUSTOM:
+                        int currentBystanderTokens = ongoingMatch.BystanderTokens;
+                        if (currentBystanderTokens >= 1)
+                        {
+                            notification.TokenToUpdate = TokenType.BYSTANDER;
+                            currentBystanderTokens--;
+                            ongoingMatch.BystanderTokens = currentBystanderTokens;
+                            notification.RemainingTokens = currentBystanderTokens;
+                            HandleBystanderTokenUpdate(ongoingMatch, notification, spymasterChannel);
+                        }
+                        else
+                        {
+                            notification.TokenToUpdate = TokenType.TIMER;
+                            currentTimerTokens = currentTimerTokens - MatchRules.TIMER_TOKENS_TO_TAKE_CUSTOM;
+                            currentTimerTokens = currentTimerTokens != -1 ? currentTimerTokens : 0;
+                            ongoingMatch.TimerTokens = currentTimerTokens;
+                            notification.RemainingTokens = currentTimerTokens;
+                            HandleTimerTokenUpdate(ongoingMatch, notification, spymasterChannel);
+                        }
                         break;
-                    case TokenType.BYSTANDER:
-                        currentTokens = ongoingMatch.BystanderTokens;
-                        currentTokens--;
-                        ongoingMatch.BystanderTokens = currentTokens;
-                        notification.RemainingTokens = currentTokens;
-                        HandleBystanderTokenUpdate(ongoingMatch, notification, spymasterChannel);
+                    default:
+                        notification.TokenToUpdate = TokenType.TIMER;
+                        currentTimerTokens = ongoingMatch.TimerTokens;
+                        currentTimerTokens = currentTimerTokens - MatchRules.TIMER_TOKENS_TO_TAKE_NON_CUSTOM;
+                        ongoingMatch.TimerTokens = currentTimerTokens;
+                        notification.RemainingTokens = currentTimerTokens;
+                        HandleTimerTokenUpdate(ongoingMatch, notification, spymasterChannel);
                         break;
                 }
             }
@@ -432,8 +453,9 @@ namespace Services.Contracts.ServiceContracts.Services
 
         private void HandleTimerTokenUpdate(OngoingMatch match, BystanderPickedNotification notification, IMatchCallback spymasterChannel)
         {
-            if (match.TimerTokens > 0)
+            if (match.TimerTokens >= 0)
             {
+                
                 try
                 {
                     spymasterChannel.NotifyBystanderPicked(notification);
@@ -443,7 +465,6 @@ namespace Services.Contracts.ServiceContracts.Services
                 {
                     HandleMatchAbandoned(match.MatchID, match.CurrentSpymasterID);
                     RemoveFaultedChannel(spymasterChannel);
-                    ServerLogger.Log.Warn("Timer token update could not be sent: ", ex);
                 }
             }
             else
@@ -500,47 +521,65 @@ namespace Services.Contracts.ServiceContracts.Services
             }
             _playersOngoingMatchesMap.TryGetValue(notification.SenderID, out Guid matchID);
             bool matchFound = _matches.TryGetValue(matchID, out OngoingMatch match);
-            bool assassinsUpdated;
             if (matchFound)
             {
                 match.StopTimer();
-                bool isSpymasterOnline = _connectedPlayers.TryGetValue(match.CurrentSpymasterID, out IMatchCallback spymasterChannel);
-                try
-                {
-                    assassinsUpdated = _scoreboardDAO.UpdateAssassinsPicked(match.CurrentSpymasterID);
-                    if (isSpymasterOnline)
-                    {
-                        spymasterChannel.NotifyAssassinPicked(notification);
-                        if (!assassinsUpdated)
-                        {
-                            spymasterChannel.NotifyStatsCouldNotBeSaved();
-                        }
-                    }
-                }
-                catch (CommunicationException ex)
-                {
-                    RemoveFaultedChannel(spymasterChannel);
-                    ServerLogger.Log.Warn("Could not notify assassin picked: ", ex);
-                }
-                bool isGuesserOnline = _connectedPlayers.TryGetValue(match.CurrentGuesserID, out  IMatchCallback guesserChannel);
-                try
-                {
-                    assassinsUpdated = _scoreboardDAO.UpdateAssassinsPicked(match.CurrentGuesserID);
-                    if (isGuesserOnline)
-                    {
-                        guesserChannel.NotifyAssassinPicked(notification);
-                        if (!assassinsUpdated)
-                        {
-                            spymasterChannel.NotifyStatsCouldNotBeSaved();
-                        }
-                    }
-                }
-                catch (CommunicationException ex)
-                {
-                    RemoveFaultedChannel(guesserChannel);
-                    ServerLogger.Log.Warn("Could not notify assassin picked: ", ex);
-                }
+                UpdateAssassinsPicked(match.CurrentGuesserID);
+                SendAssassinPickedNotification(match.CurrentGuesserID, notification);
+                SendAssassinPickedNotification(match.CurrentSpymasterID, notification);
                 RemoveMatch(match);
+            }
+        }
+
+        private void UpdateAssassinsPicked(Guid pickerID)
+        {
+            bool assassinsPickedUpdated = _scoreboardDAO.UpdateAssassinsPicked(pickerID);
+            if (!assassinsPickedUpdated)
+            {
+                SendStatsNotSavedNotification(pickerID);
+            }
+        }
+
+        private void SendStatsNotSavedNotification(Guid playerID)
+        {
+            if (_connectedPlayers.TryGetValue(playerID, out IMatchCallback channel))
+            {
+                try
+                {
+                    channel.NotifyStatsCouldNotBeSaved();
+                }
+                catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
+                {
+                    RemoveFaultedChannel(channel);
+                    ServerLogger.Log.Warn("Failed to notify scores could not be saved: ", ex);
+                }
+                catch (Exception ex)
+                {
+                    RemoveFaultedChannel(channel);
+                    ServerLogger.Log.Error("Unexpected exception while notifying scores could not be saved: ", ex);
+                }
+            }
+
+        }
+
+        private void SendAssassinPickedNotification(Guid toNotifyID, AssassinPickedNotification notification)
+        {
+            if (_connectedPlayers.TryGetValue(toNotifyID, out IMatchCallback channel))
+            {
+                try
+                {
+                    channel.NotifyAssassinPicked(notification);
+                }
+                catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
+                {
+                    RemoveFaultedChannel(channel);
+                    ServerLogger.Log.Warn("Could not notify assassin picked: ", ex);
+                }
+                catch (Exception ex)
+                {
+                    RemoveFaultedChannel(channel);
+                    ServerLogger.Log.Error("Unexpected exception while notifying assassin picked: ", ex);
+                }
             }
         }
 

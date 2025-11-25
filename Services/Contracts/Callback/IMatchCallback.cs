@@ -17,6 +17,9 @@ namespace Services.Contracts.Callback
         void NotifyRolesChanged();
 
         [OperationContract(IsOneWay = true)]
+        void NotifyGuesserTurnTimeout(int timerTokens);
+
+        [OperationContract(IsOneWay = true)]
         void NotifyAgentPicked(AgentPickedNotification notification);
 
         [OperationContract(IsOneWay = true)]
