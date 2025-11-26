@@ -1,4 +1,5 @@
 ﻿using Services.DTO;
+using Services.DTO.Request;
 using System.ServiceModel;
 
 namespace Services.Contracts.ServiceContracts.Managers
@@ -7,9 +8,9 @@ namespace Services.Contracts.ServiceContracts.Managers
     public interface IEmailManager
     {
         [OperationContract]
-        RequestResult SendVerificationCode(string email);
+        CommunicationRequest SendVerificationCode(string email);
 
         [OperationContract]
-        RequestResult ValidateVerificationCode(string email, string code);
+        ConfirmEmailRequest ValidateVerificationCode(string email, string code);
     }
 }

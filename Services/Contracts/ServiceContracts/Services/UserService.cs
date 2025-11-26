@@ -23,7 +23,7 @@ namespace Services.Contracts.ServiceContracts.Services
 
         public UpdateResult UpdateProfile(Player updatedPlayer)
         {
-            DataAccess.Player dbUpdatedPlayer = Player.AssembleDbPlayer(updatedPlayer.User, updatedPlayer);
+            DataAccess.Player dbUpdatedPlayer = Player.AssembleDbPlayer(updatedPlayer);
             DataAccess.Util.OperationResult operationResult = _playerDAO.UpdateProfile(dbUpdatedPlayer);
             return AssembleUpdateResult(operationResult);
         }

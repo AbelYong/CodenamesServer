@@ -1,10 +1,15 @@
-﻿using DataAccess.Users;
+﻿using DataAccess.DataRequests;
 using DataAccess.Properties.Langs;
+using DataAccess.Users;
+using Services.Contracts.ServiceContracts.Managers;
 using Services.DTO;
+using Services.DTO.Request;
+using Services.Operations;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
+using System.Data.Entity.Core;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Net;
@@ -12,10 +17,6 @@ using System.Net.Mail;
 using System.Security.Cryptography;
 using System.Text;
 using DA = DataAccess;
-using Services.Operations;
-using Services.DTO.Request;
-using System.Data.Entity.Core;
-using Services.Contracts.ServiceContracts.Managers;
 
 namespace Services.Contracts.ServiceContracts.Services
 {
@@ -67,15 +68,60 @@ namespace Services.Contracts.ServiceContracts.Services
             return request;
         }
 
-        public Guid? SignIn(User svUser, Player svPlayer)
+        public SignInRequest SignIn(Player svPlayer)
         {
-            svPlayer.Name = string.IsNullOrWhiteSpace(svPlayer.Name) ? null : svPlayer.Name.Trim();
-            svPlayer.LastName = string.IsNullOrWhiteSpace(svPlayer.LastName) ? null : svPlayer.LastName.Trim();
+            SignInRequest request = new SignInRequest();
+            if (svPlayer != null)
+            {
+                svPlayer.Name = string.IsNullOrWhiteSpace(svPlayer.Name) ? null : svPlayer.Name.Trim();
+                svPlayer.LastName = string.IsNullOrWhiteSpace(svPlayer.LastName) ? null : svPlayer.LastName.Trim();
 
-            DataAccess.Player dbPlayer = Player.AssembleDbPlayer(svUser, svPlayer);
-            string password = svUser.Password;
+                return RegisterNewPlayer(svPlayer);
+            }
+            else
+            {
+                request.IsSuccess = false;
+                request.StatusCode= StatusCode.MISSING_DATA;
+            }
+            return request;
+        }
 
-            return _userDAO.SignIn(dbPlayer, password);
+        private static SignInRequest RegisterNewPlayer(Player svPlayer)
+        {
+            SignInRequest request = new SignInRequest();
+            DataAccess.Player dbPlayer = Player.AssembleDbPlayer(svPlayer);
+            string password = svPlayer.User.Password;
+            PlayerRegistrationRequest dbRequest = _userDAO.SignIn(dbPlayer, password);
+            if (dbRequest.IsSuccess)
+            {
+                request.IsSuccess = true;
+            }
+            else
+            {
+                request.IsSuccess = false;
+                request.IsEmailDuplicate = dbRequest.IsEmailDuplicate;
+                request.IsEmailValid = dbRequest.IsEmailValid;
+                request.IsUsernameDuplicate = dbRequest.IsUsernameDuplicate;
+                request.IsPasswordValid = dbRequest.IsPasswordValid;
+
+                if (dbRequest.ErrorType == ErrorType.INVALID_DATA)
+                {
+                    request.StatusCode = StatusCode.WRONG_DATA;
+                }
+                else if (dbRequest.ErrorType == ErrorType.DUPLICATE)
+                {
+                    request.StatusCode = StatusCode.UNALLOWED;
+                }
+                else if (dbRequest.ErrorType == ErrorType.MISSING_DATA)
+                {
+                    request.StatusCode = StatusCode.MISSING_DATA;
+                }
+                else
+                {
+                    request.StatusCode = StatusCode.SERVER_ERROR;
+                }
+            }
+            return request;
         }
 
         public void BeginPasswordReset(string username, string email)

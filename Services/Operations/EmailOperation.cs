@@ -1,21 +1,23 @@
-﻿using DataAccess.Properties.Langs;
-using Services.DTO;
+﻿using DataAccess;
+using DataAccess.Properties.Langs;
 using System;
-using System.Collections.Generic;
 using System.Configuration;
-using System.Linq;
 using System.Net;
 using System.Net.Mail;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace Services.Operations
 {
     public static class EmailOperation
     {
-        private static readonly Regex GmailRegex =
+        private static readonly Regex _gmailRegex =
             new Regex(@"^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@gmail\.com$",
+                      RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(100));
+        private static readonly Regex _outlookRegex =
+            new Regex(@"^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@outlook\.com$",
+                      RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(100));
+        private static readonly Regex _uvEstudiantesMxRegex =
+            new Regex(@"^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@estudiantes\.uv\.mx$",
                       RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(100));
 
         public static string GenerateSixDigitCode()
@@ -31,7 +33,7 @@ namespace Services.Operations
 
         public static void SendVerificationEmail(string address, string code)
         {
-            if (GmailRegex.IsMatch(address))
+            if (_gmailRegex.IsMatch(address) || _outlookRegex.IsMatch(address) || _uvEstudiantesMxRegex.IsMatch(address))
             {
                 string subject = Lang.verifyEmailSubjectVerify;
                 string body = string.Format(Lang.verifyEmailBodyVerify, code);
@@ -41,7 +43,7 @@ namespace Services.Operations
 
         public static void SendGameInvitationEmail(string fromUsername, string toAddress, string lobbyCode)
         {
-            if (GmailRegex.IsMatch(toAddress))
+            if (_gmailRegex.IsMatch(toAddress) || _outlookRegex.IsMatch(toAddress) || _uvEstudiantesMxRegex.IsMatch(toAddress))
             {
                 string subject = "Invitation to play Codenames";
                 string body = string.Format("{0} has invited you to play a match, use the code {1} to join them", fromUsername, lobbyCode);

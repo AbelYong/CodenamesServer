@@ -237,13 +237,6 @@ namespace Services.Contracts.ServiceContracts.Services
                     return request;
                 }
 
-                if (joiningPlayer == null)
-                {
-                    request.IsSuccess = false;
-                    request.StatusCode = StatusCode.MISSING_DATA;
-                    return request;
-                }
-
                 if (!_lobbies.TryGetValue(lobbyCode, out Party party))
                 {
                     request.IsSuccess = false;
@@ -280,6 +273,12 @@ namespace Services.Contracts.ServiceContracts.Services
                 request.IsSuccess = true;
                 request.StatusCode = StatusCode.OK;
                 request.Party = party;
+            }
+            else
+            {
+                request.IsSuccess = false;
+                request.StatusCode = StatusCode.MISSING_DATA;
+                return request;
             }
             return request;
         }

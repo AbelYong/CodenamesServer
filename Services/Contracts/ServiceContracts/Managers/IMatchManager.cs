@@ -18,19 +18,19 @@ namespace Services.Contracts.ServiceContracts.Managers
         [OperationContract(IsOneWay = true)]
         void Disconnect(Guid playerID);
 
-        [OperationContract(IsOneWay = true)]
+        [OperationContract(IsOneWay = false)]
         void SendClue(Guid senderID, string clue);
 
-        [OperationContract(IsOneWay = true)]
+        [OperationContract(IsOneWay = false)]
         void NotifyTurnTimeout(Guid senderID, MatchRoleType currentRole);
 
-        [OperationContract(IsOneWay = true)]
+        [OperationContract(IsOneWay = false)]
         void NotifyPickedAgent(AgentPickedNotification notification);
 
-        [OperationContract(IsOneWay = true)]
+        [OperationContract(IsOneWay = false)]
         void NotifyPickedBystander(BystanderPickedNotification notification);
 
-        [OperationContract(IsOneWay = true)]
+        [OperationContract(IsOneWay = false)]
         void NotifyPickedAssassin(AssassinPickedNotification notification);
     }
 }

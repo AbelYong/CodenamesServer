@@ -7,6 +7,7 @@ using System.Net.Mail;
 using DataAccess.Properties.Langs;
 using DataAccess.Users;
 using Services.Contracts.ServiceContracts.Managers;
+using Services.DTO.Request;
 
 namespace Services.Contracts.ServiceContracts.Services
 {
@@ -17,9 +18,9 @@ namespace Services.Contracts.ServiceContracts.Services
         private const int VERICATION_TIMEOUT_MINUTES = 15;
         private const int MAX_ATTEMPTS = 3;
 
-        public RequestResult SendVerificationCode(string email)
+        public CommunicationRequest SendVerificationCode(string email)
         {
-            RequestResult result = new RequestResult();
+            CommunicationRequest request = new CommunicationRequest();
             if (UserDAO.ValidateEmailNotDuplicated(email))
             {
                 try
@@ -41,32 +42,34 @@ namespace Services.Contracts.ServiceContracts.Services
                     _cache.Set(email, info, policy);
 
                     EmailOperation.SendVerificationEmail(email, code);
-                    result.IsSuccess = true;
+                    request.IsSuccess = true;
+                    request.StatusCode = StatusCode.OK;
                 }
                 catch (Exception ex) when (ex is SmtpException || ex is SmtpFailedRecipientException)
                 {
-                    result.IsSuccess = false;
-                    result.Message = Lang.verifyEmailSubjectVerify;
+                    request.IsSuccess = false;
+                    request.StatusCode = StatusCode.SERVER_ERROR;
                 }
             }
             else
             {
-                result.IsSuccess = false;
-                result.Message = Lang.errorEmailAddressInUse;
+                request.IsSuccess = false;
+                request.StatusCode = StatusCode.UNALLOWED;
             }
-            return result;
+            return request;
         }
 
-        public RequestResult ValidateVerificationCode(string email, string code)
+        public ConfirmEmailRequest ValidateVerificationCode(string email, string code)
         {
-            RequestResult result = new RequestResult();
-            var info = _cache.Get(email) as VerificationInfo;
+            ConfirmEmailRequest request = new ConfirmEmailRequest();
+            VerificationInfo info = _cache.Get(email) as VerificationInfo;
             if (info != null && info.RemainingAttempts > 0)
             {
                 if (info.Code == code)
                 {
                     _cache.Remove(email);
-                    result.IsSuccess = true;
+                    request.IsSuccess = true;
+                    request.StatusCode = StatusCode.OK;
                 }
                 else
                 {
@@ -76,28 +79,17 @@ namespace Services.Contracts.ServiceContracts.Services
                         AbsoluteExpiration = info.ExpirationTime
                     };
                     _cache.Set(email, info, policy);
-                    result.IsSuccess = false;
-                    result.Message = SetResultMessage(info.RemainingAttempts);
+                    request.IsSuccess = false;
+                    request.StatusCode = StatusCode.UNAUTHORIZED;
+                    request.RemainingAttempts = info.RemainingAttempts;
                 }
             }
             else
             {
-                result.IsSuccess = false;
-                result.Message = Lang.resetCodeExpired;
+                request.IsSuccess = false;
+                request.StatusCode = StatusCode.NOT_FOUND;
             }
-            return result;
-        }
-
-        private static string SetResultMessage(int remainingAttempts)
-        {
-            if (remainingAttempts > 0)
-            {
-                return string.Format(Lang.verifyRemainingAttempts, remainingAttempts);
-            }
-            else
-            {
-                return Lang.globalTooManyAttempts;
-            }
+            return request;
         }
 
         private sealed class VerificationInfo

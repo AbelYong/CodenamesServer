@@ -79,6 +79,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>codenames.edmx</DependentUpon>
     </Compile>
+    <Compile Include="DataRequests\PlayerRegistrationRequest.cs" />
     <Compile Include="DataRequests\PlayerRequest.cs" />
     <Compile Include="Friendship.cs">
       <DependentUpon>codenames.tt</DependentUpon>
@@ -123,6 +124,8 @@
     <Compile Include="Util\OperationResult.cs" />
     <Compile Include="Users\PlayerDAO.cs" />
     <Compile Include="Users\UserDAO.cs" />
+    <Compile Include="Validators\PlayerValidator.cs" />
+    <Compile Include="Validators\UserValidator.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config">

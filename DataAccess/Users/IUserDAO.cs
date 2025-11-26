@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DataAccess.DataRequests;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,6 +11,6 @@ namespace DataAccess.Users
     {
         Guid? Authenticate(string username, string password);
 
-        Guid? SignIn(Player player, string password);
+        PlayerRegistrationRequest SignIn(Player player, string password);
     }
 }
