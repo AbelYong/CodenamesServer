@@ -188,4 +188,43 @@ Expires in 15 minutes.</value>
   <data name="verifyRemainingAttempts" xml:space="preserve">
     <value>{0} attempts remaining</value>
   </data>
+  <data name="errorInvalidID" xml:space="preserve">
+    <value>Invalid IDs.</value>
+  </data>
+  <data name="errorAddingYourself" xml:space="preserve">
+    <value>You cannot add yourself.</value>
+  </data>
+  <data name="errorDuplicatedFriendship" xml:space="preserve">
+    <value>There is already a relationship or request between these players.</value>
+  </data>
+  <data name="friendRequestSubmitted" xml:space="preserve">
+    <value>Request submitted.</value>
+  </data>
+  <data name="errorUnprocessedRequest" xml:space="preserve">
+    <value>Error processing the request on the server.</value>
+  </data>
+  <data name="errorRequestNotFound" xml:space="preserve">
+    <value>The pending request was not found.</value>
+  </data>
+  <data name="friendRequestAccepted" xml:space="preserve">
+    <value>Request accepted.</value>
+  </data>
+  <data name="errorAcceptingRequest" xml:space="preserve">
+    <value>Error accepting the request.</value>
+  </data>
+  <data name="friendRequestRejected" xml:space="preserve">
+    <value>Request rejected.</value>
+  </data>
+  <data name="errorRejectingRequest" xml:space="preserve">
+    <value>Error rejecting the request.</value>
+  </data>
+  <data name="errorNoFriendship" xml:space="preserve">
+    <value>There is no accepted friendship relationship.</value>
+  </data>
+  <data name="friendDeletedFriend" xml:space="preserve">
+    <value>Deleted friend.</value>
+  </data>
+  <data name="errorDeletingFriend" xml:space="preserve">
+    <value>Error deleting friend.</value>
+  </data>
 </root>

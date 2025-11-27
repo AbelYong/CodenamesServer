@@ -4,6 +4,7 @@ using System.Linq;
 using System.ServiceModel;
 using DataAccess.Users;
 using Services.DTO;
+using Services.DTO.Request;
 using Services.Operations;
 
 namespace Services
@@ -16,7 +17,6 @@ namespace Services
     public class FriendService : IFriendManager
     {
         private static readonly IFriendDAO _friendDAO = new FriendDAO();
-
         private static readonly IPlayerDAO _playerDAO = new PlayerDAO();
 
         private Guid _playerId;
@@ -49,105 +49,151 @@ namespace Services
             FriendCallbackManager.Unregister(mePlayerId);
         }
 
-        public void SendFriendRequest(Guid fromPlayerId, Guid toPlayerId)
+        public FriendshipRequest SendFriendRequest(Guid fromPlayerId, Guid toPlayerId)
         {
+            var response = new FriendshipRequest();
+
+            if (fromPlayerId == toPlayerId)
+            {
+                response.IsSuccess = false;
+                response.StatusCode = StatusCode.UNALLOWED;
+                return response;
+            }
+
             var result = _friendDAO.SendFriendRequest(fromPlayerId, toPlayerId);
 
             if (result.Success)
             {
                 var fromPlayer = _playerDAO.GetPlayerById(fromPlayerId);
-
                 var playerDto = Player.AssembleSvPlayer(fromPlayer);
 
                 FriendCallbackManager.InvokeCallback(toPlayerId,
                     c => c.NotifyNewFriendRequest(playerDto));
 
-                _callback.NotifyOperationSuccess(result.Message);
+                response.IsSuccess = true;
+                response.StatusCode = StatusCode.FRIEND_REQUEST_SENT;
             }
             else
             {
-                _callback.NotifyOperationFailure(result.Message);
+                response.IsSuccess = false;
+                response.StatusCode = StatusCode.CONFLICT;
             }
+
+            return response;
         }
 
-        public void AcceptFriendRequest(Guid mePlayerId, Guid requesterPlayerId)
+        public FriendshipRequest AcceptFriendRequest(Guid mePlayerId, Guid requesterPlayerId)
         {
+            var response = new FriendshipRequest();
             var result = _friendDAO.AcceptFriendRequest(mePlayerId, requesterPlayerId);
 
             if (result.Success)
             {
                 var mePlayer = _playerDAO.GetPlayerById(mePlayerId);
-
                 var playerDto = Player.AssembleSvPlayer(mePlayer);
 
                 FriendCallbackManager.InvokeCallback(requesterPlayerId,
                     c => c.NotifyFriendRequestAccepted(playerDto));
 
-                _callback.NotifyOperationSuccess(result.Message);
+                response.IsSuccess = true;
+                response.StatusCode = StatusCode.FRIEND_ADDED;
             }
             else
             {
-                _callback.NotifyOperationFailure(result.Message);
+                response.IsSuccess = false;
+                response.StatusCode = StatusCode.SERVER_ERROR;
             }
+
+            return response;
         }
 
-        public void RejectFriendRequest(Guid mePlayerId, Guid requesterPlayerId)
+        public FriendshipRequest RejectFriendRequest(Guid mePlayerId, Guid requesterPlayerId)
         {
+            var response = new FriendshipRequest();
             var result = _friendDAO.RejectFriendRequest(mePlayerId, requesterPlayerId);
 
             if (result.Success)
             {
                 var mePlayer = _playerDAO.GetPlayerById(mePlayerId);
-
                 var playerDto = Player.AssembleSvPlayer(mePlayer);
 
                 FriendCallbackManager.InvokeCallback(requesterPlayerId,
                     c => c.NotifyFriendRequestRejected(playerDto));
 
-                _callback.NotifyOperationSuccess(result.Message);
+                response.IsSuccess = true;
+                response.StatusCode = StatusCode.FRIEND_REQUEST_REJECTED;
             }
             else
             {
-                _callback.NotifyOperationFailure(result.Message);
+                response.IsSuccess = false;
+                response.StatusCode = StatusCode.SERVER_ERROR;
             }
+
+            return response;
         }
 
-        public void RemoveFriend(Guid mePlayerId, Guid friendPlayerId)
+        public FriendshipRequest RemoveFriend(Guid mePlayerId, Guid friendPlayerId)
         {
+            var response = new FriendshipRequest();
             var result = _friendDAO.RemoveFriend(mePlayerId, friendPlayerId);
 
             if (result.Success)
             {
                 var mePlayer = _playerDAO.GetPlayerById(mePlayerId);
-
                 var playerDto = Player.AssembleSvPlayer(mePlayer);
 
                 FriendCallbackManager.InvokeCallback(friendPlayerId,
                     c => c.NotifyFriendRemoved(playerDto));
 
-                _callback.NotifyOperationSuccess(result.Message);
+                response.IsSuccess = true;
+                response.StatusCode = StatusCode.FRIEND_REMOVED;
             }
             else
             {
-                _callback.NotifyOperationFailure(result.Message);
+                response.IsSuccess = false;
+                response.StatusCode = StatusCode.SERVER_ERROR;
             }
+
+            return response;
         }
 
         public List<Player> SearchPlayers(string query, Guid mePlayerId, int limit)
         {
             var items = _friendDAO.SearchPlayers(query, mePlayerId, limit <= 0 ? 20 : limit);
-            return items.Select(Player.AssembleSvPlayer).Where(p => p != null).ToList();
+
+            if (items == null)
+            {
+                return new List<Player>();
+            }
+
+            return items
+                .Where(p => p.playerID != mePlayerId)
+                .Select(Player.AssembleSvPlayer)
+                .Where(p => p != null)
+                .ToList();
         }
 
         public List<Player> GetFriends(Guid mePlayerId)
         {
             var items = _friendDAO.GetFriends(mePlayerId);
+
+            if (items == null)
+            {
+                return new List<Player>();
+            }
+
             return items.Select(Player.AssembleSvPlayer).Where(p => p != null).ToList();
         }
 
         public List<Player> GetIncomingRequests(Guid mePlayerId)
         {
             var items = _friendDAO.GetIncomingRequests(mePlayerId);
+
+            if (items == null)
+            {
+                return new List<Player>();
+            }
+
             return items.Select(Player.AssembleSvPlayer).Where(p => p != null).ToList();
         }
     }

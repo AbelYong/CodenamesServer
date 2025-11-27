@@ -61,6 +61,42 @@ namespace DataAccess.Properties.Langs {
         }
         
         /// <summary>
+        ///   Busca una cadena traducida similar a Error accepting the request..
+        /// </summary>
+        public static string errorAcceptingRequest {
+            get {
+                return ResourceManager.GetString("errorAcceptingRequest", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a You cannot add yourself..
+        /// </summary>
+        public static string errorAddingYourself {
+            get {
+                return ResourceManager.GetString("errorAddingYourself", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a Error deleting friend..
+        /// </summary>
+        public static string errorDeletingFriend {
+            get {
+                return ResourceManager.GetString("errorDeletingFriend", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a There is already a relationship or request between these players..
+        /// </summary>
+        public static string errorDuplicatedFriendship {
+            get {
+                return ResourceManager.GetString("errorDuplicatedFriendship", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Busca una cadena traducida similar a The email address is already in use.
         /// </summary>
         public static string errorEmailAddressInUse {
@@ -70,11 +106,92 @@ namespace DataAccess.Properties.Langs {
         }
         
         /// <summary>
+        ///   Busca una cadena traducida similar a Invalid IDs..
+        /// </summary>
+        public static string errorInvalidID {
+            get {
+                return ResourceManager.GetString("errorInvalidID", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a There is no accepted friendship relationship..
+        /// </summary>
+        public static string errorNoFriendship {
+            get {
+                return ResourceManager.GetString("errorNoFriendship", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a Error rejecting the request..
+        /// </summary>
+        public static string errorRejectingRequest {
+            get {
+                return ResourceManager.GetString("errorRejectingRequest", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a The pending request was not found..
+        /// </summary>
+        public static string errorRequestNotFound {
+            get {
+                return ResourceManager.GetString("errorRequestNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a Error processing the request on the server..
+        /// </summary>
+        public static string errorUnprocessedRequest {
+            get {
+                return ResourceManager.GetString("errorUnprocessedRequest", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Busca una cadena traducida similar a The username is already in use.
         /// </summary>
         public static string errorUsernameInUse {
             get {
                 return ResourceManager.GetString("errorUsernameInUse", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a Deleted friend..
+        /// </summary>
+        public static string friendDeletedFriend {
+            get {
+                return ResourceManager.GetString("friendDeletedFriend", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a Request accepted..
+        /// </summary>
+        public static string friendRequestAccepted {
+            get {
+                return ResourceManager.GetString("friendRequestAccepted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a Request rejected..
+        /// </summary>
+        public static string friendRequestRejected {
+            get {
+                return ResourceManager.GetString("friendRequestRejected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Busca una cadena traducida similar a Request submitted..
+        /// </summary>
+        public static string friendRequestSubmitted {
+            get {
+                return ResourceManager.GetString("friendRequestSubmitted", resourceCulture);
             }
         }
         
