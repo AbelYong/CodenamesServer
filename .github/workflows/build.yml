@@ -55,10 +55,10 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         shell: powershell
         run: |
-          ${{ runner.temp }}\scanner\dotnet-sonarscanner begin /k:"AbelYong_CodenamesServer" /o:"abelyong-lis2025" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.cs.vstest.reportsPaths="TestResults/*.trx" /d:sonar.cs.vscoveragexml.reportsPaths="coverage.xml"
+          ${{ runner.temp }}\scanner\dotnet-sonarscanner begin /k:"AbelYong_CodenamesServer" /o:"abelyong-lis2025" /d:sonar.token="$SONAR_TOKEN" /d:sonar.cs.vstest.reportsPaths="TestResults/*.trx" /d:sonar.cs.vscoveragexml.reportsPaths="coverage.xml"
           
           msbuild.exe CodenamesServer.sln /t:Rebuild /p:Configuration=Release
           
           dotnet-coverage collect "vstest.console.exe DataAccess.Tests\bin\Release\DataAccess.Tests.dll Services.Tests\bin\Release\Services.Tests.dll /Logger:trx /ResultsDirectory:TestResults" -f xml -o "coverage.xml"
           
-          ${{ runner.temp }}\scanner\dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+          ${{ runner.temp }}\scanner\dotnet-sonarscanner end /d:sonar.token="$SONAR_TOKEN"
