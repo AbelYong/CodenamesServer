@@ -27,7 +27,7 @@ namespace DataAccess.Test
             _player.User.email = "profile@test.com";
             _player.username = "profileTester";
             string password = "password";
-            _userID = (Guid)_userDAO.SignIn(_player, password);
+            _userID = (Guid)_userDAO.SignIn(_player, password).NewPlayerID;
 
             //Helper player to test data duplications
             _auxPlayer = new Player();
