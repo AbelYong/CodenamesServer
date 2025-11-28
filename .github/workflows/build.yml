@@ -46,8 +46,9 @@ jobs:
       - name: Create dummy connectionStrings.Local.config
         shell: powershell
         run: |
-          # Create .config file with minimum structure so msbuild doesn't fail
-          New-Item -Path "D:\a\CodenamesServer\CodenamesServer\DataAccess\connectionStrings.Local.config" -ItemType File -Value "<connectionStrings></connectionStrings>"    
+          # Create minimal .config file so msbuild doesn't fail
+          New-Item -Path "D:\a\CodenamesServer\CodenamesServer\DataAccess\connectionStrings.Local.config" -ItemType File -Value "<connectionStrings></connectionStrings>"
+          New-Item -Path "D:\a\CodenamesServer\CodenamesServer\Host\appSettings.Local.config" -ItemType File -Value "<appSettings></appSettings>"
       - name: Install Coverage Tool
         run: dotnet tool install --global dotnet-coverage
       - name: Build, Test and Analyze with Coverage
