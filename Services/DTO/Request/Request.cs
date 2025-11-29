@@ -9,6 +9,7 @@ namespace Services.DTO.Request
     [KnownType(typeof(ConfirmEmailRequest))]
     [KnownType(typeof(CreateLobbyRequest))]
     [KnownType(typeof(JoinPartyRequest))]
+    [KnownType(typeof(FriendshipRequest))]
     public abstract class Request
     {
         [DataMember]

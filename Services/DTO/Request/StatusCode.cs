@@ -36,6 +36,12 @@
         //Means that the user to be reported has already been reported before (non-repudiation)
         REPORT_DUPLICATED,
         //Means the user was reported and the accumulation resulted in an immediate ban (Kick + Ban)
-        USER_KICKED_AND_BANNED
+        USER_KICKED_AND_BANNED,
+        FRIEND_REQUEST_SENT,
+        FRIEND_ADDED,
+        FRIEND_REMOVED,
+        FRIEND_REQUEST_REJECTED,
+        ALREADY_FRIENDS,
+        FRIEND_REQUEST_ALREADY_SENT
     }
 }
