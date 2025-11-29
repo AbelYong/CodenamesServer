@@ -12,9 +12,6 @@ namespace Services.Contracts.ServiceContracts.Managers
         LoginRequest Login(string username, string password);
 
         [OperationContract]
-        SignInRequest SignIn(Player svPlayer);
-
-        [OperationContract]
         void BeginPasswordReset(string username, string email);
 
         [OperationContract]

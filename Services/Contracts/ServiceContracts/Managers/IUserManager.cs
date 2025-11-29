@@ -2,6 +2,7 @@
 using System.Runtime.Serialization;
 using System.ServiceModel;
 using Services.DTO;
+using Services.DTO.Request;
 
 namespace Services.Contracts.ServiceContracts.Managers
 {
@@ -10,18 +11,9 @@ namespace Services.Contracts.ServiceContracts.Managers
     {
         [OperationContract]
         Player GetPlayerByUserID(Guid userID);
-
         [OperationContract]
-        UpdateResult UpdateProfile(Player updatedPlayer);
-    }
-
-    [DataContract]
-    public class UpdateResult
-    {
-        [DataMember]
-        public bool Success { get; set; }
-
-        [DataMember]
-        public string Message { get; set; }
+        SignInRequest SignIn(Player svPlayer);
+        [OperationContract]
+        CommunicationRequest UpdateProfile(Player updatedPlayer);
     }
 }

@@ -72,62 +72,6 @@ namespace Services.Contracts.ServiceContracts.Services
             return request;
         }
 
-        public SignInRequest SignIn(Player svPlayer)
-        {
-            SignInRequest request = new SignInRequest();
-            if (svPlayer != null)
-            {
-                svPlayer.Name = string.IsNullOrWhiteSpace(svPlayer.Name) ? null : svPlayer.Name.Trim();
-                svPlayer.LastName = string.IsNullOrWhiteSpace(svPlayer.LastName) ? null : svPlayer.LastName.Trim();
-
-                return RegisterNewPlayer(svPlayer);
-            }
-            else
-            {
-                request.IsSuccess = false;
-                request.StatusCode= StatusCode.MISSING_DATA;
-            }
-            return request;
-        }
-
-        private SignInRequest RegisterNewPlayer(Player svPlayer)
-        {
-            SignInRequest request = new SignInRequest();
-            DataAccess.Player dbPlayer = Player.AssembleDbPlayer(svPlayer);
-            string password = svPlayer.User.Password;
-            PlayerRegistrationRequest dbRequest = _userDAO.SignIn(dbPlayer, password);
-            if (dbRequest.IsSuccess)
-            {
-                request.IsSuccess = true;
-            }
-            else
-            {
-                request.IsSuccess = false;
-                request.IsEmailDuplicate = dbRequest.IsEmailDuplicate;
-                request.IsEmailValid = dbRequest.IsEmailValid;
-                request.IsUsernameDuplicate = dbRequest.IsUsernameDuplicate;
-                request.IsPasswordValid = dbRequest.IsPasswordValid;
-
-                if (dbRequest.ErrorType == ErrorType.INVALID_DATA)
-                {
-                    request.StatusCode = StatusCode.WRONG_DATA;
-                }
-                else if (dbRequest.ErrorType == ErrorType.DUPLICATE)
-                {
-                    request.StatusCode = StatusCode.UNALLOWED;
-                }
-                else if (dbRequest.ErrorType == ErrorType.MISSING_DATA)
-                {
-                    request.StatusCode = StatusCode.MISSING_DATA;
-                }
-                else
-                {
-                    request.StatusCode = StatusCode.SERVER_ERROR;
-                }
-            }
-            return request;
-        }
-
         public void BeginPasswordReset(string username, string email)
         {
             using (var db = new DataAccess.codenamesEntities())

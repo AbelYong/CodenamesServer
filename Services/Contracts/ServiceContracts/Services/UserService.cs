@@ -1,47 +1,126 @@
 ﻿using DataAccess.Users;
+using DataAccess.DataRequests;
 using DataAccess.Util;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.Serialization;
-using System.ServiceModel;
-using System.Text;
-using Services.DTO;
-using DataAccess.Properties.Langs;
 using Services.Contracts.ServiceContracts.Managers;
+using Services.DTO;
+using Services.DTO.Request;
+using System;
 
 namespace Services.Contracts.ServiceContracts.Services
 {
     public class UserService : IUserManager
     {
-        private static IPlayerDAO _playerDAO = new PlayerDAO();
+        private readonly IUserDAO _userDAO;
+        private readonly IPlayerDAO _playerDAO;
+
+        public UserService() : this (new UserDAO(), new PlayerDAO()) { }
+        
+        public UserService(IUserDAO userDAO, IPlayerDAO playerDAO)
+        {
+            _userDAO = userDAO;
+            _playerDAO = playerDAO;
+        }
+
         public Player GetPlayerByUserID(Guid userID)
         {
             DataAccess.Player dbPlayer = _playerDAO.GetPlayerByUserID(userID);
             return Player.AssembleSvPlayer(dbPlayer);
         }
 
-        public UpdateResult UpdateProfile(Player updatedPlayer)
+        public SignInRequest SignIn(Player svPlayer)
         {
-            DataAccess.Player dbUpdatedPlayer = Player.AssembleDbPlayer(updatedPlayer);
-            DataAccess.Util.OperationResult operationResult = _playerDAO.UpdateProfile(dbUpdatedPlayer);
-            return AssembleUpdateResult(operationResult);
-        }
-
-        private static UpdateResult AssembleUpdateResult(OperationResult operationResult)
-        {
-            UpdateResult updateResult = new UpdateResult();
-            if (operationResult != null)
+            SignInRequest request = new SignInRequest();
+            if (svPlayer != null)
             {
-                updateResult.Success = operationResult.Success;
-                updateResult.Message = operationResult.Message;
+                svPlayer.Name = string.IsNullOrWhiteSpace(svPlayer.Name) ? null : svPlayer.Name.Trim();
+                svPlayer.LastName = string.IsNullOrWhiteSpace(svPlayer.LastName) ? null : svPlayer.LastName.Trim();
+
+                return RegisterNewPlayer(svPlayer);
             }
             else
             {
-                updateResult.Success = false;
-                updateResult.Message = Lang.profileUpdateServerSideIssue;
+                request.IsSuccess = false;
+                request.StatusCode = StatusCode.MISSING_DATA;
             }
-                return updateResult;
+            return request;
+        }
+
+        private SignInRequest RegisterNewPlayer(Player svPlayer)
+        {
+            SignInRequest request = new SignInRequest();
+            DataAccess.Player dbPlayer = Player.AssembleDbPlayer(svPlayer);
+            string password = svPlayer.User.Password;
+            PlayerRegistrationRequest dbRequest = _userDAO.SignIn(dbPlayer, password);
+            if (dbRequest.IsSuccess)
+            {
+                request.IsSuccess = true;
+            }
+            else
+            {
+                request.IsSuccess = false;
+                request.IsEmailDuplicate = dbRequest.IsEmailDuplicate;
+                request.IsEmailValid = dbRequest.IsEmailValid;
+                request.IsUsernameDuplicate = dbRequest.IsUsernameDuplicate;
+                request.IsPasswordValid = dbRequest.IsPasswordValid;
+
+                if (dbRequest.ErrorType == ErrorType.INVALID_DATA)
+                {
+                    request.StatusCode = StatusCode.WRONG_DATA;
+                }
+                else if (dbRequest.ErrorType == ErrorType.DUPLICATE)
+                {
+                    request.StatusCode = StatusCode.UNALLOWED;
+                }
+                else if (dbRequest.ErrorType == ErrorType.MISSING_DATA)
+                {
+                    request.StatusCode = StatusCode.MISSING_DATA;
+                }
+                else
+                {
+                    request.StatusCode = StatusCode.SERVER_ERROR;
+                }
+            }
+            return request;
+        }
+
+        public CommunicationRequest UpdateProfile(Player updatedPlayer)
+        {
+            DataAccess.Player dbUpdatedPlayer = Player.AssembleDbPlayer(updatedPlayer);
+            OperationResult operationResult = _playerDAO.UpdateProfile(dbUpdatedPlayer);
+            return AssembleUpdateResult(operationResult);
+        }
+
+        private static CommunicationRequest AssembleUpdateResult(OperationResult operationResult)
+        {
+            CommunicationRequest request = new CommunicationRequest();
+            if (operationResult != null && operationResult.Success)
+            {
+                request.IsSuccess = operationResult.Success;
+                request.StatusCode = StatusCode.UPDATED;
+            }
+            else
+            {
+                request.IsSuccess = false;
+                switch (operationResult.ErrorType)
+                {
+                    case ErrorType.DB_ERROR:
+                        request.StatusCode = StatusCode.SERVER_ERROR;
+                        break;
+                    case ErrorType.INVALID_DATA:
+                        request.StatusCode = StatusCode.WRONG_DATA;
+                        break;
+                    case ErrorType.NOT_FOUND:
+                        request.StatusCode = StatusCode.NOT_FOUND;
+                        break;
+                    case ErrorType.DUPLICATE:
+                        request.StatusCode = StatusCode.UNALLOWED;
+                        break;
+                    default:
+                        request.StatusCode = StatusCode.SERVER_ERROR;
+                        break;
+                }
+            }
+            return request;
         }
     }
 }
