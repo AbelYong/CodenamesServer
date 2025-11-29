@@ -192,7 +192,7 @@ namespace DataAccess.Users
             {
                 DataAccessLogger.Log.Error("An error ocurred while trying to update an player's profile: ", ex);
                 result.Success = false;
-                result.Message = Lang.profileUpdateServerSideIssue;
+                result.ErrorType = ErrorType.DB_ERROR;
                 return result;
             }
         }
@@ -211,7 +211,6 @@ namespace DataAccess.Users
                 else
                 {
                     result.Success = false;
-                    result.Message = Lang.errorEmailAddressInUse;
                     result.ErrorType = ErrorType.DUPLICATE;
                     return result;
                 }
@@ -229,19 +228,16 @@ namespace DataAccess.Users
                 if (ValidateUsernameNotDuplicated(updatedPlayer.username))
                 {
                     result.Success = true;
-                    result.Message = Lang.profileUpdateSuccess;
                 }
                 else
                 {
                     result.Success = false;
-                    result.Message = Lang.errorUsernameInUse;
                     result.ErrorType = ErrorType.DUPLICATE;
                 }
             }
             else
             {
                 result.Success = true;
-                result.Message = Lang.profileUpdateSuccess;
             }
             return result;
         }

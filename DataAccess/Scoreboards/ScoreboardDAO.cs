@@ -13,10 +13,7 @@ namespace DataAccess.Scoreboards
         private readonly IDbContextFactory _contextFactory;
         private readonly IPlayerDAO _playerDAO;
 
-        public ScoreboardDAO() : this(new DbContextFactory(), new PlayerDAO())
-        {
-
-        }
+        public ScoreboardDAO() : this(new DbContextFactory(), new PlayerDAO()) { }
 
         public ScoreboardDAO(IDbContextFactory contextFactory, IPlayerDAO playerDAO)
         {
