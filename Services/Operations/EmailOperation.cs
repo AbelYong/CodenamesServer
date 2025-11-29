@@ -1,5 +1,4 @@
-﻿using DataAccess;
-using DataAccess.Properties.Langs;
+﻿using DataAccess.Properties.Langs;
 using System;
 using System.Configuration;
 using System.Net;
@@ -31,13 +30,13 @@ namespace Services.Operations
             }
         }
 
-        public static void SendVerificationEmail(string address, string code)
+        public static void SendVerificationEmail(string toAddress, string code)
         {
-            if (_gmailRegex.IsMatch(address) || _outlookRegex.IsMatch(address) || _uvEstudiantesMxRegex.IsMatch(address))
+            if (_gmailRegex.IsMatch(toAddress) || _outlookRegex.IsMatch(toAddress) || _uvEstudiantesMxRegex.IsMatch(toAddress))
             {
                 string subject = Lang.verifyEmailSubjectVerify;
                 string body = string.Format(Lang.verifyEmailBodyVerify, code);
-                SendEmail(address, subject, body);
+                SendEmail(toAddress, subject, body);
             }
         }
 
@@ -47,6 +46,16 @@ namespace Services.Operations
             {
                 string subject = "Invitation to play Codenames";
                 string body = string.Format("{0} has invited you to play a match, use the code {1} to join them", fromUsername, lobbyCode);
+                SendEmail(toAddress, subject, body);
+            }
+        }
+
+        public static void SendResetEmail(string toAddress, string code)
+        {
+            if (_gmailRegex.IsMatch(toAddress) || _outlookRegex.IsMatch(toAddress) || _uvEstudiantesMxRegex.IsMatch(toAddress))
+            {
+                string subject = Lang.resetEmailSubject_Reset;
+                string body = string.Format(Lang.resetEmailBody_Reset, code);
                 SendEmail(toAddress, subject, body);
             }
         }

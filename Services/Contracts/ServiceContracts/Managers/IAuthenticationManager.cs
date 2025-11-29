@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 using System.ServiceModel;
 using Services.DTO;
 using Services.DTO.Request;
@@ -20,31 +19,6 @@ namespace Services.Contracts.ServiceContracts.Managers
 
         [OperationContract]
         ResetResult CompletePasswordReset(string username, string code, string newPassword);
-
-        [OperationContract]
-        BeginRegistrationResult BeginRegistration(User svUser, Player svPlayer, string plainPassword);
-
-        [OperationContract]
-        ConfirmRegistrationResult ConfirmRegistration(Guid requestId, string code);
-
-        [OperationContract]
-        void CancelRegistration(Guid requestId);
-    }
-
-    [DataContract]
-    public class BeginRegistrationResult
-    {
-        [DataMember] public bool Success { get; set; }
-        [DataMember] public string Message { get; set; }
-        [DataMember] public Guid? RequestId { get; set; }
-    }
-
-    [DataContract]
-    public class ConfirmRegistrationResult
-    {
-        [DataMember] public bool Success { get; set; }
-        [DataMember] public string Message { get; set; }
-        [DataMember] public Guid? UserId { get; set; }
     }
 
     [DataContract]

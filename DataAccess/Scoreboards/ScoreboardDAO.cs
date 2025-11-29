@@ -1,28 +1,39 @@
 ﻿using DataAccess.Users;
 using DataAccess.Util;
 using System;
-using System.Collections.Generic;
 using System.Data.Entity.Core;
 using System.Data.Entity.Infrastructure;
 using System.Data.SqlClient;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DataAccess.Scoreboards
 {
     public class ScoreboardDAO : IScoreboardDAO
     {
+        private readonly IDbContextFactory _contextFactory;
+        private readonly IPlayerDAO _playerDAO;
+
+        public ScoreboardDAO() : this(new DbContextFactory(), new PlayerDAO())
+        {
+
+        }
+
+        public ScoreboardDAO(IDbContextFactory contextFactory, IPlayerDAO playerDAO)
+        {
+            _contextFactory = contextFactory;
+            _playerDAO = playerDAO;
+        }
+
         public bool UpdateMatchesWon(Guid playerID)
         {
-            if (PlayerDAO.VerifyIsPlayerGuest(playerID))
+            if (_playerDAO.VerifyIsPlayerGuest(playerID))
             {
                 return true;
             }
 
             try
             {
-                using (var context = new codenamesEntities())
+                using (var context = _contextFactory.Create())
                 {
                     var query = from s in context.Scoreboards
                                 where s.playerID == playerID
@@ -30,7 +41,7 @@ namespace DataAccess.Scoreboards
                     Scoreboard scoreboard = query.FirstOrDefault();
                     if (scoreboard != null)
                     {
-                        scoreboard.mostGamesWon++;
+                        scoreboard.mostGamesWon = scoreboard.mostGamesWon + 1;
                         context.SaveChanges();
                         return true;
                     }
@@ -45,7 +56,7 @@ namespace DataAccess.Scoreboards
                     }
                 }
             }
-            catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex.InnerException is SqlException)
+            catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex is SqlException)
             {
                 DataAccessLogger.Log.Warn("Failed to update number of mathces won: ", ex);
                 return false;
@@ -59,9 +70,14 @@ namespace DataAccess.Scoreboards
 
         public bool UpdateFastestMatchRecord(Guid playerID, TimeSpan matchLength)
         {
+            if (_playerDAO.VerifyIsPlayerGuest(playerID))
+            {
+                return true;
+            }
+
             try
             {
-                using (var context = new codenamesEntities())
+                using (var context = _contextFactory.Create())
                 {
                     var query = from s in context.Scoreboards
                                 where s.playerID == playerID
@@ -88,14 +104,14 @@ namespace DataAccess.Scoreboards
                     {
                         scoreboard = new Scoreboard();
                         scoreboard.playerID = playerID;
-                        scoreboard.assassinsRevealed = 1;
+                        scoreboard.fastestGame = matchLength;
                         context.Scoreboards.Add(scoreboard);
                         context.SaveChanges();
                         return true;
                     }
                 }
             }
-            catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex.InnerException is SqlException)
+            catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex is SqlException)
             {
                 DataAccessLogger.Log.Warn("Failed to update fastest match record: ", ex);
                 return false;
@@ -109,9 +125,14 @@ namespace DataAccess.Scoreboards
 
         public bool UpdateAssassinsPicked(Guid playerID)
         {
+            if (_playerDAO.VerifyIsPlayerGuest(playerID))
+            {
+                return true;
+            }
+
             try
             {
-                using (var context = new codenamesEntities())
+                using (var context = _contextFactory.Create())
                 {
                     var query = from s in context.Scoreboards
                                 where s.playerID == playerID
@@ -119,7 +140,7 @@ namespace DataAccess.Scoreboards
                     Scoreboard scoreboard = query.FirstOrDefault();
                     if (scoreboard != null)
                     {
-                        scoreboard.assassinsRevealed++;
+                        scoreboard.assassinsRevealed = scoreboard.assassinsRevealed + 1;
                         context.SaveChanges();
                         return true;
                     }
@@ -134,7 +155,7 @@ namespace DataAccess.Scoreboards
                     }
                 }
             }
-            catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex.InnerException is SqlException)
+            catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex is SqlException)
             {
                 DataAccessLogger.Log.Error("Failed to update number of assassins picked: ", ex);
                 return false;

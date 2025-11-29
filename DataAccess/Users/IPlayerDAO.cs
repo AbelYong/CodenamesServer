@@ -12,5 +12,9 @@ namespace DataAccess.Users
         Player GetPlayerByUserID(Guid userID);
         Player GetPlayerById(Guid playerId);
         OperationResult UpdateProfile(Player updatedPlayer);
+        bool VerifyIsPlayerGuest(Guid playerID);
+        bool ValidateEmailNotDuplicated(string email);
+        bool ValidateUsernameNotDuplicated(string username);
+        string GetEmailByPlayerID(Guid playerId);
     }
 }

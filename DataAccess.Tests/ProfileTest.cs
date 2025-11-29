@@ -41,8 +41,7 @@ namespace DataAccess.Test
         [OneTimeTearDown]
         public void OnetimeTeardown()
         {
-            PlayerDAO.DeletePlayer(_player);
-            PlayerDAO.DeletePlayer(_auxPlayer);
+            
         }
 
         [SetUp]

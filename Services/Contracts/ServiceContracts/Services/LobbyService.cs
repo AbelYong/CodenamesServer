@@ -17,13 +17,17 @@ namespace Services.Contracts.ServiceContracts.Services
         ConcurrencyMode = ConcurrencyMode.Multiple)]
     public class LobbyService : ILobbyManager
     {
+        private readonly IPlayerDAO _playerDAO;
         private readonly ConcurrentDictionary<Guid, ILobbyCallback> _connectedPlayers;
         private readonly ConcurrentDictionary<string, Party> _lobbies;
         private readonly ConcurrentDictionary<Guid, string> _playerLobbyMap;
         private static readonly Random _random = new Random();
 
-        public LobbyService()
+        public LobbyService() : this (new PlayerDAO()) { }
+
+        public LobbyService(IPlayerDAO playerDAO)
         {
+            _playerDAO = playerDAO;
             _connectedPlayers = new ConcurrentDictionary<Guid, ILobbyCallback>();
             _lobbies = new ConcurrentDictionary<string, Party>();
             _playerLobbyMap = new ConcurrentDictionary<Guid, string>();
@@ -50,13 +54,11 @@ namespace Services.Contracts.ServiceContracts.Services
         public void Disconnect(Guid playerID)
         {
             bool hasDisconnected = _connectedPlayers.TryRemove(playerID, out _);
-            if (hasDisconnected)
+            if (hasDisconnected &&
+                _playerLobbyMap.TryRemove(playerID, out string lobbyCode) &&
+                _lobbies.TryGetValue(lobbyCode, out Party party))
             {
-                if (_playerLobbyMap.TryRemove(playerID, out string lobbyCode) &&
-                    _lobbies.TryGetValue(lobbyCode, out Party party))
-                {
-                    AbandonParty(party, playerID);
-                }
+                AbandonParty(party, playerID);
             }
         }
 
@@ -159,7 +161,7 @@ namespace Services.Contracts.ServiceContracts.Services
                     return request;
                 }
 
-                string friendEmailAddress = PlayerDAO.GetEmailByPlayerID(friendToInviteID);
+                string friendEmailAddress = _playerDAO.GetEmailByPlayerID(friendToInviteID);
                 bool isFriendOnline = _connectedPlayers.TryGetValue(friendToInviteID, out ILobbyCallback friendChannel);
                 if (isFriendOnline)
                 {

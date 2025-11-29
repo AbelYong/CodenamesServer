@@ -12,13 +12,23 @@ namespace Services.Tests.MatchmakingTests
     [TestFixture]
     public class BoardGenerationTest
     {
-        [Test]
-        public void GenerateMatch_Requester_MatchesConfiguration()
+        private MatchConfiguration _matchConfig;
+
+        [SetUp]
+        public void Setup()
         {
             MatchConfiguration config = new MatchConfiguration();
             config.Requester = new DTO.Player();
             config.Requester.PlayerID = Guid.NewGuid();
-            Guid requesterID = (Guid)config.Requester.PlayerID;
+            config.MatchRules = new MatchRules();
+            _matchConfig = config;
+        }
+
+        [Test]
+        public void GenerateMatch_NormalMatch_HasNineAgents()
+        {
+            _matchConfig.MatchRules.Gamemode = Gamemode.NORMAL;
+
         }
     }
 }

@@ -3,25 +3,32 @@ using DataAccess.Properties.Langs;
 using DataAccess.Util;
 using DataAccess.Validators;
 using System;
-using System.Collections.Generic;
 using System.Data.Entity;
 using System.Data.Entity.Core;
 using System.Data.Entity.Infrastructure;
 using System.Data.SqlClient;
 using System.Linq;
-using System.Runtime.Remoting.Contexts;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DataAccess.Users
 {
     public class PlayerDAO : IPlayerDAO
     {
+        private readonly IDbContextFactory _contextFactory;
+        public PlayerDAO() : this (new DbContextFactory())
+        {
+
+        }
+
+        public PlayerDAO(IDbContextFactory contextFactory)
+        {
+            _contextFactory = contextFactory;
+        }
+
         public Player GetPlayerByUserID(Guid userID)
         {
             try
             {
-                using (var context = new codenamesEntities())
+                using (var context = _contextFactory.Create())
                 {
                     var query = from p in context.Players.Include(p => p.User)
                                 where p.userID == userID
@@ -36,25 +43,7 @@ namespace DataAccess.Users
             }
         }
 
-        /// <summary>
-        /// Gets a Player entity by its ID, including its associated User.
-        /// </summary>
-        /// <param name="playerId">The ID of the player to search for.</param>
-        /// <returns>The Player entity, or null if not found.</returns>
-        public Player GetPlayerById(Guid playerId)
-        {
-            if (playerId == Guid.Empty) return null;
-
-            using (var db = new codenamesEntities())
-            {
-                return db.Players
-                         .Include(p => p.User)
-                         .AsNoTracking()
-                         .FirstOrDefault(p => p.playerID == playerId);
-            }
-        }
-
-        public static string GetEmailByPlayerID(Guid playerId)
+        public string GetEmailByPlayerID(Guid playerId)
         {
             if (playerId == Guid.Empty)
             {
@@ -63,9 +52,9 @@ namespace DataAccess.Users
 
             try
             {
-                using (var db = new codenamesEntities())
+                using (var context = _contextFactory.Create())
                 {
-                    Player player = db.Players.Include(p => p.User)
+                    Player player = context.Players.Include(p => p.User)
                         .AsNoTracking()
                         .FirstOrDefault(p => p.playerID == playerId);
                     return player != null ? player.User.email : string.Empty;
@@ -78,11 +67,64 @@ namespace DataAccess.Users
             }
         }
 
-        public static bool VerifyIsPlayerGuest(Guid playerID)
+        /// <summary>
+        /// Checks if the email is already in use.
+        /// </summary>
+        /// <param name="username">The email to verify.</param>
+        /// <returns>True if no matching email was found; false otherwise.</returns>
+        /// <exception cref="System.Data.SqlClient.SqlException">
+        /// <exception cref="EntityException">
+        /// Thrown if the database operation failed.
+        /// </exception>
+        public bool ValidateEmailNotDuplicated(string email)
+        {
+            using (var context = _contextFactory.Create())
+            {
+                bool emailInUse = context.Users.Any(u => u.email == email);
+                return !emailInUse;
+            }
+        }
+
+        /// <summary>
+        /// Checks if the username is already in use.
+        /// </summary>
+        /// <param name="username">The username to verify.</param>
+        /// <returns>True if no matching username was found, otherwise returns false.</returns>
+        /// <exception cref="System.Data.Entity.Core.EntityException">
+        /// Thrown if the database operation failed.
+        /// </exception>
+        public bool ValidateUsernameNotDuplicated(string username)
+        {
+            using (var context = _contextFactory.Create())
+            {
+                bool usernameInUse = context.Players.Any(p => p.username == username);
+                return !usernameInUse;
+            }
+        }
+
+        /// <summary>
+        /// Gets a Player entity by its ID, including its associated User.
+        /// </summary>
+        /// <param name="playerId">The ID of the player to search for.</param>
+        /// <returns>The Player entity, or null if not found.</returns>
+        public Player GetPlayerById(Guid playerId)
+        {
+            if (playerId == Guid.Empty) return null;
+
+            using (var context = _contextFactory.Create())
+            {
+                return context.Players
+                         .Include(p => p.User)
+                         .AsNoTracking()
+                         .FirstOrDefault(p => p.playerID == playerId);
+            }
+        }
+
+        public bool VerifyIsPlayerGuest(Guid playerID)
         {
             try
             {
-                using (var context = new codenamesEntities())
+                using (var context = _contextFactory.Create())
                 {
                     var query = from p in context.Players
                                 where p.playerID == playerID
@@ -110,7 +152,7 @@ namespace DataAccess.Users
                     return result;
                 }
 
-                using (var context = new codenamesEntities())
+                using (var context = _contextFactory.Create())
                 {
                     var dbUser = (from u in context.Users
                                   where u.userID == updatedPlayer.User.userID
@@ -158,14 +200,14 @@ namespace DataAccess.Users
             }
         }
 
-        private static OperationResult HandleUserUpdate(Player updatedPlayer, User dbUser)
+        private OperationResult HandleUserUpdate(Player updatedPlayer, User dbUser)
         {
             OperationResult result = new OperationResult();
             bool isEmailValidationNeeded = (updatedPlayer.User.email != dbUser.email);
 
             if (isEmailValidationNeeded)
             {
-                if (UserDAO.ValidateEmailNotDuplicated(updatedPlayer.User.email))
+                if (ValidateEmailNotDuplicated(updatedPlayer.User.email))
                 {
                     dbUser.email = updatedPlayer.User.email;
                 }
@@ -181,7 +223,7 @@ namespace DataAccess.Users
             return result;
         }
 
-        private static OperationResult HandlePlayerUpdate(Player updatedPlayer, Player dbPlayer)
+        private OperationResult HandlePlayerUpdate(Player updatedPlayer, Player dbPlayer)
         {
             OperationResult result = new OperationResult();
             bool isUsernameValidationNeeded = (updatedPlayer.username != dbPlayer.username);
@@ -207,11 +249,11 @@ namespace DataAccess.Users
             return result;
         }
 
-        public static void DeletePlayer(Player playerToDelete)
+        public void DeletePlayer(Player playerToDelete)
         {
             try
             {
-                using (var context = new codenamesEntities())
+                using (var context = _contextFactory.Create())
                 {
                     Player player = (from p in context.Players
                                      where p.username == playerToDelete.username
@@ -231,23 +273,6 @@ namespace DataAccess.Users
             catch (SqlException sqlex)
             {
                 System.Console.WriteLine(sqlex.Message);
-            }
-        }
-
-        /// <summary>
-        /// Checks if the username is already in use.
-        /// </summary>
-        /// <param name="username">The username to verify.</param>
-        /// <returns>True if no matching username was found, otherwise returns false.</returns>
-        /// <exception cref="System.Data.Entity.Core.EntityException">
-        /// Thrown if the database operation failed.
-        /// </exception>
-        public static bool ValidateUsernameNotDuplicated(string username)
-        {
-            using (var context = new codenamesEntities())
-            {
-                bool usernameInUse = context.Players.Any(p => p.username == username);
-                return !usernameInUse;
             }
         }
 

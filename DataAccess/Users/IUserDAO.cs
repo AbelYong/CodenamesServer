@@ -10,7 +10,6 @@ namespace DataAccess.Users
     public interface IUserDAO
     {
         Guid? Authenticate(string username, string password);
-
         PlayerRegistrationRequest SignIn(Player player, string password);
     }
 }

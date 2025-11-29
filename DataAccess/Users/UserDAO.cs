@@ -1,24 +1,44 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Data.SqlClient;
 using System.Data.Entity.Core.Objects;
 using DataAccess.DataRequests;
 using DataAccess.Validators;
 using System.Data.Entity.Infrastructure;
+using System.Data.Entity.Core;
+using DataAccess.Util;
 
 namespace DataAccess.Users
 {
     public class UserDAO : IUserDAO
     {
+        private readonly IDbContextFactory _contextFactory;
+        private readonly IPlayerDAO _playerDAO;
+
+        public UserDAO() : this (new DbContextFactory(), new PlayerDAO())
+        {
+
+        }
+
+        public UserDAO(IDbContextFactory contextFactory, IPlayerDAO playerDAO)
+        {
+            _contextFactory = contextFactory;
+            _playerDAO = playerDAO;
+        }
+
+        /// <summary>
+        /// Gets the User's userID if the provided username and password match 
+        /// </summary>
+        /// <param name="username"></param>
+        /// <param name="password"></param>
+        /// <returns>The user's id if the username and password match, otherwise returns null</returns>
+        /// 
         public Guid? Authenticate(string username, string password)
         {
             try
             {
                 Guid? userID = null;
-                using (var context = new codenamesEntities())
+                using (var context = _contextFactory.Create())
                 {
                     ObjectParameter outUserID = new ObjectParameter("userID", typeof(Guid?));
                     context.uspLogin(username, password, outUserID);
@@ -27,11 +47,8 @@ namespace DataAccess.Users
                 }
                 return userID;
             }
-            catch (SqlException sqlex)
+            catch (Exception ex) when (ex is EntityException || ex is SqlException)
             {
-                //TODO log
-                System.Console.WriteLine("SqlException");
-                System.Console.WriteLine(sqlex.Message);
                 throw;
             }
         }
@@ -50,7 +67,7 @@ namespace DataAccess.Users
                 request.IsUsernameDuplicate = false;
                 request.IsPasswordValid = true;
                 Guid? newUserID = null;
-                using (var context = new codenamesEntities())
+                using (var context = _contextFactory.Create())
                 {
                     ObjectParameter outUserID = new ObjectParameter("newUserID", typeof(Guid?));
                     context.uspSignIn(player.User.email, password, player.username, player.name, player.lastName, outUserID);
@@ -61,23 +78,30 @@ namespace DataAccess.Users
                 request.NewPlayerID = newUserID;
                 return request;
             }
-            catch (SqlException sqlex)
+            catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex is SqlException)
             {
-                //TODO log
-                System.Console.WriteLine(sqlex.Message);
+                DataAccessLogger.Log.Debug("Exception while signing-in a new player: ", ex);
+                request.IsSuccess = false;
+                request.ErrorType = ErrorType.DB_ERROR;
+                return request;
+            }
+            catch (Exception ex) when (ex is InvalidCastException)
+            {
+                DataAccessLogger.Log.Debug("Cast exception while trying to cast Guid from uspSignIn: ", ex);
                 request.IsSuccess = false;
                 request.ErrorType = ErrorType.DB_ERROR;
                 return request;
             }
             catch (Exception ex)
             {
+                DataAccessLogger.Log.Error("Unexpected exception while signing in a new player: ", ex);
                 request.IsSuccess = false;
                 request.ErrorType = ErrorType.DB_ERROR;
                 return request;
             }
         }
 
-        private static PlayerRegistrationRequest ValidateNewUser(Player player, string password)
+        private PlayerRegistrationRequest ValidateNewUser(Player player, string password)
         {
             PlayerRegistrationRequest request = new PlayerRegistrationRequest();
             request.IsSuccess = true; //Start assuming it's valid
@@ -87,14 +111,14 @@ namespace DataAccess.Users
                 request.ErrorType = ErrorType.MISSING_DATA;
             }
 
-            if (!ValidateEmailNotDuplicated(player.User.email))
+            if (!_playerDAO.ValidateEmailNotDuplicated(player.User.email))
             {
                 request.IsSuccess = false;
                 request.ErrorType = ErrorType.DUPLICATE;
                 request.IsEmailDuplicate = true;
             }
 
-            if (!PlayerDAO.ValidateUsernameNotDuplicated(player.username))
+            if (!_playerDAO.ValidateUsernameNotDuplicated(player.username))
             {
                 request.IsSuccess = false;
                 request.ErrorType = ErrorType.DUPLICATE;
@@ -115,23 +139,6 @@ namespace DataAccess.Users
                 request.IsPasswordValid = false;
             }
             return request;
-        }
-
-        /// <summary>
-        /// Checks if the email is already in use.
-        /// </summary>
-        /// <param name="username">The email to verify.</param>
-        /// <returns>True if no matching email was found; false otherwise.</returns>
-        /// <exception cref="System.Data.SqlClient.SqlException">
-        /// Thrown if the database operation failed.
-        /// </exception>
-        public static bool ValidateEmailNotDuplicated(string email)
-        {
-            using (var context = new codenamesEntities())
-            {
-                bool emailInUse = context.Users.Any(u => u.email == email);
-                return !emailInUse;
-            }
         }
     }
 }

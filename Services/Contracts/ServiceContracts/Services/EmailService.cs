@@ -4,7 +4,6 @@ using Services.Operations;
 using System;
 using Services.DTO;
 using System.Net.Mail;
-using DataAccess.Properties.Langs;
 using DataAccess.Users;
 using Services.Contracts.ServiceContracts.Managers;
 using Services.DTO.Request;
@@ -14,14 +13,25 @@ namespace Services.Contracts.ServiceContracts.Services
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.PerCall)]
     public class EmailService : IEmailManager
     {
+        private readonly IPlayerDAO _playerDAO;
         private static readonly MemoryCache _cache = MemoryCache.Default;
         private const int VERICATION_TIMEOUT_MINUTES = 15;
         private const int MAX_ATTEMPTS = 3;
 
+        public EmailService() : this (new PlayerDAO())
+        {
+
+        }
+
+        public EmailService(IPlayerDAO playerDAO)
+        {
+            _playerDAO = playerDAO;
+        }
+
         public CommunicationRequest SendVerificationCode(string email)
         {
             CommunicationRequest request = new CommunicationRequest();
-            if (UserDAO.ValidateEmailNotDuplicated(email))
+            if (_playerDAO.ValidateEmailNotDuplicated(email))
             {
                 try
                 {

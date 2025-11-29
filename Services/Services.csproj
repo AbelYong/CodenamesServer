@@ -64,9 +64,11 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Contracts\CallbackProvider.cs" />
     <Compile Include="Contracts\Callback\IMatchCallback.cs" />
     <Compile Include="Contracts\Callback\IMatchmakingCallback.cs" />
     <Compile Include="Contracts\Callback\ILobbyCallback.cs" />
+    <Compile Include="Contracts\ICallbackProvider.cs" />
     <Compile Include="Contracts\ServiceContracts\Managers\IMatchmakingManager.cs" />
     <Compile Include="Contracts\ServiceContracts\Managers\ILobbyManager.cs" />
     <Compile Include="Contracts\ServiceContracts\Managers\IMatchManager.cs" />

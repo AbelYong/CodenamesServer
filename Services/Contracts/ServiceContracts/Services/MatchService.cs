@@ -16,13 +16,24 @@ namespace Services.Contracts.ServiceContracts.Services
         InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
     public class MatchService : IMatchManager
     {
-        private readonly ScoreboardDAO _scoreboardDAO;
+        private readonly ICallbackProvider _callbackProvider;
+        private readonly IScoreboardDAO _scoreboardDAO;
         private readonly ConcurrentDictionary<Guid, IMatchCallback> _connectedPlayers;
         private readonly ConcurrentDictionary<Guid, OngoingMatch> _matches;
         private readonly ConcurrentDictionary<Guid, Guid> _playersOngoingMatchesMap;
 
+        public MatchService(ICallbackProvider callbackProvider)
+        {
+            _callbackProvider = callbackProvider;
+            _scoreboardDAO = new ScoreboardDAO();
+            _connectedPlayers = new ConcurrentDictionary<Guid, IMatchCallback>();
+            _matches = new ConcurrentDictionary<Guid, OngoingMatch>();
+            _playersOngoingMatchesMap = new ConcurrentDictionary<Guid, Guid>();
+        }
+
         public MatchService()
         {
+            _callbackProvider = new CallbackProvider();
             _scoreboardDAO = new ScoreboardDAO();
             _connectedPlayers = new ConcurrentDictionary<Guid, IMatchCallback>();
             _matches = new ConcurrentDictionary<Guid, OngoingMatch>();
@@ -32,7 +43,7 @@ namespace Services.Contracts.ServiceContracts.Services
         public CommunicationRequest Connect(Guid playerID)
         {
             CommunicationRequest request = new CommunicationRequest();
-            IMatchCallback currentClientChannel = OperationContext.Current.GetCallbackChannel<IMatchCallback>();
+            IMatchCallback currentClientChannel = _callbackProvider.GetCallback<IMatchCallback>();
             bool hasConnected = _connectedPlayers.TryAdd(playerID, currentClientChannel);
             if (hasConnected)
             {
@@ -89,7 +100,7 @@ namespace Services.Contracts.ServiceContracts.Services
                 {
                     channel.NotifyCompanionDisconnect();
                 }
-                catch (CommunicationException ex)
+                catch (Exception ex) when (ex is CommunicationException || ex is ObjectDisposedException)
                 {
                     RemoveFaultedChannel(channel);
                     ServerLogger.Log.Warn("Player could not be notified of companion disconnect: ", ex);
@@ -106,10 +117,10 @@ namespace Services.Contracts.ServiceContracts.Services
                 request.StatusCode = StatusCode.MISSING_DATA;
                 return request;
             }
-            bool matchExists = _matches.TryGetValue(match.MatchID, out OngoingMatch ongoingMatch);
+            OngoingMatch ongoingMatch;
             lock (_matches)
             {
-                if (matchExists)
+                if (_matches.TryGetValue(match.MatchID, out ongoingMatch))
                 {
                     if (match.Requester.PlayerID == playerID)
                     {

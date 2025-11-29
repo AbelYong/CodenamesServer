@@ -64,6 +64,7 @@
     <Compile Include="Ban.cs">
       <DependentUpon>codenames.tt</DependentUpon>
     </Compile>
+    <Compile Include="codenamesEntities.cs" />
     <Compile Include="codenames.Context.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -81,9 +82,12 @@
     </Compile>
     <Compile Include="DataRequests\PlayerRegistrationRequest.cs" />
     <Compile Include="DataRequests\PlayerRequest.cs" />
+    <Compile Include="DbContextFactory.cs" />
     <Compile Include="Friendship.cs">
       <DependentUpon>codenames.tt</DependentUpon>
     </Compile>
+    <Compile Include="ICodenamesContext.cs" />
+    <Compile Include="IDbContextFactory.cs" />
     <Compile Include="PasswordReset.cs">
       <DependentUpon>codenames.tt</DependentUpon>
     </Compile>
