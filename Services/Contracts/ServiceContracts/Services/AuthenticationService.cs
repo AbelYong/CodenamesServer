@@ -21,10 +21,7 @@ namespace Services.Contracts.ServiceContracts.Services
         private readonly IUserDAO _userDAO;
         private readonly IBanDAO _banDAO;
 
-        public AuthenticationService() : this(new UserDAO(), new BanDAO())
-        {
-
-        }
+        public AuthenticationService() : this(new UserDAO(), new BanDAO()) { }
 
         public AuthenticationService(IUserDAO userDAO, IBanDAO banDAO)
         {

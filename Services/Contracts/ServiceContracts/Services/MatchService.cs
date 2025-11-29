@@ -22,18 +22,17 @@ namespace Services.Contracts.ServiceContracts.Services
         private readonly ConcurrentDictionary<Guid, OngoingMatch> _matches;
         private readonly ConcurrentDictionary<Guid, Guid> _playersOngoingMatchesMap;
 
-        public MatchService(ICallbackProvider callbackProvider)
+        public MatchService() : this(new CallbackProvider())
         {
-            _callbackProvider = callbackProvider;
             _scoreboardDAO = new ScoreboardDAO();
             _connectedPlayers = new ConcurrentDictionary<Guid, IMatchCallback>();
             _matches = new ConcurrentDictionary<Guid, OngoingMatch>();
             _playersOngoingMatchesMap = new ConcurrentDictionary<Guid, Guid>();
         }
 
-        public MatchService()
+        public MatchService(ICallbackProvider callbackProvider)
         {
-            _callbackProvider = new CallbackProvider();
+            _callbackProvider = callbackProvider;
             _scoreboardDAO = new ScoreboardDAO();
             _connectedPlayers = new ConcurrentDictionary<Guid, IMatchCallback>();
             _matches = new ConcurrentDictionary<Guid, OngoingMatch>();
@@ -478,6 +477,7 @@ namespace Services.Contracts.ServiceContracts.Services
                 {
                     HandleMatchAbandoned(match.MatchID, match.CurrentSpymasterID);
                     RemoveFaultedChannel(spymasterChannel);
+                    ServerLogger.Log.Warn("Match timer token update could not be notified: ", ex);
                 }
             }
             else

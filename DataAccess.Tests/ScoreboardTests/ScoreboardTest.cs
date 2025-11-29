@@ -23,22 +23,17 @@ namespace DataAccess.Test.ScoreboardTests
         [SetUp]
         public void Setup()
         {
-            // 1. Mock the Data
             _data = new List<Scoreboard>();
-            _scoreboardSet = GetQueryableMockDbSet(_data);
+            _scoreboardSet = TestUtil.GetQueryableMockDbSet(_data);
 
-            // 2. Mock the Context
             _context = new Mock<ICodenamesContext>();
             _context.Setup(c => c.Scoreboards).Returns(_scoreboardSet.Object);
 
-            // 3. Mock the Factory
             _contextFactory = new Mock<IDbContextFactory>();
             _contextFactory.Setup(f => f.Create()).Returns(_context.Object);
 
-            // 4. Mock the PlayerDAO (To handle the Guest check without DB)
             _playerDAO = new Mock<IPlayerDAO>();
 
-            // 5. Initialize SUT (System Under Test)
             _scoreboardDAO = new ScoreboardDAO(_contextFactory.Object, _playerDAO.Object);
         }
 
@@ -247,23 +242,6 @@ namespace DataAccess.Test.ScoreboardTests
                 sb.assassinsRevealed == 1
             )), Times.Once);
             _context.Verify(c => c.SaveChanges(), Times.Once);
-        }
-
-        // --- Helper for Mocking DbSet ---
-        private static Mock<DbSet<T>> GetQueryableMockDbSet<T>(List<T> sourceList) where T : class
-        {
-            var queryable = sourceList.AsQueryable();
-            var dbSet = new Mock<DbSet<T>>();
-
-            dbSet.As<IQueryable<T>>().Setup(m => m.Provider).Returns(queryable.Provider);
-            dbSet.As<IQueryable<T>>().Setup(m => m.Expression).Returns(queryable.Expression);
-            dbSet.As<IQueryable<T>>().Setup(m => m.ElementType).Returns(queryable.ElementType);
-            dbSet.As<IQueryable<T>>().Setup(m => m.GetEnumerator()).Returns(() => queryable.GetEnumerator());
-
-            // Setup Add to actually add to the list so verifying logic works
-            dbSet.Setup(d => d.Add(It.IsAny<T>())).Callback<T>((s) => sourceList.Add(s));
-
-            return dbSet;
         }
     }
 }

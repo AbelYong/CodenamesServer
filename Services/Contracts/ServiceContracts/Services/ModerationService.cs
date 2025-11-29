@@ -1,6 +1,5 @@
 ﻿using DataAccess;
 using DataAccess.Users;
-using Services.Contracts;
 using Services.Contracts.ServiceContracts.Managers;
 using Services.DTO;
 using Services.DTO.Request;
@@ -17,11 +16,16 @@ namespace Services.Contracts.ServiceContracts.Services
         private readonly IBanDAO _banDAO;
         private readonly IPlayerDAO _playerDAO;
 
-        public ModerationService()
+        public ModerationService() : this (new ReportDAO(), new BanDAO(), new PlayerDAO())
         {
-            _reportDAO = new ReportDAO();
-            _banDAO = new BanDAO();
-            _playerDAO = new PlayerDAO();
+
+        }
+
+        public ModerationService(IReportDAO reportDAO, IBanDAO banDAO, IPlayerDAO playerDAO)
+        {
+            _reportDAO = reportDAO;
+            _banDAO = banDAO;
+            _playerDAO = playerDAO;
         }
 
         public CommunicationRequest ReportPlayer(Guid reporterPlayerID, Guid reportedPlayerID, string reason)

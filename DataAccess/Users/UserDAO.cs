@@ -15,10 +15,7 @@ namespace DataAccess.Users
         private readonly IDbContextFactory _contextFactory;
         private readonly IPlayerDAO _playerDAO;
 
-        public UserDAO() : this (new DbContextFactory(), new PlayerDAO())
-        {
-
-        }
+        public UserDAO() : this (new DbContextFactory(), new PlayerDAO()) { }
 
         public UserDAO(IDbContextFactory contextFactory, IPlayerDAO playerDAO)
         {
@@ -62,10 +59,7 @@ namespace DataAccess.Users
             }
             try
             {
-                request.IsEmailValid = true;
-                request.IsEmailDuplicate = false;
-                request.IsUsernameDuplicate = false;
-                request.IsPasswordValid = true;
+                SetRequestToValid(request);
                 Guid? newUserID = null;
                 using (var context = _contextFactory.Create())
                 {
@@ -99,6 +93,14 @@ namespace DataAccess.Users
                 request.ErrorType = ErrorType.DB_ERROR;
                 return request;
             }
+        }
+
+        private static void SetRequestToValid(PlayerRegistrationRequest request)
+        {
+            request.IsEmailValid = true;
+            request.IsEmailDuplicate = false;
+            request.IsUsernameDuplicate = false;
+            request.IsPasswordValid = true;
         }
 
         private PlayerRegistrationRequest ValidateNewUser(Player player, string password)

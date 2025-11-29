@@ -16,15 +16,26 @@ namespace Services.Contracts.ServiceContracts.Services
         ConcurrencyMode = ConcurrencyMode.Multiple)]
     public class MatchmakingService : IMatchmakingManager
     {
+        public const int MAX_MATCH_STORAGE = 60;
+        private readonly ICallbackProvider _callbackProvider;
         private readonly ConcurrentDictionary<Guid, IMatchmakingCallback> _connectedPlayers;
         private readonly ConcurrentDictionary<Guid, Match> _pendingMatches;
         private readonly ConcurrentDictionary<Guid, MatchConfirmation> _matchesAwaitingConfirmation;
         private readonly object _confirmationLock;
         private readonly TimeSpan _confirmationTimeout;
 
-        public MatchmakingService()
+        public MatchmakingService() : this (new CallbackProvider())
         {
-            const int MAX_MATCH_STORAGE = 60;
+            _connectedPlayers = new ConcurrentDictionary<Guid, IMatchmakingCallback>();
+            _pendingMatches = new ConcurrentDictionary<Guid, Match>();
+            _matchesAwaitingConfirmation = new ConcurrentDictionary<Guid, MatchConfirmation>();
+            _confirmationLock = new object();
+            _confirmationTimeout = TimeSpan.FromSeconds(MAX_MATCH_STORAGE);
+        }
+
+        public MatchmakingService(ICallbackProvider callbackProvider)
+        {
+            _callbackProvider = callbackProvider;
             _connectedPlayers = new ConcurrentDictionary<Guid, IMatchmakingCallback>();
             _pendingMatches = new ConcurrentDictionary<Guid, Match>();
             _matchesAwaitingConfirmation = new ConcurrentDictionary<Guid, MatchConfirmation>();
@@ -35,7 +46,7 @@ namespace Services.Contracts.ServiceContracts.Services
         public CommunicationRequest Connect(Guid playerID)
         {
             CommunicationRequest request = new CommunicationRequest();
-            IMatchmakingCallback currentClientChannel = OperationContext.Current.GetCallbackChannel<IMatchmakingCallback>();
+            IMatchmakingCallback currentClientChannel = _callbackProvider.GetCallback<IMatchmakingCallback>();
             bool hasConnected = _connectedPlayers.TryAdd(playerID, currentClientChannel);
             if (hasConnected)
             {

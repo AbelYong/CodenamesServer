@@ -14,10 +14,7 @@ namespace DataAccess.Users
     public class PlayerDAO : IPlayerDAO
     {
         private readonly IDbContextFactory _contextFactory;
-        public PlayerDAO() : this (new DbContextFactory())
-        {
-
-        }
+        public PlayerDAO() : this (new DbContextFactory()) { }
 
         public PlayerDAO(IDbContextFactory contextFactory)
         {
@@ -249,14 +246,14 @@ namespace DataAccess.Users
             return result;
         }
 
-        public void DeletePlayer(Player playerToDelete)
+        public void DeletePlayer(Guid playerID)
         {
             try
             {
                 using (var context = _contextFactory.Create())
                 {
                     Player player = (from p in context.Players
-                                     where p.username == playerToDelete.username
+                                     where p.playerID == playerID
                                      select p).FirstOrDefault();
                     if (player != null)
                     {
@@ -270,9 +267,13 @@ namespace DataAccess.Users
                     }
                 }
             }
-            catch (SqlException sqlex)
+            catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex.InnerException is SqlException)
             {
-                System.Console.WriteLine(sqlex.Message);
+                DataAccessLogger.Log.Debug("Exception while trying to delete a player: ", ex);
+            }
+            catch (Exception ex)
+            {
+                DataAccessLogger.Log.Error("Unexpected exception while trying to delete a player", ex);
             }
         }
 

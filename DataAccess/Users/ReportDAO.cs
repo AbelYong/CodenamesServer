@@ -5,9 +5,18 @@ namespace DataAccess.Users
 {
     public class ReportDAO : IReportDAO
     {
+        private readonly IDbContextFactory _contextFactory;
+
+        public ReportDAO() : this (new DbContextFactory()) { }
+
+        public ReportDAO(IDbContextFactory contextFactory)
+        {
+            _contextFactory = contextFactory;
+        }
+
         public bool HasPlayerReportedTarget(Guid reporterUserID, Guid reportedUserID)
         {
-            using (var context = new codenamesEntities())
+            using (var context = _contextFactory.Create())
             {
                 return context.Reports.Any(r =>
                     r.reporterUserID == reporterUserID &&
@@ -17,7 +26,7 @@ namespace DataAccess.Users
 
         public void AddReport(Report report)
         {
-            using (var context = new codenamesEntities())
+            using (var context = _contextFactory.Create())
             {
                 context.Reports.Add(report);
                 context.SaveChanges();
@@ -26,7 +35,7 @@ namespace DataAccess.Users
 
         public int CountUniqueReports(Guid reportedUserID)
         {
-            using (var context = new codenamesEntities())
+            using (var context = _contextFactory.Create())
             {
                 return context.Reports
                     .Where(r => r.reportedUserID == reportedUserID)

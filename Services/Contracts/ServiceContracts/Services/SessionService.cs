@@ -15,14 +15,21 @@ namespace Services.Contracts.ServiceContracts.Services
         ConcurrencyMode = ConcurrencyMode.Reentrant)]
     public class SessionService : ISessionManager
     {
-        public static SessionService Instance { get; private set; }
+        public static SessionService Instance { get; }
+        private readonly IFriendManager _friendService;
+        private readonly ICallbackProvider _callbackProvider;
+        private readonly ConcurrentDictionary<Player, ISessionCallback> _playersOnline;
 
-        private static readonly FriendService friendService = new FriendService();
-        private readonly ConcurrentDictionary<Player, ISessionCallback> _playersOnline = new ConcurrentDictionary<Player, ISessionCallback>();
-        
-        public SessionService()
+        public SessionService() : this (new FriendService(), new CallbackProvider())
         {
-            Instance = this;
+            _playersOnline = new ConcurrentDictionary<Player, ISessionCallback>();
+        }
+
+        public SessionService(IFriendManager friendService, ICallbackProvider callbackProvider)
+        {
+            _friendService = friendService;
+            _callbackProvider = callbackProvider;
+            _playersOnline = new ConcurrentDictionary<Player, ISessionCallback>();
         }
 
         public CommunicationRequest Connect(Player player)
@@ -35,7 +42,7 @@ namespace Services.Contracts.ServiceContracts.Services
                 return request;
             }
 
-            var currentClientChannel = OperationContext.Current.GetCallbackChannel<ISessionCallback>();
+            var currentClientChannel = _callbackProvider.GetCallback<ISessionCallback>();
 
             Guid playerID = (Guid)player.PlayerID;
 
@@ -53,7 +60,7 @@ namespace Services.Contracts.ServiceContracts.Services
                 playersOnlineSnapshot = _playersOnline.ToDictionary(session => session.Key, session => session.Value);
             }
 
-            List<Player> friends = friendService.GetFriends(playerID);
+            List<Player> friends = _friendService.GetFriends(playerID);
 
             Dictionary<Player, ISessionCallback> friendCallbacks = GetFriendsOnlineChannels(friends, playersOnlineSnapshot);
             NotifyConnectToOnlineFriends(friendCallbacks, player);
@@ -130,7 +137,7 @@ namespace Services.Contracts.ServiceContracts.Services
             }
 
             Guid playerID = (Guid)player.PlayerID;
-            List<Player> friends = friendService.GetFriends(playerID);
+            List<Player> friends = _friendService.GetFriends(playerID);
 
             Dictionary<Player, ISessionCallback> playersOnlineSnapshot = new Dictionary<Player, ISessionCallback>();
 

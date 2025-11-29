@@ -13,6 +13,15 @@ namespace DataAccess.Users
 {
     public class FriendDAO : IFriendDAO
     {
+        private readonly IDbContextFactory _contextFactory;
+
+        public FriendDAO() : this (new DbContextFactory()) { }
+
+        public FriendDAO(IDbContextFactory contextFactory)
+        {
+            _contextFactory = contextFactory;
+        }
+
         /// <summary>
         /// Searches for players matching a query string, excluding a specific player ID.
         /// </summary>
@@ -23,11 +32,11 @@ namespace DataAccess.Users
 
             try
             {
-                using (var db = new codenamesEntities())
+                using (var context = _contextFactory.Create())
                 {
                     var q = query.ToLower();
 
-                    return db.Players
+                    return context.Players
                         .Include(p => p.User)
                         .Where(p => p.playerID != excludePlayerId &&
                                     (p.username.ToLower().Contains(q) ||
@@ -51,23 +60,26 @@ namespace DataAccess.Users
         /// </summary>
         public IEnumerable<Player> GetFriends(Guid playerId)
         {
-            if (playerId == Guid.Empty) return Enumerable.Empty<Player>();
+            if (playerId == Guid.Empty)
+            {
+                return Enumerable.Empty<Player>();
+            }
 
             try
             {
-                using (var db = new codenamesEntities())
+                using (var context = _contextFactory.Create())
                 {
-                    var friendsA = db.Friendships
-                                     .Where(f => f.playerID == playerId && f.requestStatus == true)
+                    var friendsA = context.Friendships
+                                     .Where(f => f.playerID == playerId && f.requestStatus)
                                      .Select(f => f.friendID);
 
-                    var friendsB = db.Friendships
-                                     .Where(f => f.friendID == playerId && f.requestStatus == true)
+                    var friendsB = context.Friendships
+                                     .Where(f => f.friendID == playerId && f.requestStatus)
                                      .Select(f => f.playerID);
 
                     var ids = friendsA.Union(friendsB);
 
-                    return db.Players
+                    return context.Players
                              .Include(p => p.User)
                              .Where(p => ids.Contains(p.playerID))
                              .AsNoTracking()
@@ -86,17 +98,20 @@ namespace DataAccess.Users
         /// </summary>
         public IEnumerable<Player> GetIncomingRequests(Guid playerId)
         {
-            if (playerId == Guid.Empty) return Enumerable.Empty<Player>();
+            if (playerId == Guid.Empty)
+            {
+                return Enumerable.Empty<Player>();
+            }
 
             try
             {
-                using (var db = new codenamesEntities())
+                using (var context = _contextFactory.Create())
                 {
-                    var requesterIds = db.Friendships
-                        .Where(f => f.friendID == playerId && f.requestStatus == false)
+                    var requesterIds = context.Friendships
+                        .Where(f => f.friendID == playerId && f.requestStatus)
                         .Select(f => f.playerID);
 
-                    return db.Players
+                    return context.Players
                              .Include(p => p.User)
                              .Where(p => requesterIds.Contains(p.playerID))
                              .AsNoTracking()
@@ -133,9 +148,9 @@ namespace DataAccess.Users
 
             try
             {
-                using (var db = new codenamesEntities())
+                using (var context = _contextFactory.Create())
                 {
-                    var alreadyExists = db.Friendships.Any(f =>
+                    var alreadyExists = context.Friendships.Any(f =>
                         (f.playerID == fromPlayerId && f.friendID == toPlayerId) ||
                         (f.playerID == toPlayerId && f.friendID == fromPlayerId));
 
@@ -146,14 +161,14 @@ namespace DataAccess.Users
                         return result;
                     }
 
-                    db.Friendships.Add(new Friendship
+                    context.Friendships.Add(new Friendship
                     {
                         playerID = fromPlayerId,
                         friendID = toPlayerId,
                         requestStatus = false
                     });
 
-                    db.SaveChanges();
+                    context.SaveChanges();
                     
                     result.Success = true;
                     result.Message = Lang.friendRequestSubmitted;
@@ -178,12 +193,12 @@ namespace DataAccess.Users
 
             try
             {
-                using (var db = new codenamesEntities())
+                using (var context = _contextFactory.Create())
                 {
-                    var req = db.Friendships
+                    var req = context.Friendships
                         .FirstOrDefault(f => f.playerID == requesterPlayerId &&
                                              f.friendID == playerId &&
-                                             f.requestStatus == false);
+                                             f.requestStatus);
 
                     if (req == null)
                     {
@@ -194,12 +209,12 @@ namespace DataAccess.Users
 
                     req.requestStatus = true;
 
-                    var reciprocalExists = db.Friendships.Any(f =>
-                        f.playerID == playerId && f.friendID == requesterPlayerId && f.requestStatus == true);
+                    var reciprocalExists = context.Friendships.Any(f =>
+                        f.playerID == playerId && f.friendID == requesterPlayerId && f.requestStatus);
 
                     if (!reciprocalExists)
                     {
-                        db.Friendships.Add(new Friendship
+                        context.Friendships.Add(new Friendship
                         {
                             playerID = playerId,
                             friendID = requesterPlayerId,
@@ -207,7 +222,7 @@ namespace DataAccess.Users
                         });
                     }
 
-                    db.SaveChanges();
+                    context.SaveChanges();
 
                     result.Success = true;
                     result.Message = Lang.friendRequestAccepted;
@@ -232,9 +247,9 @@ namespace DataAccess.Users
 
             try
             {
-                using (var db = new codenamesEntities())
+                using (var context = _contextFactory.Create())
                 {
-                    var req = db.Friendships
+                    var req = context.Friendships
                         .FirstOrDefault(f => f.playerID == requesterPlayerId &&
                                              f.friendID == playerId &&
                                              f.requestStatus == false);
@@ -246,8 +261,8 @@ namespace DataAccess.Users
                         return result;
                     }
 
-                    db.Friendships.Remove(req);
-                    db.SaveChanges();
+                    context.Friendships.Remove(req);
+                    context.SaveChanges();
 
                     result.Success = true;
                     result.Message = Lang.friendRequestRejected;
@@ -272,9 +287,9 @@ namespace DataAccess.Users
 
             try
             {
-                using (var db = new codenamesEntities())
+                using (var context = _contextFactory.Create())
                 {
-                    var links = db.Friendships.Where(f =>
+                    var links = context.Friendships.Where(f =>
                         (f.playerID == playerId && f.friendID == friendId && f.requestStatus == true) ||
                         (f.playerID == friendId && f.friendID == playerId && f.requestStatus == true)).ToList();
 
@@ -285,8 +300,8 @@ namespace DataAccess.Users
                         return result;
                     }
 
-                    db.Friendships.RemoveRange(links);
-                    db.SaveChanges();
+                    context.Friendships.RemoveRange(links);
+                    context.SaveChanges();
 
                     result.Success = true;
                     result.Message = Lang.friendDeletedFriend;

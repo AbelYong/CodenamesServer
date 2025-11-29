@@ -18,10 +18,7 @@ namespace Services.Contracts.ServiceContracts.Services
         private const int VERICATION_TIMEOUT_MINUTES = 15;
         private const int MAX_ATTEMPTS = 3;
 
-        public EmailService() : this (new PlayerDAO())
-        {
-
-        }
+        public EmailService() : this (new PlayerDAO()) { }
 
         public EmailService(IPlayerDAO playerDAO)
         {

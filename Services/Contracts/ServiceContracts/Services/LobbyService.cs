@@ -17,17 +17,24 @@ namespace Services.Contracts.ServiceContracts.Services
         ConcurrencyMode = ConcurrencyMode.Multiple)]
     public class LobbyService : ILobbyManager
     {
+        private readonly ICallbackProvider _callbackProvider;
         private readonly IPlayerDAO _playerDAO;
         private readonly ConcurrentDictionary<Guid, ILobbyCallback> _connectedPlayers;
         private readonly ConcurrentDictionary<string, Party> _lobbies;
         private readonly ConcurrentDictionary<Guid, string> _playerLobbyMap;
         private static readonly Random _random = new Random();
 
-        public LobbyService() : this (new PlayerDAO()) { }
+        public LobbyService() : this (new PlayerDAO(), new CallbackProvider())
+        {
+            _connectedPlayers = new ConcurrentDictionary<Guid, ILobbyCallback>();
+            _lobbies = new ConcurrentDictionary<string, Party>();
+            _playerLobbyMap = new ConcurrentDictionary<Guid, string>();
+        }
 
-        public LobbyService(IPlayerDAO playerDAO)
+        public LobbyService(IPlayerDAO playerDAO, ICallbackProvider callbackProvider)
         {
             _playerDAO = playerDAO;
+            _callbackProvider = callbackProvider;
             _connectedPlayers = new ConcurrentDictionary<Guid, ILobbyCallback>();
             _lobbies = new ConcurrentDictionary<string, Party>();
             _playerLobbyMap = new ConcurrentDictionary<Guid, string>();
@@ -36,7 +43,7 @@ namespace Services.Contracts.ServiceContracts.Services
         public CommunicationRequest Connect(Guid playerID)
         {
             CommunicationRequest request = new CommunicationRequest();
-            ILobbyCallback _currentClientChannel = OperationContext.Current.GetCallbackChannel<ILobbyCallback>();
+            ILobbyCallback _currentClientChannel = _callbackProvider.GetCallback<ILobbyCallback>();
             bool hasConnected = _connectedPlayers.TryAdd(playerID, _currentClientChannel);
             if (hasConnected)
             {

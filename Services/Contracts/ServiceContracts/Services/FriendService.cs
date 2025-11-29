@@ -1,11 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.ServiceModel;
-using DataAccess.Users;
+﻿using DataAccess.Users;
+using Services.Contracts;
 using Services.DTO;
 using Services.DTO.Request;
 using Services.Operations;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.ServiceModel;
 
 namespace Services
 {
@@ -16,11 +17,19 @@ namespace Services
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.PerSession)]
     public class FriendService : IFriendManager
     {
-        private static readonly IFriendDAO _friendDAO = new FriendDAO();
-        private static readonly IPlayerDAO _playerDAO = new PlayerDAO();
-
+        private readonly ICallbackProvider _callbackProvider;
+        private readonly IFriendDAO _friendDAO;
+        private readonly IPlayerDAO _playerDAO;
         private Guid _playerId;
-        private IFriendCallback _callback;
+
+        public FriendService() : this (new FriendDAO(), new PlayerDAO(), new CallbackProvider()) { }
+
+        public FriendService(IFriendDAO friendDAO, IPlayerDAO playerDAO, ICallbackProvider callbackProvider)
+        {
+            _friendDAO = friendDAO;
+            _playerDAO = playerDAO;
+            _callbackProvider = callbackProvider;
+        }
 
         public void Connect(Guid mePlayerId)
         {
@@ -30,11 +39,12 @@ namespace Services
             }
 
             _playerId = mePlayerId;
-            _callback = OperationContext.Current.GetCallbackChannel<IFriendCallback>();
+            IFriendCallback callback = _callbackProvider.GetCallback<IFriendCallback>();
 
-            FriendCallbackManager.Register(_playerId, _callback);
+            FriendCallbackManager.Register(_playerId, callback);
+            Console.WriteLine("{0} registered to friend service", mePlayerId);
 
-            var commObject = (ICommunicationObject)_callback;
+            var commObject = (ICommunicationObject)callback;
             commObject.Closing += OnClientClosing;
             commObject.Faulted += OnClientClosing;
         }

@@ -41,7 +41,7 @@ namespace DataAccess.Test
         [OneTimeTearDown]
         public void OnetimeTeardown()
         {
-            
+            _userDAO = null;
         }
 
         [SetUp]
