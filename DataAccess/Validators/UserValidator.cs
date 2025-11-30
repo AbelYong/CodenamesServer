@@ -1,5 +1,4 @@
-﻿using DataAccess.Users;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -22,6 +21,10 @@ namespace DataAccess.Validators
 
         public static bool ValidateEmailFormat(string email)
         {
+            if (string.IsNullOrEmpty(email))
+            {
+                return false;
+            }
             return (_gmailRegex.IsMatch(email) || _outlookRegex.IsMatch(email) || _uvEstudiantesMxRegex.IsMatch(email));
         }
 

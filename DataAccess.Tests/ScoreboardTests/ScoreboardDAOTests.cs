@@ -11,7 +11,7 @@ using System.Linq;
 namespace DataAccess.Test.ScoreboardTests
 {
     [TestFixture]
-    public class ScoreboardTest
+    public class ScoreboardDAOTests
     {
         private Mock<IDbContextFactory> _contextFactory;
         private Mock<ICodenamesContext> _context;

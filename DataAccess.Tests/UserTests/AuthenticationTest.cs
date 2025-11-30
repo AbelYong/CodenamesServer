@@ -18,17 +18,13 @@ namespace DataAccess.Tests.UserTests
         [SetUp]
         public void Setup()
         {
-            // 1. Mock the Context
             _context = new Mock<ICodenamesContext>();
 
-            // 2. Mock the Factory to return the Mock Context
             _contextFactory = new Mock<IDbContextFactory>();
             _contextFactory.Setup(f => f.Create()).Returns(_context.Object);
 
-            // 3. Mock the dependency IPlayerDAO (UserDAO needs it in constructor)
             _playerDAO = new Mock<IPlayerDAO>();
 
-            // 4. Instantiate SUT
             _userDAO = new UserDAO(_contextFactory.Object, _playerDAO.Object);
         }
 

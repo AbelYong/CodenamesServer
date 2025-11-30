@@ -55,7 +55,8 @@ namespace DataAccess.Users
             {
                 using (var context = _contextFactory.Create())
                 {
-                    Player player = context.Players.Include(p => p.User)
+                    Player player = context.Players
+                        .Include(p => p.User)
                         .AsNoTracking()
                         .FirstOrDefault(p => p.playerID == playerId);
                     return player != null ? player.User.email : string.Empty;
@@ -260,6 +261,13 @@ namespace DataAccess.Users
 
             if (isEmailValidationNeeded)
             {
+                if (!UserValidator.ValidateEmailFormat(updatedPlayer.User.email))
+                {
+                    result.Success = false;
+                    result.ErrorType = ErrorType.INVALID_DATA;
+                    return result;
+                }
+
                 if (ValidateEmailNotDuplicated(updatedPlayer.User.email))
                 {
                     dbUser.email = updatedPlayer.User.email;

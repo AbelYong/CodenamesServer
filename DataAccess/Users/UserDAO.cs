@@ -111,6 +111,7 @@ namespace DataAccess.Users
             {
                 request.IsSuccess = false;
                 request.ErrorType = ErrorType.MISSING_DATA;
+                return request; //Stop, following validations will throw NullReference
             }
 
             if (!_playerDAO.ValidateEmailNotDuplicated(player.User.email))

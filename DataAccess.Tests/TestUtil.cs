@@ -17,8 +17,11 @@ namespace DataAccess.Test
             dbSet.As<IQueryable<T>>().Setup(m => m.ElementType).Returns(queryable.ElementType);
             dbSet.As<IQueryable<T>>().Setup(m => m.GetEnumerator()).Returns(() => queryable.GetEnumerator());
 
-            // Setup Add to actually add to the list so verifying logic works
             dbSet.Setup(d => d.Add(It.IsAny<T>())).Callback<T>((s) => sourceList.Add(s));
+
+            // This prevents the chain from breaking or returning null when .Include(...) is called in an EF 
+            dbSet.Setup(d => d.Include(It.IsAny<string>())).Returns(dbSet.Object);
+            dbSet.Setup(d => d.AsNoTracking()).Returns(dbSet.Object);
 
             return dbSet;
         }
