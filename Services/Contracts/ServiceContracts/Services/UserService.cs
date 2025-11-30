@@ -63,21 +63,20 @@ namespace Services.Contracts.ServiceContracts.Services
                 request.IsUsernameDuplicate = dbRequest.IsUsernameDuplicate;
                 request.IsPasswordValid = dbRequest.IsPasswordValid;
 
-                if (dbRequest.ErrorType == ErrorType.INVALID_DATA)
+                switch (dbRequest.ErrorType)
                 {
-                    request.StatusCode = StatusCode.WRONG_DATA;
-                }
-                else if (dbRequest.ErrorType == ErrorType.DUPLICATE)
-                {
-                    request.StatusCode = StatusCode.UNALLOWED;
-                }
-                else if (dbRequest.ErrorType == ErrorType.MISSING_DATA)
-                {
-                    request.StatusCode = StatusCode.MISSING_DATA;
-                }
-                else
-                {
-                    request.StatusCode = StatusCode.SERVER_ERROR;
+                    case ErrorType.INVALID_DATA:
+                        request.StatusCode = StatusCode.WRONG_DATA;
+                        break;
+                    case ErrorType.DUPLICATE:
+                        request.StatusCode = StatusCode.UNALLOWED;
+                        break;
+                    case ErrorType.MISSING_DATA:
+                        request.StatusCode = StatusCode.MISSING_DATA;
+                        break;
+                    default:
+                        request.StatusCode = StatusCode.SERVER_ERROR;
+                        break;
                 }
             }
             return request;
@@ -93,10 +92,18 @@ namespace Services.Contracts.ServiceContracts.Services
         private static CommunicationRequest AssembleUpdateResult(OperationResult operationResult)
         {
             CommunicationRequest request = new CommunicationRequest();
-            if (operationResult != null && operationResult.Success)
+            if (operationResult == null)
+            {
+                request.IsSuccess = false;
+                request.StatusCode = StatusCode.MISSING_DATA;
+                return request;
+            }
+            
+            if (operationResult.Success)
             {
                 request.IsSuccess = operationResult.Success;
                 request.StatusCode = StatusCode.UPDATED;
+                return request;
             }
             else
             {
