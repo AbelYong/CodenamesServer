@@ -14,22 +14,30 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: 17
-          distribution: 'zulu' # Alternative distribution options are available.
+          distribution: 'zulu'
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+          fetch-depth: 0
+      
       - name: Set up MSBuild
         uses: microsoft/setup-msbuild@v2
+      
+      - name: Set up VSTest
+        uses: darenm/Setup-VSTest@v1
+
       - name: Set up NuGet
         uses: NuGet/setup-nuget@v2
+        
       - name: Restore NuGet packages
         run: nuget restore CodenamesServer.sln
+        
       - name: Cache SonarQube Cloud packages
         uses: actions/cache@v4
         with:
           path: ~\sonar\cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
+          
       - name: Cache SonarQube Cloud scanner
         id: cache-sonar-scanner
         uses: actions/cache@v4
@@ -37,29 +45,32 @@ jobs:
           path: ${{ runner.temp }}\scanner
           key: ${{ runner.os }}-sonar-scanner
           restore-keys: ${{ runner.os }}-sonar-scanner
+          
       - name: Install SonarQube Cloud scanner
         if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
         shell: powershell
         run: |
           New-Item -Path ${{ runner.temp }}\scanner -ItemType Directory
           dotnet tool update dotnet-sonarscanner --tool-path ${{ runner.temp }}\scanner
-      - name: Create dummy connectionStrings.Local.config
+          
+      - name: Create dummy config files
         shell: powershell
         run: |
-          # Create minimal .config file so msbuild doesn't fail
           New-Item -Path "D:\a\CodenamesServer\CodenamesServer\DataAccess\connectionStrings.Local.config" -ItemType File -Value "<connectionStrings></connectionStrings>"
           New-Item -Path "D:\a\CodenamesServer\CodenamesServer\Host\appSettings.Local.config" -ItemType File -Value "<appSettings></appSettings>"
+          
       - name: Install Coverage Tool
         run: dotnet tool install --global dotnet-coverage
+        
       - name: Build, Test and Analyze with Coverage
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         shell: powershell
         run: |
-          ${{ runner.temp }}\scanner\dotnet-sonarscanner begin /k:"AbelYong_CodenamesServer" /o:"abelyong-lis2025" /d:sonar.token="$SONAR_TOKEN" /d:sonar.cs.vstest.reportsPaths="TestResults/*.trx" /d:sonar.cs.vscoveragexml.reportsPaths="coverage.xml"
+          ${{ runner.temp }}\scanner\dotnet-sonarscanner begin /k:"AbelYong_CodenamesServer" /o:"abelyong-lis2025" /d:sonar.token="$env:SONAR_TOKEN" /d:sonar.cs.vstest.reportsPaths="TestResults/*.trx" /d:sonar.cs.vscoveragexml.reportsPaths="coverage.xml"
           
-          msbuild.exe CodenamesServer.sln /t:Rebuild /p:Configuration=Release
+          msbuild.exe CodenamesServer.sln /t:Rebuild /p:Configuration=Release /p:DebugType=full
           
           dotnet-coverage collect "vstest.console.exe DataAccess.Tests\bin\Release\DataAccess.Tests.dll Services.Tests\bin\Release\Services.Tests.dll /Logger:trx /ResultsDirectory:TestResults" -f xml -o "coverage.xml"
           
-          ${{ runner.temp }}\scanner\dotnet-sonarscanner end /d:sonar.token="$SONAR_TOKEN"
+          ${{ runner.temp }}\scanner\dotnet-sonarscanner end /d:sonar.token="$env:SONAR_TOKEN"
