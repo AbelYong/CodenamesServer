@@ -69,7 +69,7 @@ jobs:
         run: |
           ${{ runner.temp }}\scanner\dotnet-sonarscanner begin /k:"AbelYong_CodenamesServer" /o:"abelyong-lis2025" /d:sonar.token="$env:SONAR_TOKEN" /d:sonar.cs.vstest.reportsPaths="TestResults/*.trx" /d:sonar.cs.vscoveragexml.reportsPaths="coverage.xml"
           
-          msbuild.exe CodenamesServer.sln /t:Rebuild /p:Configuration=Release
+          msbuild.exe CodenamesServer.sln /t:Rebuild /p:Configuration=Release /p:DebugType=full
           
           dotnet-coverage collect "vstest.console.exe DataAccess.Tests\bin\Release\DataAccess.Tests.dll Services.Tests\bin\Release\Services.Tests.dll /Logger:trx /ResultsDirectory:TestResults" -f xml -o "coverage.xml"
           
