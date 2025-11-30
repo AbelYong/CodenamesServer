@@ -1,5 +1,4 @@
 ﻿using DataAccess.DataRequests;
-using DataAccess.Properties.Langs;
 using DataAccess.Util;
 using DataAccess.Validators;
 using System;
@@ -33,9 +32,14 @@ namespace DataAccess.Users
                     return query.FirstOrDefault();
                 }
             }
-            catch (SqlException sqlex)
+            catch (Exception ex) when (ex is EntityException || ex is SqlException)
             {
-                DataAccessLogger.Log.Error("An error ocurred while trying get an user by ID: ", sqlex);
+                DataAccessLogger.Log.Debug("An exception ocurred while trying get a player by userID: ", ex);
+                return null;
+            }
+            catch (Exception ex)
+            {
+                DataAccessLogger.Log.Error("Unexpected exception while getting a player by userID", ex);
                 return null;
             }
         }
@@ -44,7 +48,7 @@ namespace DataAccess.Users
         {
             if (playerId == Guid.Empty)
             {
-                return null;
+                return string.Empty;
             }
 
             try
@@ -57,9 +61,14 @@ namespace DataAccess.Users
                     return player != null ? player.User.email : string.Empty;
                 }
             }
-            catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex is SqlException)
+            catch (Exception ex) when (ex is EntityException || ex is SqlException)
             {
-                DataAccessLogger.Log.Error("Failed to get a player's email: ", ex);
+                DataAccessLogger.Log.Debug("Failed to get a player's email: ", ex);
+                return string.Empty;
+            }
+            catch (Exception ex)
+            {
+                DataAccessLogger.Log.Error("Unexpected exception trying to get a player's email: ", ex);
                 return string.Empty;
             }
         }
@@ -69,17 +78,28 @@ namespace DataAccess.Users
         /// </summary>
         /// <param name="username">The email to verify.</param>
         /// <returns>True if no matching email was found; false otherwise.</returns>
-        /// <exception cref="System.Data.SqlClient.SqlException">
-        /// <exception cref="EntityException">
-        /// Thrown if the database operation failed.
         /// </exception>
         public bool ValidateEmailNotDuplicated(string email)
         {
-            using (var context = _contextFactory.Create())
+            try
             {
-                bool emailInUse = context.Users.Any(u => u.email == email);
-                return !emailInUse;
+                using (var context = _contextFactory.Create())
+                {
+                    bool emailInUse = context.Users.Any(u => u.email == email);
+                    return !emailInUse;
+                }
             }
+            catch (Exception ex) when (ex is EntityException || ex is SqlException)
+            {
+                DataAccessLogger.Log.Debug("Exception while verifying email not duplicated", ex);
+                return false; //Assume it's in use if validation failed
+            }
+            catch (Exception ex)
+            {
+                DataAccessLogger.Log.Error("Unexpected exception while verifying email not duplicated: ", ex);
+                return false;
+            }
+            
         }
 
         /// <summary>
@@ -87,15 +107,25 @@ namespace DataAccess.Users
         /// </summary>
         /// <param name="username">The username to verify.</param>
         /// <returns>True if no matching username was found, otherwise returns false.</returns>
-        /// <exception cref="System.Data.Entity.Core.EntityException">
-        /// Thrown if the database operation failed.
-        /// </exception>
         public bool ValidateUsernameNotDuplicated(string username)
         {
-            using (var context = _contextFactory.Create())
+            try
             {
-                bool usernameInUse = context.Players.Any(p => p.username == username);
-                return !usernameInUse;
+                using (var context = _contextFactory.Create())
+                {
+                    bool usernameInUse = context.Players.Any(p => p.username == username);
+                    return !usernameInUse;
+                }
+            }
+            catch (Exception ex) when (ex is EntityException || ex is SqlException)
+            {
+                DataAccessLogger.Log.Debug("Exception while verifying username not duplicated", ex);
+                return false; //Assume it's in use if validation failed
+            }
+            catch (Exception ex)
+            {
+                DataAccessLogger.Log.Error("Unexpected exception while verifying username not duplicated: ", ex);
+                return false;
             }
         }
 
@@ -106,14 +136,29 @@ namespace DataAccess.Users
         /// <returns>The Player entity, or null if not found.</returns>
         public Player GetPlayerById(Guid playerId)
         {
-            if (playerId == Guid.Empty) return null;
-
-            using (var context = _contextFactory.Create())
+            if (playerId == Guid.Empty)
             {
-                return context.Players
-                         .Include(p => p.User)
-                         .AsNoTracking()
-                         .FirstOrDefault(p => p.playerID == playerId);
+                return null;
+            }
+            try
+            {
+                using (var context = _contextFactory.Create())
+                {
+                    return context.Players
+                             .Include(p => p.User)
+                             .AsNoTracking()
+                             .FirstOrDefault(p => p.playerID == playerId);
+                }
+            }
+            catch (Exception ex) when (ex is EntityException || ex is SqlException)
+            {
+                DataAccessLogger.Log.Debug("Exception while trying to get a Player by playerID: ", ex);
+                return null;
+            }
+            catch (Exception ex)
+            {
+                DataAccessLogger.Log.Error("Unexpected exception while trying to get a Player by playerID: ", ex);
+                return null;
             }
         }
 
@@ -129,10 +174,14 @@ namespace DataAccess.Users
                     return !query.Any();
                 }
             }
-            catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex is SqlException)
+            catch (Exception ex) when (ex is EntityException || ex is SqlException)
             {
-                //We assume the player is a guest if its identity could not be verified
-                DataAccessLogger.Log.Error("Failed to verify if player is a guest: ", ex);
+                DataAccessLogger.Log.Debug("Failed to verify if player is a guest: ", ex);
+                return true; //We assume the player is a guest if its identity could not be verified
+            }
+            catch (Exception ex)
+            {
+                DataAccessLogger.Log.Error("Unexpected exception while trying to verify if a player is a guest", ex);
                 return true;
             }
         }
@@ -190,7 +239,14 @@ namespace DataAccess.Users
             }
             catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex is SqlException)
             {
-                DataAccessLogger.Log.Error("An error ocurred while trying to update an player's profile: ", ex);
+                DataAccessLogger.Log.Debug("Exception while trying to update an player's profile: ", ex);
+                result.Success = false;
+                result.ErrorType = ErrorType.DB_ERROR;
+                return result;
+            }
+            catch (Exception ex)
+            {
+                DataAccessLogger.Log.Error("Unexpected exception while trying to update a player's profile: ", ex);
                 result.Success = false;
                 result.ErrorType = ErrorType.DB_ERROR;
                 return result;
@@ -240,37 +296,6 @@ namespace DataAccess.Users
                 result.Success = true;
             }
             return result;
-        }
-
-        public void DeletePlayer(Guid playerID)
-        {
-            try
-            {
-                using (var context = _contextFactory.Create())
-                {
-                    Player player = (from p in context.Players
-                                     where p.playerID == playerID
-                                     select p).FirstOrDefault();
-                    if (player != null)
-                    {
-                        Guid userID = player.userID;
-                        User user = (from u in context.Users
-                                     where u.userID == userID
-                                     select u).FirstOrDefault();
-                        context.Players.Remove(player);
-                        context.Users.Remove(user);
-                        context.SaveChanges();
-                    }
-                }
-            }
-            catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex.InnerException is SqlException)
-            {
-                DataAccessLogger.Log.Debug("Exception while trying to delete a player: ", ex);
-            }
-            catch (Exception ex)
-            {
-                DataAccessLogger.Log.Error("Unexpected exception while trying to delete a player", ex);
-            }
         }
 
         private static void UpdatePlayer(Player player, Player updatedPlayer)
