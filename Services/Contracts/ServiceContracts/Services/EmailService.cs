@@ -3,7 +3,6 @@ using System.Runtime.Caching;
 using Services.Operations;
 using System;
 using Services.DTO;
-using System.Net.Mail;
 using DataAccess.Users;
 using Services.Contracts.ServiceContracts.Managers;
 using Services.DTO.Request;
@@ -14,15 +13,17 @@ namespace Services.Contracts.ServiceContracts.Services
     public class EmailService : IEmailManager
     {
         private readonly IPlayerDAO _playerDAO;
+        private readonly IEmailOperation _emailOperation;
         private static readonly MemoryCache _cache = MemoryCache.Default;
         private const int VERICATION_TIMEOUT_MINUTES = 15;
         private const int MAX_ATTEMPTS = 3;
 
-        public EmailService() : this (new PlayerDAO()) { }
+        public EmailService() : this (new PlayerDAO(), new EmailOperation()) { }
 
-        public EmailService(IPlayerDAO playerDAO)
+        public EmailService(IPlayerDAO playerDAO, IEmailOperation emailOperation)
         {
             _playerDAO = playerDAO;
+            _emailOperation = emailOperation;
         }
 
         public CommunicationRequest SendVerificationCode(string email)
@@ -30,33 +31,25 @@ namespace Services.Contracts.ServiceContracts.Services
             CommunicationRequest request = new CommunicationRequest();
             if (_playerDAO.ValidateEmailNotDuplicated(email))
             {
-                try
+                string code = _emailOperation.GenerateSixDigitCode();
+                DateTimeOffset expiration = DateTimeOffset.UtcNow.AddMinutes(VERICATION_TIMEOUT_MINUTES);
+
+                var info = new VerificationInfo
                 {
-                    string code = EmailOperation.GenerateSixDigitCode();
-                    DateTimeOffset expiration = DateTimeOffset.UtcNow.AddMinutes(VERICATION_TIMEOUT_MINUTES);
+                    Code = code,
+                    RemainingAttempts = MAX_ATTEMPTS,
+                    ExpirationTime = expiration
+                };
 
-                    var info = new VerificationInfo
-                    {
-                        Code = code,
-                        RemainingAttempts = MAX_ATTEMPTS,
-                        ExpirationTime = expiration
-                    };
-
-                    var policy = new CacheItemPolicy
-                    {
-                        AbsoluteExpiration = expiration
-                    };
-                    _cache.Set(email, info, policy);
-
-                    EmailOperation.SendVerificationEmail(email, code);
-                    request.IsSuccess = true;
-                    request.StatusCode = StatusCode.OK;
-                }
-                catch (Exception ex) when (ex is SmtpException || ex is SmtpFailedRecipientException)
+                var policy = new CacheItemPolicy
                 {
-                    request.IsSuccess = false;
-                    request.StatusCode = StatusCode.SERVER_ERROR;
-                }
+                    AbsoluteExpiration = expiration
+                };
+                _cache.Set(email, info, policy);
+
+                bool wasEmailSent = _emailOperation.SendVerificationEmail(email, code);
+                request.IsSuccess = wasEmailSent;
+                request.StatusCode = wasEmailSent ? StatusCode.OK : StatusCode.SERVER_ERROR;
             }
             else
             {

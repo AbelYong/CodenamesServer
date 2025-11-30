@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 
 namespace Services.Operations
 {
-    public static class EmailOperation
+    public class EmailOperation : IEmailOperation
     {
         private static readonly Regex _gmailRegex =
             new Regex(@"^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@gmail\.com$",
@@ -19,7 +19,7 @@ namespace Services.Operations
             new Regex(@"^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@estudiantes\.uv\.mx$",
                       RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(100));
 
-        public static string GenerateSixDigitCode()
+        public string GenerateSixDigitCode()
         {
             using (var code = System.Security.Cryptography.RandomNumberGenerator.Create())
             {
@@ -30,24 +30,26 @@ namespace Services.Operations
             }
         }
 
-        public static void SendVerificationEmail(string toAddress, string code)
+        public bool SendVerificationEmail(string toAddress, string code)
         {
             if (_gmailRegex.IsMatch(toAddress) || _outlookRegex.IsMatch(toAddress) || _uvEstudiantesMxRegex.IsMatch(toAddress))
             {
                 string subject = Lang.verifyEmailSubjectVerify;
                 string body = string.Format(Lang.verifyEmailBodyVerify, code);
-                SendEmail(toAddress, subject, body);
+                return SendEmail(toAddress, subject, body);
             }
+            return false;
         }
 
-        public static void SendGameInvitationEmail(string fromUsername, string toAddress, string lobbyCode)
+        public bool SendGameInvitationEmail(string fromUsername, string toAddress, string lobbyCode)
         {
             if (_gmailRegex.IsMatch(toAddress) || _outlookRegex.IsMatch(toAddress) || _uvEstudiantesMxRegex.IsMatch(toAddress))
             {
                 string subject = "Invitation to play Codenames";
                 string body = string.Format("{0} has invited you to play a match, use the code {1} to join them", fromUsername, lobbyCode);
-                SendEmail(toAddress, subject, body);
+                return SendEmail(toAddress, subject, body);
             }
+            return false;
         }
 
         public static void SendResetEmail(string toAddress, string code)
@@ -60,23 +62,40 @@ namespace Services.Operations
             }
         }
 
-        private static void SendEmail(string address, string subject, string body)
+        private static bool SendEmail(string address, string subject, string body)
         {
             using (var msg = new MailMessage())
             {
-                msg.From = new MailAddress(EmailConfig.fromAddr, EmailConfig.fromName);
-                msg.To.Add(address);
-                msg.Subject = subject;
-                msg.Body = body;
-                msg.IsBodyHtml = false;
-
-                using (var smtp = new SmtpClient(EmailConfig.host, EmailConfig.port))
+                try
                 {
-                    smtp.EnableSsl = true;
-                    smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
-                    smtp.Credentials = new NetworkCredential(EmailConfig.user, EmailConfig.pass);
-                    smtp.Send(msg);
+                    msg.From = new MailAddress(EmailConfig.fromAddr, EmailConfig.fromName);
+                    msg.To.Add(address);
+                    msg.Subject = subject;
+                    msg.Body = body;
+                    msg.IsBodyHtml = false;
+
+                    using (var smtp = new SmtpClient(EmailConfig.host, EmailConfig.port))
+                    {
+                        smtp.EnableSsl = true;
+                        smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
+                        smtp.Credentials = new NetworkCredential(EmailConfig.user, EmailConfig.pass);
+                        smtp.Send(msg);
+                        return true;
+                    }
                 }
+                catch (Exception ex) when (ex is SmtpException || ex is SmtpFailedRecipientException)
+                {
+                    ServerLogger.Log.Warn("Exception while trying to send an email: ", ex);
+                }
+                catch (Exception ex) when (ex is FormatException || ex is ArgumentNullException || ex is ArgumentException)
+                {
+                    ServerLogger.Log.Debug("Argument exception while trying to send an email: ", ex);
+                }
+                catch (Exception ex)
+                {
+                    ServerLogger.Log.Error("Unexpected exception while trying to send an email: ", ex);
+                }
+                return false;
             }
         }
 

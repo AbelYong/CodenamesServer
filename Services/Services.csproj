@@ -65,6 +65,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Contracts\CallbackProvider.cs" />
+    <Compile Include="Contracts\Callback\CallbackUtil.cs" />
     <Compile Include="Contracts\Callback\IMatchCallback.cs" />
     <Compile Include="Contracts\Callback\IMatchmakingCallback.cs" />
     <Compile Include="Contracts\Callback\ILobbyCallback.cs" />
@@ -112,6 +113,7 @@
     <Compile Include="Contracts\ServiceContracts\Managers\IUserManager.cs" />
     <Compile Include="Operations\EmailOperation.cs" />
     <Compile Include="Contracts\ServiceContracts\Services\UserService.cs" />
+    <Compile Include="Operations\IEmailOperation.cs" />
     <Compile Include="Operations\MatchmakingOperation.cs" />
     <Compile Include="Operations\FriendCallbackManager.cs" />
     <Compile Include="Operations\ServerLogger.cs" />

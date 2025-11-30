@@ -20,13 +20,15 @@ namespace Services.Contracts.ServiceContracts.Services
     {
         private readonly IUserDAO _userDAO;
         private readonly IBanDAO _banDAO;
+        private readonly IEmailOperation _emailOperation;
 
-        public AuthenticationService() : this(new UserDAO(), new BanDAO()) { }
+        public AuthenticationService() : this(new UserDAO(), new BanDAO(), new EmailOperation()) { }
 
-        public AuthenticationService(IUserDAO userDAO, IBanDAO banDAO)
+        public AuthenticationService(IUserDAO userDAO, IBanDAO banDAO, IEmailOperation emailOperation)
         {
             _userDAO = userDAO;
             _banDAO = banDAO;
+            _emailOperation = emailOperation;
         }
 
         public LoginRequest Login(string username, string password)
@@ -83,7 +85,7 @@ namespace Services.Contracts.ServiceContracts.Services
 
                 if (userAgg == null) return;
 
-                string code = EmailOperation.GenerateSixDigitCode();
+                string code = _emailOperation.GenerateSixDigitCode();
 
                 var pr = new DataAccess.PasswordReset
                 {

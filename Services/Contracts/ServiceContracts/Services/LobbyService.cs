@@ -19,25 +19,27 @@ namespace Services.Contracts.ServiceContracts.Services
     {
         private readonly ICallbackProvider _callbackProvider;
         private readonly IPlayerDAO _playerDAO;
+        private readonly IEmailOperation _emailOperation;
         private readonly ConcurrentDictionary<Guid, ILobbyCallback> _connectedPlayers;
         private readonly ConcurrentDictionary<string, Party> _lobbies;
         private readonly ConcurrentDictionary<Guid, string> _playerLobbyMap;
         private static readonly Random _random = new Random();
 
-        public LobbyService() : this (new PlayerDAO(), new CallbackProvider())
+        public LobbyService() : this (new PlayerDAO(), new CallbackProvider(), new EmailOperation())
         {
             _connectedPlayers = new ConcurrentDictionary<Guid, ILobbyCallback>();
             _lobbies = new ConcurrentDictionary<string, Party>();
             _playerLobbyMap = new ConcurrentDictionary<Guid, string>();
         }
 
-        public LobbyService(IPlayerDAO playerDAO, ICallbackProvider callbackProvider)
+        public LobbyService(IPlayerDAO playerDAO, ICallbackProvider callbackProvider, IEmailOperation emailOperation)
         {
             _playerDAO = playerDAO;
             _callbackProvider = callbackProvider;
             _connectedPlayers = new ConcurrentDictionary<Guid, ILobbyCallback>();
             _lobbies = new ConcurrentDictionary<string, Party>();
             _playerLobbyMap = new ConcurrentDictionary<Guid, string>();
+            _emailOperation = emailOperation;
         }
 
         public CommunicationRequest Connect(Guid playerID)
@@ -168,29 +170,13 @@ namespace Services.Contracts.ServiceContracts.Services
                     return request;
                 }
 
+                SendInGameInvatation(friendToInviteID, partyHost, lobbyCode);
+
                 string friendEmailAddress = _playerDAO.GetEmailByPlayerID(friendToInviteID);
-                bool isFriendOnline = _connectedPlayers.TryGetValue(friendToInviteID, out ILobbyCallback friendChannel);
-                if (isFriendOnline)
-                {
-                    try
-                    {
-                        friendChannel.NotifyMatchInvitationReceived(partyHost, lobbyCode);
-                    }
-                    catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
-                    {
-                        //This one is true, because even if CommunicationEx was thrown invitation was sent through email
-                        request.IsSuccess = true;
-                        request.StatusCode = StatusCode.CLIENT_UNREACHABLE;
-                        ServerLogger.Log.Warn("Exception while sending lobby invitation: ", ex);
-                    }
-                    catch (Exception ex)
-                    {
-                        ServerLogger.Log.Error("Unexpected exception while sending lobby invitation: ", ex);
-                    }
-                }
-                EmailOperation.SendGameInvitationEmail(partyHost.Username, friendEmailAddress, lobbyCode);
+                bool wasEmailSent = _emailOperation.SendGameInvitationEmail(partyHost.Username, friendEmailAddress, lobbyCode);
+
                 request.IsSuccess = true;
-                request.StatusCode = StatusCode.OK;
+                request.StatusCode = wasEmailSent ? StatusCode.OK : StatusCode.CLIENT_UNREACHABLE;
             }
             else
             {
@@ -198,6 +184,26 @@ namespace Services.Contracts.ServiceContracts.Services
                 request.StatusCode = StatusCode.MISSING_DATA;
             }
             return request;
+        }
+
+        private void SendInGameInvatation(Guid friendToInviteID, Player partyHost, string lobbyCode)
+        {
+            bool isFriendOnline = _connectedPlayers.TryGetValue(friendToInviteID, out ILobbyCallback friendChannel);
+            if (isFriendOnline)
+            {
+                try
+                {
+                    friendChannel.NotifyMatchInvitationReceived(partyHost, lobbyCode);
+                }
+                catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
+                {
+                    ServerLogger.Log.Warn("Exception while sending lobby invitation: ", ex);
+                }
+                catch (Exception ex)
+                {
+                    ServerLogger.Log.Error("Unexpected exception while sending lobby invitation: ", ex);
+                }
+            }
         }
 
         private CommunicationRequest VerifyPlayerCanInvite(Guid partyHostID, string lobbyCode)
