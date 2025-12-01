@@ -206,5 +206,17 @@ namespace Services
 
             return items.Select(Player.AssembleSvPlayer).Where(p => p != null).ToList();
         }
+
+        public List<Player> GetSentRequests(Guid mePlayerId)
+        {
+            var items = _friendDAO.GetSentRequests(mePlayerId);
+
+            if (items == null)
+            {
+                return new List<Player>();
+            }
+
+            return items.Select(Player.AssembleSvPlayer).Where(p => p != null).ToList();
+        }
     }
 }

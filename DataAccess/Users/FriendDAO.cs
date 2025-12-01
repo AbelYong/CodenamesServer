@@ -28,17 +28,23 @@ namespace DataAccess.Users
         public IEnumerable<Player> SearchPlayers(string query, Guid excludePlayerId, int limit = 20)
         {
             query = (query ?? "").Trim();
-            if (string.IsNullOrEmpty(query)) return Enumerable.Empty<Player>();
-
+            if (string.IsNullOrEmpty(query))
+            {
+                return Enumerable.Empty<Player>();
+            }
             try
             {
                 using (var context = _contextFactory.Create())
                 {
                     var q = query.ToLower();
+                    var existingContacts = context.Friendships
+                        .Where(f => (f.playerID == excludePlayerId || f.friendID == excludePlayerId) && f.requestStatus == true)
+                        .Select(f => f.playerID == excludePlayerId ? f.friendID : f.playerID);
 
                     return context.Players
                         .Include(p => p.User)
                         .Where(p => p.playerID != excludePlayerId &&
+                                    !existingContacts.Contains(p.playerID) &&
                                     (p.username.ToLower().Contains(q) ||
                                      (p.name != null && p.name.ToLower().Contains(q)) ||
                                      (p.lastName != null && p.lastName.ToLower().Contains(q))))
@@ -121,6 +127,35 @@ namespace DataAccess.Users
             catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex is SqlException)
             {
                 DataAccessLogger.Log.Error("Error retrieving incoming requests for playerID: " + playerId, ex);
+                return Enumerable.Empty<Player>();
+            }
+        }
+
+        public IEnumerable<Player> GetSentRequests(Guid playerId)
+        {
+            if (playerId == Guid.Empty)
+            {
+                return Enumerable.Empty<Player>();
+            }
+
+            try
+            {
+                using (var context = _contextFactory.Create())
+                {
+                    var targetIds = context.Friendships
+                        .Where(f => f.playerID == playerId && f.requestStatus == false)
+                        .Select(f => f.friendID);
+
+                    return context.Players
+                        .Include(p => p.User)
+                        .Where(p => targetIds.Contains(p.playerID))
+                        .AsNoTracking()
+                        .ToList();
+                }
+            }
+            catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex is SqlException)
+            {
+                DataAccessLogger.Log.Error("Error retrieving sent requests for playerID: " + playerId, ex);
                 return Enumerable.Empty<Player>();
             }
         }

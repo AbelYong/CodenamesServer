@@ -36,5 +36,8 @@ namespace Services
 
         [OperationContract]
         List<Player> GetIncomingRequests(Guid mePlayerId);
+
+        [OperationContract]
+        List<Player> GetSentRequests(Guid mePlayerId);
     }
 }
