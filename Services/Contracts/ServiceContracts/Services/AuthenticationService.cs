@@ -107,7 +107,9 @@ namespace Services.Contracts.ServiceContracts.Services
         public ResetResult CompletePasswordReset(string username, string code, string newPassword)
         {
             if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 10 || newPassword.Length > 16)
+            {
                 return new ResetResult { Success = false, Message = Lang.resetPasswordLengthError };
+            }
 
             using (var db = new DataAccess.codenamesEntities())
             {
@@ -117,19 +119,25 @@ namespace Services.Contracts.ServiceContracts.Services
                          select usr).SingleOrDefault();
 
                 if (u == null)
+                {
                     return new ResetResult { Success = false, Message = Lang.resetInvalidRequest };
+                }
 
                 var now = DateTimeOffset.UtcNow;
                 var req = db.PasswordResets
-                            .Where(r => r.userID == u.userID && r.used == false && r.expiresAt > now)
+                            .Where(r => r.userID == u.userID && !r.used && r.expiresAt > now)
                             .OrderByDescending(r => r.createdAt)
                             .FirstOrDefault();
 
                 if (req == null)
+                {
                     return new ResetResult { Success = false, Message = Lang.resetCodeExpired };
+                }
 
                 if (req.attempts >= 5)
+                {
                     return new ResetResult { Success = false, Message = Lang.globalTooManyAttempts };
+                }
 
                 var ok = SlowEquals(req.codeHash, Sha512(code));
                 if (!ok)

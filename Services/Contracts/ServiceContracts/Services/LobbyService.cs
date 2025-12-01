@@ -325,7 +325,7 @@ namespace Services.Contracts.ServiceContracts.Services
             _connectedPlayers.TryRemove(playerID, out ILobbyCallback faultedChannel);
             if (faultedChannel is ICommunicationObject communicationObject)
             {
-                communicationObject?.Abort();
+                communicationObject.Abort();
             }
         }
 

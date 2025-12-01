@@ -285,15 +285,6 @@ namespace Services.Contracts.ServiceContracts.Services
             }
         }
 
-        private void RemoveFaultedChannel(Guid playerID)
-        {
-            _connectedPlayers.TryRemove(playerID, out IMatchmakingCallback faultedChannel);
-            if (faultedChannel is ICommunicationObject communicationObject)
-            {
-                communicationObject?.Abort();
-            }
-        }
-
         private void NotifyMatchCanceled(Guid playerToNotifyID, Guid matchID, StatusCode reason)
         {
             if (_connectedPlayers.TryGetValue(playerToNotifyID, out IMatchmakingCallback channel))
@@ -336,15 +327,13 @@ namespace Services.Contracts.ServiceContracts.Services
                 }
 
                 //Check if the players are ready
-                if (confirmation.HasRequesterConfirmed && confirmation.HasCompanionConfirmed)
+                if (confirmation.HasRequesterConfirmed && confirmation.HasCompanionConfirmed &&
+                    _matchesAwaitingConfirmation.TryRemove(matchID, out MatchConfirmation removedConfirmation))
                 {
                     // Players are ready, remove the confirmation inside the lock to prevent the timeout from also removing it.
-                    if (_matchesAwaitingConfirmation.TryRemove(matchID, out MatchConfirmation removedConfirmation))
-                    {
-                        removedConfirmation.TimeoutTimer?.Change(Timeout.Infinite, Timeout.Infinite);
-                        removedConfirmation.TimeoutTimer?.Dispose();
-                        shouldNotify = true;
-                    }
+                    removedConfirmation.TimeoutTimer?.Change(Timeout.Infinite, Timeout.Infinite);
+                    removedConfirmation.TimeoutTimer?.Dispose();
+                    shouldNotify = true;
                 }
             }
             if (shouldNotify)
@@ -387,6 +376,15 @@ namespace Services.Contracts.ServiceContracts.Services
         public void RequestMatchCancel(Guid playerID)
         {
             CancelPendingMatches(playerID);
+        }
+
+        private void RemoveFaultedChannel(Guid playerID)
+        {
+            _connectedPlayers.TryRemove(playerID, out IMatchmakingCallback faultedChannel);
+            if (faultedChannel is ICommunicationObject communicationObject)
+            {
+                communicationObject.Abort();
+            }
         }
 
         private sealed class MatchConfirmation

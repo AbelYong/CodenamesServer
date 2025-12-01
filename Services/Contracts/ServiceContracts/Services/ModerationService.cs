@@ -30,13 +30,13 @@ namespace Services.Contracts.ServiceContracts.Services
 
         public CommunicationRequest ReportPlayer(Guid reporterPlayerID, Guid reportedPlayerID, string reason)
         {
-            CommunicationRequest result = new CommunicationRequest();
+            CommunicationRequest request = new CommunicationRequest();
 
             if (!SessionService.Instance.IsPlayerOnline(reporterPlayerID))
             {
-                result.IsSuccess = false;
-                result.StatusCode = StatusCode.UNAUTHORIZED;
-                return result;
+                request.IsSuccess = false;
+                request.StatusCode = StatusCode.UNAUTHORIZED;
+                return request;
             }
 
             try
@@ -46,9 +46,9 @@ namespace Services.Contracts.ServiceContracts.Services
 
                 if (reporterEntity == null || reportedEntity == null)
                 {
-                    result.IsSuccess = false;
-                    result.StatusCode = StatusCode.NOT_FOUND;
-                    return result;
+                    request.IsSuccess = false;
+                    request.StatusCode = StatusCode.NOT_FOUND;
+                    return request;
                 }
 
                 Guid reporterUserID = reporterEntity.userID;
@@ -57,9 +57,9 @@ namespace Services.Contracts.ServiceContracts.Services
 
                 if (_reportDAO.HasPlayerReportedTarget(reporterUserID, reportedUserID))
                 {
-                    result.IsSuccess = false;
-                    result.StatusCode = StatusCode.REPORT_DUPLICATED;
-                    return result;
+                    request.IsSuccess = false;
+                    request.StatusCode = StatusCode.REPORT_DUPLICATED;
+                    return request;
                 }
 
                 var report = new Report
@@ -103,28 +103,28 @@ namespace Services.Contracts.ServiceContracts.Services
 
                     SessionService.Instance.KickUser(reportedPlayerID, kickReason);
 
-                    result.IsSuccess = true;
-                    result.StatusCode = StatusCode.USER_KICKED_AND_BANNED;
+                    request.IsSuccess = true;
+                    request.StatusCode = StatusCode.USER_KICKED_AND_BANNED;
                 }
                 else
                 {
-                    result.IsSuccess = true;
-                    result.StatusCode = StatusCode.REPORT_CREATED;
+                    request.IsSuccess = true;
+                    request.StatusCode = StatusCode.REPORT_CREATED;
                 }
             }
             catch (DbUpdateException)
             {
-                result.IsSuccess = false;
-                result.StatusCode = StatusCode.REPORT_DUPLICATED;
+                request.IsSuccess = false;
+                request.StatusCode = StatusCode.REPORT_DUPLICATED;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error in ModerationService: {ex.Message}");
-                result.IsSuccess = false;
-                result.StatusCode = StatusCode.SERVER_ERROR;
+                request.IsSuccess = false;
+                request.StatusCode = StatusCode.SERVER_ERROR;
             }
 
-            return result;
+            return request;
         }
     }
 }
