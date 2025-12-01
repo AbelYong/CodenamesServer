@@ -31,14 +31,24 @@ namespace DataAccess.Users
                         .FirstOrDefault();
                 }
             }
-            catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex is SqlException)
+            catch (SqlException ex)
             {
-                DataAccessLogger.Log.Warn("Exception while retrieving active ban for user: ", ex);
+                DataAccessLogger.Log.Error("Database connection error retrieving active ban for user: " + userID, ex);
+                return null;
+            }
+            catch (EntityException ex)
+            {
+                DataAccessLogger.Log.Error("Entity error retrieving active ban for user: " + userID, ex);
+                return null;
+            }
+            catch (TimeoutException ex)
+            {
+                DataAccessLogger.Log.Error("Timeout retrieving active ban for user: " + userID, ex);
                 return null;
             }
             catch (Exception ex)
             {
-                DataAccessLogger.Log.Error("Unexpected exception while retrieving active ban for user: ", ex);
+                DataAccessLogger.Log.Error("Unexpected exception while retrieving active ban for user: " + userID, ex);
                 return null;
             }
         }
@@ -53,14 +63,29 @@ namespace DataAccess.Users
                     context.SaveChanges();
                 }
             }
-            catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex is SqlException)
+            catch (DbUpdateException ex)
             {
-                DataAccessLogger.Log.Warn("Exception while applying ban: ", ex);
+                DataAccessLogger.Log.Error("Error updating database while applying ban.", ex);
+                throw;
+            }
+            catch (SqlException ex)
+            {
+                DataAccessLogger.Log.Error("SQL error applying ban.", ex);
+                throw;
+            }
+            catch (EntityException ex)
+            {
+                DataAccessLogger.Log.Error("Entity error applying ban.", ex);
+                throw;
+            }
+            catch (TimeoutException ex)
+            {
+                DataAccessLogger.Log.Error("Timeout applying ban.", ex);
                 throw;
             }
             catch (Exception ex)
             {
-                DataAccessLogger.Log.Error("Unexpected exception while applying ban: ", ex);
+                DataAccessLogger.Log.Error("Unexpected exception while applying ban.", ex);
                 throw;
             }
         }

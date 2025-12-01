@@ -1,5 +1,4 @@
 ﻿using DataAccess.DataRequests;
-using DataAccess.Properties.Langs;
 using DataAccess.Util;
 using System;
 using System.Collections.Generic;
@@ -15,7 +14,7 @@ namespace DataAccess.Users
     {
         private readonly IDbContextFactory _contextFactory;
 
-        public FriendDAO() : this (new DbContextFactory()) { }
+        public FriendDAO() : this(new DbContextFactory()) { }
 
         public FriendDAO(IDbContextFactory contextFactory)
         {
@@ -32,6 +31,7 @@ namespace DataAccess.Users
             {
                 return Enumerable.Empty<Player>();
             }
+
             try
             {
                 using (var context = _contextFactory.Create())
@@ -54,9 +54,24 @@ namespace DataAccess.Users
                         .ToList();
                 }
             }
-            catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex is SqlException)
+            catch (SqlException ex)
             {
-                DataAccessLogger.Log.Error("Error searching players with query: " + query, ex);
+                DataAccessLogger.Log.Error("Database connection error searching players.", ex);
+                return Enumerable.Empty<Player>();
+            }
+            catch (EntityException ex)
+            {
+                DataAccessLogger.Log.Error("Entity error searching players.", ex);
+                return Enumerable.Empty<Player>();
+            }
+            catch (TimeoutException ex)
+            {
+                DataAccessLogger.Log.Error("Timeout searching players.", ex);
+                return Enumerable.Empty<Player>();
+            }
+            catch (Exception ex)
+            {
+                DataAccessLogger.Log.Error("Unexpected error searching players.", ex);
                 return Enumerable.Empty<Player>();
             }
         }
@@ -92,9 +107,24 @@ namespace DataAccess.Users
                              .ToList();
                 }
             }
-            catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex is SqlException)
+            catch (SqlException ex)
             {
-                DataAccessLogger.Log.Error("Error retrieving friends for playerID: " + playerId, ex);
+                DataAccessLogger.Log.Error("Database connection error retrieving friends.", ex);
+                return Enumerable.Empty<Player>();
+            }
+            catch (EntityException ex)
+            {
+                DataAccessLogger.Log.Error("Entity error retrieving friends.", ex);
+                return Enumerable.Empty<Player>();
+            }
+            catch (TimeoutException ex)
+            {
+                DataAccessLogger.Log.Error("Timeout retrieving friends.", ex);
+                return Enumerable.Empty<Player>();
+            }
+            catch (Exception ex)
+            {
+                DataAccessLogger.Log.Error("Unexpected error retrieving friends.", ex);
                 return Enumerable.Empty<Player>();
             }
         }
@@ -124,9 +154,19 @@ namespace DataAccess.Users
                              .ToList();
                 }
             }
-            catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex is SqlException)
+            catch (SqlException ex)
             {
-                DataAccessLogger.Log.Error("Error retrieving incoming requests for playerID: " + playerId, ex);
+                DataAccessLogger.Log.Error("Database connection error retrieving incoming requests.", ex);
+                return Enumerable.Empty<Player>();
+            }
+            catch (EntityException ex)
+            {
+                DataAccessLogger.Log.Error("Entity error retrieving incoming requests.", ex);
+                return Enumerable.Empty<Player>();
+            }
+            catch (Exception ex)
+            {
+                DataAccessLogger.Log.Error("Unexpected error retrieving incoming requests.", ex);
                 return Enumerable.Empty<Player>();
             }
         }
@@ -153,9 +193,19 @@ namespace DataAccess.Users
                         .ToList();
                 }
             }
-            catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex is SqlException)
+            catch (SqlException ex)
             {
-                DataAccessLogger.Log.Error("Error retrieving sent requests for playerID: " + playerId, ex);
+                DataAccessLogger.Log.Error("Database connection error retrieving sent requests.", ex);
+                return Enumerable.Empty<Player>();
+            }
+            catch (EntityException ex)
+            {
+                DataAccessLogger.Log.Error("Entity error retrieving sent requests.", ex);
+                return Enumerable.Empty<Player>();
+            }
+            catch (Exception ex)
+            {
+                DataAccessLogger.Log.Error("Unexpected error retrieving sent requests.", ex);
                 return Enumerable.Empty<Player>();
             }
         }
@@ -170,14 +220,12 @@ namespace DataAccess.Users
             if (fromPlayerId == Guid.Empty || toPlayerId == Guid.Empty)
             {
                 result.ErrorType = ErrorType.MISSING_DATA;
-                result.Message = Lang.errorInvalidID;
                 return result;
             }
 
             if (fromPlayerId == toPlayerId)
             {
                 result.ErrorType = ErrorType.INVALID_DATA;
-                result.Message = Lang.errorAddingYourself;
                 return result;
             }
 
@@ -192,7 +240,6 @@ namespace DataAccess.Users
                     if (alreadyExists)
                     {
                         result.ErrorType = ErrorType.DUPLICATE;
-                        result.Message = Lang.errorDuplicatedFriendship;
                         return result;
                     }
 
@@ -204,17 +251,33 @@ namespace DataAccess.Users
                     });
 
                     context.SaveChanges();
-                    
+
                     result.Success = true;
-                    result.Message = Lang.friendRequestSubmitted;
                     return result;
                 }
             }
-            catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex is SqlException)
+            catch (DbUpdateException ex)
             {
-                DataAccessLogger.Log.Error($"Error sending friend request from {fromPlayerId} to {toPlayerId}", ex);
+                DataAccessLogger.Log.Error($"Error saving friend request to DB from {fromPlayerId} to {toPlayerId}", ex);
                 result.ErrorType = ErrorType.DB_ERROR;
-                result.Message = Lang.errorUnprocessedRequest;
+                return result;
+            }
+            catch (EntityException ex)
+            {
+                DataAccessLogger.Log.Error($"Entity error sending friend request from {fromPlayerId} to {toPlayerId}", ex);
+                result.ErrorType = ErrorType.DB_ERROR;
+                return result;
+            }
+            catch (SqlException ex)
+            {
+                DataAccessLogger.Log.Error($"SQL error sending friend request from {fromPlayerId} to {toPlayerId}", ex);
+                result.ErrorType = ErrorType.DB_ERROR;
+                return result;
+            }
+            catch (Exception ex)
+            {
+                DataAccessLogger.Log.Error($"Unexpected error sending friend request from {fromPlayerId} to {toPlayerId}", ex);
+                result.ErrorType = ErrorType.DB_ERROR;
                 return result;
             }
         }
@@ -238,7 +301,6 @@ namespace DataAccess.Users
                     if (req == null)
                     {
                         result.ErrorType = ErrorType.NOT_FOUND;
-                        result.Message = Lang.errorRequestNotFound;
                         return result;
                     }
 
@@ -260,15 +322,25 @@ namespace DataAccess.Users
                     context.SaveChanges();
 
                     result.Success = true;
-                    result.Message = Lang.friendRequestAccepted;
                     return result;
                 }
             }
-            catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex is SqlException)
+            catch (DbUpdateException ex)
             {
-                DataAccessLogger.Log.Error($"Error accepting friend request. User: {playerId}, Requester: {requesterPlayerId}", ex);
+                DataAccessLogger.Log.Error($"Error saving changes (Accept Request). User: {playerId}, Requester: {requesterPlayerId}", ex);
                 result.ErrorType = ErrorType.DB_ERROR;
-                result.Message = Lang.errorAcceptingRequest;
+                return result;
+            }
+            catch (EntityException ex)
+            {
+                DataAccessLogger.Log.Error($"Entity error accepting friend request. User: {playerId}", ex);
+                result.ErrorType = ErrorType.DB_ERROR;
+                return result;
+            }
+            catch (Exception ex)
+            {
+                DataAccessLogger.Log.Error($"Unexpected error accepting friend request. User: {playerId}", ex);
+                result.ErrorType = ErrorType.DB_ERROR;
                 return result;
             }
         }
@@ -292,7 +364,6 @@ namespace DataAccess.Users
                     if (req == null)
                     {
                         result.ErrorType = ErrorType.NOT_FOUND;
-                        result.Message = Lang.errorRequestNotFound;
                         return result;
                     }
 
@@ -300,15 +371,25 @@ namespace DataAccess.Users
                     context.SaveChanges();
 
                     result.Success = true;
-                    result.Message = Lang.friendRequestRejected;
                     return result;
                 }
             }
-            catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex is SqlException)
+            catch (DbUpdateException ex)
             {
-                DataAccessLogger.Log.Error($"Error rejecting friend request. User: {playerId}, Requester: {requesterPlayerId}", ex);
+                DataAccessLogger.Log.Error($"Error saving changes (Reject Request). User: {playerId}, Requester: {requesterPlayerId}", ex);
                 result.ErrorType = ErrorType.DB_ERROR;
-                result.Message = Lang.errorRejectingRequest;
+                return result;
+            }
+            catch (EntityException ex)
+            {
+                DataAccessLogger.Log.Error($"Entity error rejecting friend request. User: {playerId}", ex);
+                result.ErrorType = ErrorType.DB_ERROR;
+                return result;
+            }
+            catch (Exception ex)
+            {
+                DataAccessLogger.Log.Error($"Unexpected error rejecting friend request. User: {playerId}", ex);
+                result.ErrorType = ErrorType.DB_ERROR;
                 return result;
             }
         }
@@ -331,7 +412,6 @@ namespace DataAccess.Users
                     if (!links.Any())
                     {
                         result.ErrorType = ErrorType.NOT_FOUND;
-                        result.Message = Lang.errorNoFriendship;
                         return result;
                     }
 
@@ -339,15 +419,25 @@ namespace DataAccess.Users
                     context.SaveChanges();
 
                     result.Success = true;
-                    result.Message = Lang.friendDeletedFriend;
                     return result;
                 }
             }
-            catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex is SqlException)
+            catch (DbUpdateException ex)
             {
-                DataAccessLogger.Log.Error($"Error removing friend. User: {playerId}, Friend: {friendId}", ex);
+                DataAccessLogger.Log.Error($"Error saving changes (Remove Friend). User: {playerId}, Friend: {friendId}", ex);
                 result.ErrorType = ErrorType.DB_ERROR;
-                result.Message = Lang.errorDeletingFriend;
+                return result;
+            }
+            catch (EntityException ex)
+            {
+                DataAccessLogger.Log.Error($"Entity error removing friend. User: {playerId}", ex);
+                result.ErrorType = ErrorType.DB_ERROR;
+                return result;
+            }
+            catch (Exception ex)
+            {
+                DataAccessLogger.Log.Error($"Unexpected error removing friend. User: {playerId}", ex);
+                result.ErrorType = ErrorType.DB_ERROR;
                 return result;
             }
         }

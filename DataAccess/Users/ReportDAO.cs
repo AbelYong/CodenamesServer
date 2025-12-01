@@ -1,5 +1,6 @@
 ﻿using DataAccess.Util;
 using System;
+using System.Data.Entity;
 using System.Data.Entity.Core;
 using System.Data.Entity.Infrastructure;
 using System.Data.SqlClient;
@@ -29,14 +30,24 @@ namespace DataAccess.Users
                         r.reportedUserID == reportedUserID);
                 }
             }
-            catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex is SqlException)
+            catch (SqlException ex)
             {
-                DataAccessLogger.Log.Warn("Exception while checking if player has reported target: ", ex);
+                DataAccessLogger.Log.Error("Database connection error checking if player has reported target.", ex);
+                return false;
+            }
+            catch (EntityException ex)
+            {
+                DataAccessLogger.Log.Error("Entity error checking if player has reported target.", ex);
+                return false;
+            }
+            catch (TimeoutException ex)
+            {
+                DataAccessLogger.Log.Error("Timeout checking if player has reported target.", ex);
                 return false;
             }
             catch (Exception ex)
             {
-                DataAccessLogger.Log.Error("Unexpected exception while checking if player has reported target: ", ex);
+                DataAccessLogger.Log.Error("Unexpected exception while checking if player has reported target.", ex);
                 return false;
             }
         }
@@ -51,14 +62,29 @@ namespace DataAccess.Users
                     context.SaveChanges();
                 }
             }
-            catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex is SqlException)
+            catch (DbUpdateException ex)
             {
-                DataAccessLogger.Log.Warn("Exception while adding a new report: ", ex);
+                DataAccessLogger.Log.Error("Error updating database while adding a new report.", ex);
+                throw;
+            }
+            catch (SqlException ex)
+            {
+                DataAccessLogger.Log.Error("SQL error adding a new report.", ex);
+                throw;
+            }
+            catch (EntityException ex)
+            {
+                DataAccessLogger.Log.Error("Entity error adding a new report.", ex);
+                throw;
+            }
+            catch (TimeoutException ex)
+            {
+                DataAccessLogger.Log.Error("Timeout adding a new report.", ex);
                 throw;
             }
             catch (Exception ex)
             {
-                DataAccessLogger.Log.Error("Unexpected exception while adding a new report: ", ex);
+                DataAccessLogger.Log.Error("Unexpected exception while adding a new report.", ex);
                 throw;
             }
         }
@@ -76,14 +102,24 @@ namespace DataAccess.Users
                         .Count();
                 }
             }
-            catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex is SqlException)
+            catch (SqlException ex)
             {
-                DataAccessLogger.Log.Warn("Exception while counting unique reports: ", ex);
+                DataAccessLogger.Log.Error("Database connection error counting unique reports.", ex);
+                return 0;
+            }
+            catch (EntityException ex)
+            {
+                DataAccessLogger.Log.Error("Entity error counting unique reports.", ex);
+                return 0;
+            }
+            catch (TimeoutException ex)
+            {
+                DataAccessLogger.Log.Error("Timeout counting unique reports.", ex);
                 return 0;
             }
             catch (Exception ex)
             {
-                DataAccessLogger.Log.Error("Unexpected exception while counting unique reports: ", ex);
+                DataAccessLogger.Log.Error("Unexpected exception while counting unique reports.", ex);
                 return 0;
             }
         }

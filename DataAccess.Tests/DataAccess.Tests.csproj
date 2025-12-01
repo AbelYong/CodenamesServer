@@ -144,11 +144,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="UserTests\AuthenticationTest.cs" />
+    <Compile Include="UserTests\BanDAOTest.cs" />
+    <Compile Include="UserTests\FriendDAOTest.cs" />
     <Compile Include="UserTests\ProfileUpdateTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ScoreboardTests\ScoreboardDAOTests.cs" />
     <Compile Include="TestUtil.cs" />
     <Compile Include="UserTests\PlayerDAOTest.cs" />
+    <Compile Include="UserTests\ReportDAOTest.cs" />
     <Compile Include="UserTests\SignInTest.cs" />
     <Compile Include="ValidatorTests\PlayerValidatorTest.cs" />
     <Compile Include="ValidatorTests\UserValidatorTest.cs" />
