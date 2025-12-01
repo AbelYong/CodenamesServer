@@ -29,6 +29,13 @@ namespace Services.Contracts.ServiceContracts.Services
         public CommunicationRequest SendVerificationCode(string email)
         {
             CommunicationRequest request = new CommunicationRequest();
+            if (!EmailOperation.ValidateEmailFormat(email))
+            {
+                request.IsSuccess = false;
+                request.StatusCode = StatusCode.WRONG_DATA;
+                return request;
+            }
+
             if (_playerDAO.ValidateEmailNotDuplicated(email))
             {
                 string code = _emailOperation.GenerateSixDigitCode();

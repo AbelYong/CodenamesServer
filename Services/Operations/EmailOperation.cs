@@ -32,7 +32,7 @@ namespace Services.Operations
 
         public bool SendVerificationEmail(string toAddress, string code)
         {
-            if (_gmailRegex.IsMatch(toAddress) || _outlookRegex.IsMatch(toAddress) || _uvEstudiantesMxRegex.IsMatch(toAddress))
+            if (ValidateEmailFormat(toAddress))
             {
                 string subject = Lang.verifyEmailSubjectVerify;
                 string body = string.Format(Lang.verifyEmailBodyVerify, code);
@@ -43,7 +43,7 @@ namespace Services.Operations
 
         public bool SendGameInvitationEmail(string fromUsername, string toAddress, string lobbyCode)
         {
-            if (_gmailRegex.IsMatch(toAddress) || _outlookRegex.IsMatch(toAddress) || _uvEstudiantesMxRegex.IsMatch(toAddress))
+            if (ValidateEmailFormat(toAddress))
             {
                 string subject = "Invitation to play Codenames";
                 string body = string.Format("{0} has invited you to play a match, use the code {1} to join them", fromUsername, lobbyCode);
@@ -54,7 +54,7 @@ namespace Services.Operations
 
         public static void SendResetEmail(string toAddress, string code)
         {
-            if (_gmailRegex.IsMatch(toAddress) || _outlookRegex.IsMatch(toAddress) || _uvEstudiantesMxRegex.IsMatch(toAddress))
+            if (ValidateEmailFormat(toAddress))
             {
                 string subject = Lang.resetEmailSubject_Reset;
                 string body = string.Format(Lang.resetEmailBody_Reset, code);
@@ -97,6 +97,11 @@ namespace Services.Operations
                 }
                 return false;
             }
+        }
+
+        public static bool ValidateEmailFormat(string email)
+        {
+            return (_gmailRegex.IsMatch(email) || _outlookRegex.IsMatch(email) || _uvEstudiantesMxRegex.IsMatch(email));
         }
 
         private static class EmailConfig
