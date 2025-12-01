@@ -16,7 +16,7 @@ namespace DataAccess.Validators
             new Regex(@"^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@outlook\.com$",
                       RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(100));
         private static readonly Regex _uvEstudiantesMxRegex =
-            new Regex(@"^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@estudiantes\.uv\.mx$",
+            new Regex(@"^zS\d{8}@estudiantes\.uv\.mx$",
                       RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(100));
 
         public static bool ValidateEmailFormat(string email)
