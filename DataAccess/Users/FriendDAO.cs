@@ -108,7 +108,7 @@ namespace DataAccess.Users
                 using (var context = _contextFactory.Create())
                 {
                     var requesterIds = context.Friendships
-                        .Where(f => f.friendID == playerId && f.requestStatus)
+                        .Where(f => f.friendID == playerId && f.requestStatus == false)
                         .Select(f => f.playerID);
 
                     return context.Players
@@ -198,7 +198,7 @@ namespace DataAccess.Users
                     var req = context.Friendships
                         .FirstOrDefault(f => f.playerID == requesterPlayerId &&
                                              f.friendID == playerId &&
-                                             f.requestStatus);
+                                             f.requestStatus == false);
 
                     if (req == null)
                     {
