@@ -14,5 +14,7 @@ namespace DataAccess.Scoreboards
         bool UpdateFastestMatchRecord(Guid playerID,TimeSpan matchLength);
         
         bool UpdateAssassinsPicked(Guid playerID);
+        Scoreboard GetPlayerScoreboard(Guid playerID);
+        List<Scoreboard> GetTopPlayersByWins(int topCount);
     }
 }

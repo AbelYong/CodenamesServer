@@ -1,6 +1,7 @@
 ﻿using DataAccess.Users;
 using DataAccess.Util;
 using System;
+using System.Collections.Generic;
 using System.Data.Entity.Core;
 using System.Data.Entity.Infrastructure;
 using System.Data.SqlClient;
@@ -36,9 +37,10 @@ namespace DataAccess.Scoreboards
                                 where s.playerID == playerID
                                 select s;
                     Scoreboard scoreboard = query.FirstOrDefault();
+
                     if (scoreboard != null)
                     {
-                        scoreboard.mostGamesWon = scoreboard.mostGamesWon + 1;
+                        scoreboard.mostGamesWon = (scoreboard.mostGamesWon ?? 0) + 1;
                         context.SaveChanges();
                         return true;
                     }
@@ -47,6 +49,7 @@ namespace DataAccess.Scoreboards
                         scoreboard = new Scoreboard();
                         scoreboard.playerID = playerID;
                         scoreboard.mostGamesWon = 1;
+                        scoreboard.assassinsRevealed = 0;
                         context.Scoreboards.Add(scoreboard);
                         context.SaveChanges();
                         return true;
@@ -55,7 +58,7 @@ namespace DataAccess.Scoreboards
             }
             catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex is SqlException)
             {
-                DataAccessLogger.Log.Warn("Failed to update number of mathces won: ", ex);
+                DataAccessLogger.Log.Warn("Failed to update number of matches won: ", ex);
                 return false;
             }
             catch (Exception ex)
@@ -135,9 +138,10 @@ namespace DataAccess.Scoreboards
                                 where s.playerID == playerID
                                 select s;
                     Scoreboard scoreboard = query.FirstOrDefault();
+
                     if (scoreboard != null)
                     {
-                        scoreboard.assassinsRevealed = scoreboard.assassinsRevealed + 1;
+                        scoreboard.assassinsRevealed = (scoreboard.assassinsRevealed ?? 0) + 1;
                         context.SaveChanges();
                         return true;
                     }
@@ -146,6 +150,7 @@ namespace DataAccess.Scoreboards
                         scoreboard = new Scoreboard();
                         scoreboard.playerID = playerID;
                         scoreboard.assassinsRevealed = 1;
+                        scoreboard.mostGamesWon = 0;
                         context.Scoreboards.Add(scoreboard);
                         context.SaveChanges();
                         return true;
@@ -161,6 +166,42 @@ namespace DataAccess.Scoreboards
             {
                 DataAccessLogger.Log.Error("Unexpected exception while updating number of assassins picked: ", ex);
                 return false;
+            }
+        }
+
+        public Scoreboard GetPlayerScoreboard(Guid playerID)
+        {
+            try
+            {
+                using (var context = _contextFactory.Create())
+                {
+                    return context.Scoreboards.Include("Player")
+                                  .FirstOrDefault(s => s.playerID == playerID);
+                }
+            }
+            catch (Exception ex)
+            {
+                DataAccessLogger.Log.Error("Error retrieving player scoreboard", ex);
+                return null;
+            }
+        }
+
+        public List<Scoreboard> GetTopPlayersByWins(int topCount)
+        {
+            try
+            {
+                using (var context = _contextFactory.Create())
+                {
+                    return context.Scoreboards.Include("Player")
+                                  .OrderByDescending(s => s.mostGamesWon)
+                                  .Take(topCount)
+                                  .ToList();
+                }
+            }
+            catch (Exception ex)
+            {
+                DataAccessLogger.Log.Error("Error retrieving top players", ex);
+                return new List<Scoreboard>();
             }
         }
     }

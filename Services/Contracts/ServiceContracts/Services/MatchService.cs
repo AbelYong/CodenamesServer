@@ -421,6 +421,10 @@ namespace Services.Contracts.ServiceContracts.Services
                     {
                         channel.NotifyStatsCouldNotBeSaved();
                     }
+                    if (matchesWonUpdated)
+                    {
+                        ScoreboardService.NotifyMatchConcluded();
+                    }
                 }
                 catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
                 {
