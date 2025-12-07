@@ -408,6 +408,10 @@ namespace Services.Contracts.ServiceContracts.Services
                     {
                         channel.NotifyStatsCouldNotBeSaved();
                     }
+                    if (matchesWonUpdated)
+                    {
+                        ScoreboardService.NotifyMatchConcluded();
+                    }
                 }
                 catch (CommunicationException ex)
                 {
