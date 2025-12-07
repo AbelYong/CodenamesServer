@@ -4,7 +4,7 @@ namespace Services.DTO.Request
 {
     [DataContract]
     [KnownType(typeof(CommunicationRequest))]
-    [KnownType(typeof(LoginRequest))]
+    [KnownType(typeof(AuthenticationRequest))]
     [KnownType(typeof(SignInRequest))]
     [KnownType(typeof(ConfirmEmailRequest))]
     [KnownType(typeof(CreateLobbyRequest))]

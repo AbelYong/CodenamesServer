@@ -1,12 +1,13 @@
-﻿using System;
-using System.Linq;
-using System.Data.SqlClient;
-using System.Data.Entity.Core.Objects;
-using DataAccess.DataRequests;
-using DataAccess.Validators;
-using System.Data.Entity.Infrastructure;
-using System.Data.Entity.Core;
+﻿using DataAccess.DataRequests;
 using DataAccess.Util;
+using DataAccess.Validators;
+using System;
+using System.Data.Entity;
+using System.Data.Entity.Core;
+using System.Data.Entity.Core.Objects;
+using System.Data.Entity.Infrastructure;
+using System.Data.SqlClient;
+using System.Linq;
 
 namespace DataAccess.Users
 {
@@ -142,6 +143,137 @@ namespace DataAccess.Users
                 request.IsPasswordValid = false;
             }
             return request;
+        }
+
+        public UpdateRequest ResetPassword(string email, string newPassword)
+        {
+            UpdateRequest request = new UpdateRequest();
+            if (!UserValidator.ValidatePassword(newPassword))
+            {
+                request.IsSuccess = false;
+                request.ErrorType = ErrorType.INVALID_DATA;
+                return request;
+            }
+
+            if (!UserValidator.ValidatePassword(newPassword))
+            {
+                request.IsSuccess = false;
+                request.ErrorType = ErrorType.INVALID_DATA;
+                return request;
+            }
+
+            try
+            {
+                if (CheckEmailExists(email))
+                {
+                    using (var context = _contextFactory.Create())
+                    {
+                        context.uspUpdatePassword(email, newPassword);
+                        request.IsSuccess = true;
+                    }
+                }
+                else
+                {
+                    request.IsSuccess= false;
+                    request.ErrorType = ErrorType.NOT_FOUND;
+                }
+            }
+            catch (Exception ex) when (ex is EntityException || ex is SqlException)
+            {
+                DataAccessLogger.Log.Debug("Exception while trying to reset an user's password: ", ex);
+                request.IsSuccess = false;
+                request.ErrorType = ErrorType.DB_ERROR;
+            }
+            catch (Exception ex)
+            {
+                DataAccessLogger.Log.Error("Unexpected exception while trying to reset an user's password: ", ex);
+                request.IsSuccess = false;
+                request.ErrorType = ErrorType.DB_ERROR;
+            }
+            return request;
+        }
+
+        public UpdateRequest UpdatePassword(string username, string currentPassword, string newPassword)
+        {
+            UpdateRequest request = new UpdateRequest();
+            if (!UserValidator.ValidatePassword(newPassword))
+            {
+                request.IsSuccess = false;
+                request.ErrorType = ErrorType.INVALID_DATA;
+                return request;
+            }
+
+            try
+            {
+                string email = GetEmailByUsername(username);
+                if (string.IsNullOrEmpty(username))
+                {
+                    request.IsSuccess = false;
+                    request.ErrorType = ErrorType.NOT_FOUND;
+                    return request;
+                }
+
+                if (InternalAuthenticate(username, currentPassword))
+                {
+                    using (var context = _contextFactory.Create())
+                    {
+                        context.uspUpdatePassword(email, newPassword);
+                        request.IsSuccess = true;
+                    }
+                }
+                else
+                {
+                    request.IsSuccess = false;
+                    request.ErrorType = ErrorType.UNALLOWED;
+                }
+            }
+            catch (Exception ex) when (ex is EntityException || ex is SqlException)
+            {
+                DataAccessLogger.Log.Debug("Exception while trying to update an user's password: ", ex);
+                request.IsSuccess = false;
+                request.ErrorType = ErrorType.DB_ERROR;
+            }
+            catch (Exception ex)
+            {
+                DataAccessLogger.Log.Error("Unexpected exception while trying to update an user's password: ", ex);
+                request.IsSuccess = false;
+                request.ErrorType = ErrorType.DB_ERROR;
+            }
+            return request;
+        }
+
+        private bool CheckEmailExists(string email)
+        {
+            using (var context = _contextFactory.Create())
+            {
+                return context.Users.Where(u => u.email == email).Any();
+            }
+        }
+
+        private string GetEmailByUsername(string username)
+        {
+            string email = string.Empty;
+            using (var context = _contextFactory.Create())
+            {
+                Player auxPlayer = context.Players
+                    .Include(p => p.User)
+                    .Where(p => p.username == username).FirstOrDefault();
+                if (auxPlayer != null)
+                {
+                    email = auxPlayer.User.email;
+                }
+            }
+            return email;
+        }
+
+        private bool InternalAuthenticate(string username, string password)
+        {
+            Guid? userID = Authenticate(username, password);
+            if (userID != null)
+            {
+                return true;
+            }
+            return false;
         }
     }
 }

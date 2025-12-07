@@ -58,9 +58,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Address.cs">
-      <DependentUpon>codenames.tt</DependentUpon>
-    </Compile>
     <Compile Include="Ban.cs">
       <DependentUpon>codenames.tt</DependentUpon>
     </Compile>
@@ -82,22 +79,17 @@
     </Compile>
     <Compile Include="DataRequests\PlayerRegistrationRequest.cs" />
     <Compile Include="DataRequests\PlayerRequest.cs" />
+    <Compile Include="DataRequests\UpdateRequest.cs" />
     <Compile Include="DbContextFactory.cs" />
     <Compile Include="Friendship.cs">
       <DependentUpon>codenames.tt</DependentUpon>
     </Compile>
     <Compile Include="ICodenamesContext.cs" />
     <Compile Include="IDbContextFactory.cs" />
-    <Compile Include="PasswordReset.cs">
-      <DependentUpon>codenames.tt</DependentUpon>
-    </Compile>
     <Compile Include="Properties\Langs\Lang.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Lang.resx</DependentUpon>
-    </Compile>
-    <Compile Include="RegistrationRequest.cs">
-      <DependentUpon>codenames.tt</DependentUpon>
     </Compile>
     <Compile Include="Report.cs">
       <DependentUpon>codenames.tt</DependentUpon>

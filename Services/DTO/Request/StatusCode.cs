@@ -8,6 +8,7 @@
         CREATED,
         //Means a request succesfully updated an object
         UPDATED,
+        //Means a request was rejected because a resource or identificator is in use by another user
         CONFLICT,
         //Means a request failed because one client requested to cancel the operation
         CLIENT_CANCEL,
@@ -23,12 +24,20 @@
         WRONG_DATA,
         //General code that means something requested by the client could not be found
         NOT_FOUND,
+        //Means the user does not fulfill the requirements to execute 
         UNAUTHORIZED,
         //Means the request could not be fulfilled because a rule would be infringed
         UNALLOWED,
+        //Means a request failed due to a server side error, such as an exception
         SERVER_ERROR,
+        //(Used on the client side) Means the server failed to fulfill a request for an unknown reason
         SERVER_UNAVAIBLE,
+        //(Used on the client side) Means the server failed to respond within the timeout
         SERVER_TIMEOUT,
+        //(Used on the client side) Means the server couldn't be found by the client
+        SERVER_UNREACHABLE,
+        //(Used on the client side) Means the request failed due to a client-side exception 
+        CLIENT_ERROR,
         //Means that someone tried to log in and is banned.
         ACCOUNT_BANNED,
         //Means a report was successful

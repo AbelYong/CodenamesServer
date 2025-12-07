@@ -442,7 +442,7 @@ namespace Services.Tests.ContractTests
             return new Player
             {
                 PlayerID = Guid.NewGuid(),
-                Username = "User_" + Guid.NewGuid().ToString().Substring(0, 4)
+                Username = "User" + Guid.NewGuid().ToString().Substring(0, 4)
             };
         }
     }

@@ -294,10 +294,11 @@ namespace Services.Contracts.ServiceContracts.Services
                 {
                     spymasterChannel.NotifyGuesserTurnTimeout(timerTokens);
                 }
-                catch (CommunicationException ex)
+                catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
                 {
                     ServerLogger.Log.Warn("Failed to send guesser turn timeout notification", ex);
                 }
+
             }
         }
 
@@ -339,10 +340,16 @@ namespace Services.Contracts.ServiceContracts.Services
                     channel.NotifyRolesChanged();
                     return true;
                 }
-                catch (CommunicationException ex)
+                catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
                 {
                     RemoveFaultedChannel(channel);
                     ServerLogger.Log.Warn("Role change could not be notified: ", ex);
+                    return false;
+                }
+                catch (Exception ex)
+                {
+                    RemoveFaultedChannel(channel);
+                    ServerLogger.Log.Error("Unexpected exception while notifying role change: ", ex);
                     return false;
                 }
             }
@@ -379,11 +386,17 @@ namespace Services.Contracts.ServiceContracts.Services
                         HandleMatchWon(ongoingMatch);
                     }
                 }
-                catch (CommunicationException ex)
+                catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
                 {
                     HandleMatchAbandoned(matchID, ongoingMatch.CurrentSpymasterID);
                     RemoveFaultedChannel(spymasterChannel);
                     ServerLogger.Log.Warn("Spymaster could not be notified an agent was picked: ", ex);
+                }
+                catch (Exception ex)
+                {
+                    HandleMatchAbandoned(matchID, ongoingMatch.CurrentSpymasterID);
+                    RemoveFaultedChannel(spymasterChannel);
+                    ServerLogger.Log.Error("Unexpected exception while notifying Spymaster an agent was picked: ", ex);
                 }
             }
         }
@@ -409,10 +422,15 @@ namespace Services.Contracts.ServiceContracts.Services
                         channel.NotifyStatsCouldNotBeSaved();
                     }
                 }
-                catch (CommunicationException ex)
+                catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
                 {
                     RemoveFaultedChannel(channel);
                     ServerLogger.Log.Warn("Match won could not be notified: ", ex);
+                }
+                catch (Exception ex)
+                {
+                    RemoveFaultedChannel(channel);
+                    ServerLogger.Log.Error("Unexpected exception while notifying Match won: ", ex);
                 }
             }
         }
@@ -473,11 +491,17 @@ namespace Services.Contracts.ServiceContracts.Services
                     spymasterChannel.NotifyBystanderPicked(notification);
                     HandleRoleSwitch(match);
                 }
-                catch (CommunicationException ex)
+                catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
                 {
                     HandleMatchAbandoned(match.MatchID, match.CurrentSpymasterID);
                     RemoveFaultedChannel(spymasterChannel);
                     ServerLogger.Log.Warn("Match timer token update could not be notified: ", ex);
+                }
+                catch (Exception ex)
+                {
+                    HandleMatchAbandoned(match.MatchID, match.CurrentSpymasterID);
+                    RemoveFaultedChannel(spymasterChannel);
+                    ServerLogger.Log.Error("Unexpected exception while notifying match timer token update: ", ex);
                 }
             }
             else
@@ -502,11 +526,17 @@ namespace Services.Contracts.ServiceContracts.Services
                 spymasterChannel.NotifyBystanderPicked(notification);
                 HandleRoleSwitch(match);
             }
-            catch (CommunicationException ex)
+            catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
             {
                 HandleMatchAbandoned(match.MatchID, match.CurrentSpymasterID);
                 RemoveFaultedChannel(spymasterChannel);
                 ServerLogger.Log.Warn("Bystander token update could not be sent: ", ex);
+            }
+            catch (Exception ex)
+            {
+                HandleMatchAbandoned(match.MatchID, match.CurrentSpymasterID);
+                RemoveFaultedChannel(spymasterChannel);
+                ServerLogger.Log.Error("Unexpected exception while notifying bystander token update: ", ex);
             }
         }
 
@@ -518,11 +548,16 @@ namespace Services.Contracts.ServiceContracts.Services
                 {
                     channel.NotifyMatchTimeout(finalMatchLength);
                 }
-                catch (CommunicationException ex)
+                catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
                 {
                     RemoveFaultedChannel(channel);
                     ServerLogger.Log.Warn("Could not notify match lost: ", ex);
-                } 
+                }
+                catch (Exception ex)
+                {
+                    RemoveFaultedChannel(channel);
+                    ServerLogger.Log.Error("Unexpected exception while notifying match lost due to tiemout:", ex);
+                }
             }
         }
 

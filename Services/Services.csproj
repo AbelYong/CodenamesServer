@@ -97,9 +97,10 @@
     <Compile Include="DTO\DataContract\TokenType.cs" />
     <Compile Include="DTO\Request\ConfirmEmailRequest.cs" />
     <Compile Include="DTO\Request\CreateLobbyRequest.cs" />
+    <Compile Include="DTO\Request\EmailType.cs" />
     <Compile Include="DTO\Request\FriendshipRequest.cs" />
     <Compile Include="DTO\Request\JoinPartyRequest.cs" />
-    <Compile Include="DTO\Request\LoginRequest.cs" />
+    <Compile Include="DTO\Request\AuthenticationRequest.cs" />
     <Compile Include="DTO\Request\Request.cs" />
     <Compile Include="DTO\DataContract\User.cs" />
     <Compile Include="DTO\Request\CommunicationRequest.cs" />

@@ -1,4 +1,5 @@
 ﻿using DataAccess.Properties.Langs;
+using Services.DTO.Request;
 using System;
 using System.Configuration;
 using System.Net;
@@ -30,12 +31,13 @@ namespace Services.Operations
             }
         }
 
-        public bool SendVerificationEmail(string toAddress, string code)
+        public bool SendVerificationEmail(string toAddress, string code, EmailType type)
         {
             if (ValidateEmailFormat(toAddress))
             {
-                string subject = Lang.verifyEmailSubjectVerify;
-                string body = string.Format(Lang.verifyEmailBodyVerify, code);
+                string subject = type == EmailType.EMAIL_VERIFICATION ? Lang.verifyEmailSubjectVerify : Lang.resetEmailSubject_Reset;
+                string body = type == EmailType.EMAIL_VERIFICATION ? Lang.verifyEmailBodyVerify : Lang.resetEmailBody_Reset;
+                body = string.Format(body, code);
                 return SendEmail(toAddress, subject, body);
             }
             return false;
@@ -50,16 +52,6 @@ namespace Services.Operations
                 return SendEmail(toAddress, subject, body);
             }
             return false;
-        }
-
-        public static void SendResetEmail(string toAddress, string code)
-        {
-            if (ValidateEmailFormat(toAddress))
-            {
-                string subject = Lang.resetEmailSubject_Reset;
-                string body = string.Format(Lang.resetEmailBody_Reset, code);
-                SendEmail(toAddress, subject, body);
-            }
         }
 
         private static bool SendEmail(string address, string subject, string body)

@@ -77,7 +77,7 @@ namespace Services.DTO
             }
             else
             {
-                return null;
+                return new Player { PlayerID = Guid.Empty };
             }
         }
 

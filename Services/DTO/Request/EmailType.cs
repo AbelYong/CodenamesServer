@@ -1,0 +1,14 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Services.DTO.Request
+{
+    public enum EmailType
+    {
+        EMAIL_VERIFICATION,
+        PASSWORD_RESET
+    }
+}

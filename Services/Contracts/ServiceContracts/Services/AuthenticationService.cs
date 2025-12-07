@@ -20,20 +20,20 @@ namespace Services.Contracts.ServiceContracts.Services
     {
         private readonly IUserDAO _userDAO;
         private readonly IBanDAO _banDAO;
-        private readonly IEmailOperation _emailOperation;
+        private readonly IEmailManager _emailManager;
 
-        public AuthenticationService() : this(new UserDAO(), new BanDAO(), new EmailOperation()) { }
+        public AuthenticationService() : this(new UserDAO(), new BanDAO(), new EmailService()) { }
 
-        public AuthenticationService(IUserDAO userDAO, IBanDAO banDAO, IEmailOperation emailOperation)
+        public AuthenticationService(IUserDAO userDAO, IBanDAO banDAO, IEmailManager emailManager)
         {
             _userDAO = userDAO;
             _banDAO = banDAO;
-            _emailOperation = emailOperation;
+            _emailManager = emailManager;
         }
 
-        public LoginRequest Login(string username, string password)
+        public AuthenticationRequest Authenticate(string username, string password)
         {
-            LoginRequest request = new LoginRequest();
+            AuthenticationRequest request = new AuthenticationRequest();
             try
             {
                 Guid? userID = _userDAO.Authenticate(username, password);
@@ -59,7 +59,7 @@ namespace Services.Contracts.ServiceContracts.Services
                     request.StatusCode = StatusCode.UNAUTHORIZED;
                 }
             }
-            catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex is SqlException)
+            catch (Exception ex) when (ex is EntityException || ex is SqlException)
             {
                 request.IsSuccess = false;
                 request.StatusCode = StatusCode.SERVER_ERROR;
@@ -74,108 +74,75 @@ namespace Services.Contracts.ServiceContracts.Services
             return request;
         }
 
-        public void BeginPasswordReset(string username, string email)
+        public CommunicationRequest CompletePasswordReset(string email, string code, string newPassword)
         {
-            using (var db = new DataAccess.codenamesEntities())
+            CommunicationRequest request = new CommunicationRequest();
+
+            ConfirmEmailRequest emailConfirmation = _emailManager.ValidateVerificationCode(email, code, EmailType.PASSWORD_RESET);
+            if (emailConfirmation.IsSuccess)
             {
-                var userAgg = (from u in db.Users
-                               join p in db.Players on u.userID equals p.userID
-                               where p.username == username && u.email == email
-                               select new { u.userID, u.email }).SingleOrDefault();
-
-                if (userAgg == null) return;
-
-                string code = _emailOperation.GenerateSixDigitCode();
-
-                var pr = new DataAccess.PasswordReset
+                UpdateRequest result = _userDAO.ResetPassword(email, newPassword);
+                if (result.IsSuccess)
                 {
-                    resetID = Guid.NewGuid(),
-                    userID = userAgg.userID,
-                    codeHash = Sha512(code),
-                    expiresAt = DateTimeOffset.UtcNow.AddMinutes(10),
-                    used = false,
-                    attempts = 0,
-                    createdAt = DateTimeOffset.UtcNow
-                };
-                db.PasswordResets.Add(pr);
-                db.SaveChanges();
-
-                EmailOperation.SendResetEmail(userAgg.email, code);
+                    request.IsSuccess = true;
+                    request.StatusCode = StatusCode.UPDATED;
+                    return request;
+                }
+                else
+                {
+                    return ConvertFromUpdateRequest(result);
+                }
+            }
+            else
+            {
+                request.IsSuccess = false;
+                request.StatusCode = StatusCode.UNAUTHORIZED;
+                return request;
             }
         }
 
-        public ResetResult CompletePasswordReset(string username, string code, string newPassword)
+        public CommunicationRequest UpdatePassword(string username, string currentPassword, string newPassword)
         {
-            if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 10 || newPassword.Length > 16)
+            CommunicationRequest request = new CommunicationRequest();
+            UpdateRequest result = _userDAO.UpdatePassword(username, currentPassword, newPassword);
+            if (result.IsSuccess)
             {
-                return new ResetResult { Success = false, Message = Lang.resetPasswordLengthError };
+                request.IsSuccess = true;
+                request.StatusCode = StatusCode.UPDATED;
+                return request;
             }
-
-            using (var db = new DataAccess.codenamesEntities())
+            else
             {
-                var u = (from usr in db.Users
-                         join p in db.Players on usr.userID equals p.userID
-                         where p.username == username
-                         select usr).SingleOrDefault();
-
-                if (u == null)
-                {
-                    return new ResetResult { Success = false, Message = Lang.resetInvalidRequest };
-                }
-
-                var now = DateTimeOffset.UtcNow;
-                var req = db.PasswordResets
-                            .Where(r => r.userID == u.userID && !r.used && r.expiresAt > now)
-                            .OrderByDescending(r => r.createdAt)
-                            .FirstOrDefault();
-
-                if (req == null)
-                {
-                    return new ResetResult { Success = false, Message = Lang.resetCodeExpired };
-                }
-
-                if (req.attempts >= 5)
-                {
-                    return new ResetResult { Success = false, Message = Lang.globalTooManyAttempts };
-                }
-
-                var ok = SlowEquals(req.codeHash, Sha512(code));
-                if (!ok)
-                {
-                    req.attempts += 1;
-                    db.SaveChanges();
-                    return new ResetResult { Success = false, Message = Lang.globalIncorrectCode };
-                }
-
-                var newSalt = Guid.NewGuid();
-
-                var pSalt = new SqlParameter("@salt", SqlDbType.UniqueIdentifier) { Value = newSalt };
-                var pPwd = new SqlParameter("@pwd", SqlDbType.VarChar, 16) { Value = newPassword };
-                var pUid = new SqlParameter("@uid", SqlDbType.UniqueIdentifier) { Value = u.userID };
-
-                db.Database.ExecuteSqlCommand(@"
-                UPDATE [dbo].[User]
-                SET passwordSalt = @salt,
-                    passwordHash = HASHBYTES('SHA2_512', @pwd + CAST(@salt AS VARCHAR(36)))
-                WHERE userID = @uid", pSalt, pPwd, pUid);
-                req.used = true;
-                db.SaveChanges();
-
-                return new ResetResult { Success = true, Message = Lang.resetPasswordUpdated };
+                return ConvertFromUpdateRequest(result);
             }
         }
 
-        private static byte[] Sha512(string input)
+        private static CommunicationRequest ConvertFromUpdateRequest(UpdateRequest updateRequest)
         {
-            using (var sha = SHA512.Create())
-                return sha.ComputeHash(Encoding.UTF8.GetBytes(input));
-        }
-
-        private static bool SlowEquals(byte[] a, byte[] b)
-        {
-            if (a == null || b == null || a.Length != b.Length) return false;
-            int diff = 0; for (int i = 0; i < a.Length; i++) diff |= a[i] ^ b[i];
-            return diff == 0;
+            CommunicationRequest request = new CommunicationRequest();
+            if (updateRequest == null)
+            {
+                request.IsSuccess = false;
+                request.StatusCode = StatusCode.MISSING_DATA;
+                return request;
+            }
+            request.IsSuccess = updateRequest.IsSuccess;
+            switch (updateRequest.ErrorType)
+            {
+                case ErrorType.INVALID_DATA:
+                    request.StatusCode = StatusCode.WRONG_DATA;
+                    break;
+                case ErrorType.NOT_FOUND:
+                    request.StatusCode = StatusCode.NOT_FOUND;
+                    break;
+                case ErrorType.UNALLOWED:
+                    request.StatusCode = StatusCode.UNAUTHORIZED;
+                    break;
+                case ErrorType.DB_ERROR:
+                    request.StatusCode = StatusCode.SERVER_ERROR;
+                    break;
+            }
+            return request;
         }
     }
 }

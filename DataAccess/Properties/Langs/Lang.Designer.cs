@@ -251,7 +251,7 @@ namespace DataAccess.Properties.Langs {
         
         /// <summary>
         ///   Busca una cadena traducida similar a Use this code to reset your password: {0}
-        ///Expires in 10 minutes..
+        ///Expires in 15 minutes..
         /// </summary>
         public static string resetEmailBody_Reset {
             get {

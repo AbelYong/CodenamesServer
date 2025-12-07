@@ -27,14 +27,11 @@ namespace DataAccess
             throw new UnintentionalCodeFirstException();
         }
     
-        public virtual DbSet<Address> Addresses { get; set; }
         public virtual DbSet<Ban> Bans { get; set; }
         public virtual DbSet<Friendship> Friendships { get; set; }
         public virtual DbSet<Player> Players { get; set; }
         public virtual DbSet<Scoreboard> Scoreboards { get; set; }
         public virtual DbSet<User> Users { get; set; }
-        public virtual DbSet<PasswordReset> PasswordResets { get; set; }
-        public virtual DbSet<RegistrationRequest> RegistrationRequests { get; set; }
         public virtual DbSet<Report> Reports { get; set; }
     
         public virtual int uspLogin(string username, string password, ObjectParameter userID)
@@ -73,6 +70,19 @@ namespace DataAccess
                 new ObjectParameter("lastName", typeof(string));
     
             return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction("uspSignIn", emailParameter, passwordParameter, usernameParameter, nameParameter, lastNameParameter, newUserID);
+        }
+    
+        public virtual int uspUpdatePassword(string email, string newPassword)
+        {
+            var emailParameter = email != null ?
+                new ObjectParameter("email", email) :
+                new ObjectParameter("email", typeof(string));
+    
+            var newPasswordParameter = newPassword != null ?
+                new ObjectParameter("newPassword", newPassword) :
+                new ObjectParameter("newPassword", typeof(string));
+    
+            return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction("uspUpdatePassword", emailParameter, newPasswordParameter);
         }
     }
 }

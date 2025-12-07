@@ -1,9 +1,5 @@
 ﻿using DataAccess.DataRequests;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DataAccess.Users
 {
@@ -11,5 +7,7 @@ namespace DataAccess.Users
     {
         Guid? Authenticate(string username, string password);
         PlayerRegistrationRequest SignIn(Player player, string password);
+        UpdateRequest ResetPassword(string email, string newPassword);
+        UpdateRequest UpdatePassword(string username, string currentPassword, string newPassword);
     }
 }

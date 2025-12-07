@@ -119,7 +119,7 @@
   </resheader>
   <data name="resetEmailBody_Reset" xml:space="preserve">
     <value>Usa este código para cambiar tu contraseña: {0}
-Caduca en 10 minutos.</value>
+Caduca en 15 minutos.</value>
   </data>
   <data name="resetEmailSubject_Reset" xml:space="preserve">
     <value>Código para restablecer tu contraseña</value>
