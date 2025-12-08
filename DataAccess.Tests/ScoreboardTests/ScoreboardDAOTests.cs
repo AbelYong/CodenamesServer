@@ -76,7 +76,7 @@ namespace DataAccess.Test.ScoreboardTests
         {
             // Arrange
             Guid playerId = Guid.NewGuid();
-            // Data list is empty
+            // Player has no scoreboard
 
             _playerDAO.Setup(p => p.VerifyIsPlayerGuest(playerId)).Returns(false);
 

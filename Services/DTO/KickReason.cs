@@ -3,12 +3,15 @@
 namespace Services.DTO
 {
     [DataContract]
-    public enum BanReason
+    public enum KickReason
     {
         [EnumMember]
-        TemporaryBan,
+        TEMPORARY_BAN,
 
         [EnumMember]
-        PermanentBan
+        PERMANTENT_BAN,
+
+        [EnumMember]
+        DUPLICATE_LOGIN
     }
 }

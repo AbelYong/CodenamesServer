@@ -18,6 +18,6 @@ namespace Services.Contracts
         void ReceiveOnlineFriends(List<Player> friends);
 
         [OperationContract(IsOneWay = true)]
-        void NotifyKicked(BanReason reason);
+        void NotifyKicked(KickReason reason);
     }
 }

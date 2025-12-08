@@ -16,5 +16,7 @@ namespace Services.Contracts.ServiceContracts.Managers
 
         [OperationContract]
         Scoreboard GetMyScore(Guid playerID);
+
+        void NotifyMatchConcluded(); //Used by match service, not by the clients
     }
 }

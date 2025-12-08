@@ -10,12 +10,9 @@ using System.ServiceModel;
 
 namespace Services.Contracts.ServiceContracts.Services
 {
-    [ServiceBehavior(
-        InstanceContextMode = InstanceContextMode.Single,
-        ConcurrencyMode = ConcurrencyMode.Reentrant)]
+    [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Reentrant)]
     public class SessionService : ISessionManager
     {
-        public static SessionService Instance { get; }
         private readonly IFriendManager _friendService;
         private readonly ICallbackProvider _callbackProvider;
         private readonly ConcurrentDictionary<Player, ISessionCallback> _playersOnline;
@@ -52,9 +49,14 @@ namespace Services.Contracts.ServiceContracts.Services
             {
                 if (!_playersOnline.TryAdd(player, currentClientChannel))
                 {
-                    request.IsSuccess = false;
-                    request.StatusCode = StatusCode.UNAUTHORIZED;
-                    return request;
+                    // If player is currently online, kick them from their previous login
+                    // wether they'll be allowed to connect is determined by if the kick was sucessful
+                    request.IsSuccess = HandleDuplicateLogin(player, currentClientChannel);
+                    if (!request.IsSuccess)
+                    {
+                        request.StatusCode = StatusCode.UNAUTHORIZED;
+                        return request;
+                    }
                 }
 
                 playersOnlineSnapshot = _playersOnline.ToDictionary(session => session.Key, session => session.Value);
@@ -64,6 +66,7 @@ namespace Services.Contracts.ServiceContracts.Services
 
             Dictionary<Player, ISessionCallback> friendCallbacks = GetFriendsOnlineChannels(friends, playersOnlineSnapshot);
             NotifyConnectToOnlineFriends(friendCallbacks, player);
+
             KeyValuePair<Player, ISessionCallback> playerCallback = new KeyValuePair<Player, ISessionCallback> (player, currentClientChannel);
             List<Player> onlineFriends = friendCallbacks.Keys.ToList();
             SendOnlineFriends(onlineFriends, playerCallback);
@@ -73,6 +76,18 @@ namespace Services.Contracts.ServiceContracts.Services
             string playerOnlineMessage = string.Format("{0} has connected", player.PlayerID);
             ServerLogger.Log.Info(message:playerOnlineMessage);
             return request;
+        }
+
+        private bool HandleDuplicateLogin(Player player, ISessionCallback channel)
+        {
+            Guid playerID = (Guid)player.PlayerID;
+            KickPlayer(playerID, KickReason.DUPLICATE_LOGIN);
+            var kickedPlayer = _playersOnline.FirstOrDefault(p => p.Key.PlayerID == playerID);
+            if (kickedPlayer.Key == null)
+            {
+                return _playersOnline.TryAdd(player, channel);
+            }
+            return false;
         }
 
         private static Dictionary<Player, ISessionCallback> GetFriendsOnlineChannels(List<Player> friends, Dictionary<Player, ISessionCallback> playersOnline)
@@ -258,7 +273,8 @@ namespace Services.Contracts.ServiceContracts.Services
         {
             if (_playersOnline.TryGetValue(player, out ISessionCallback faultedChannel))
             {
-                KeyValuePair<Player, ISessionCallback> entryToRemove = new KeyValuePair<Player, ISessionCallback>(player, faultedChannel);
+                KeyValuePair<Player, ISessionCallback> entryToRemove =
+                    new KeyValuePair<Player, ISessionCallback>(player, faultedChannel);
 
                 bool removed = ((ICollection<KeyValuePair<Player, ISessionCallback>>)_playersOnline)
                     .Remove(entryToRemove);
@@ -276,13 +292,17 @@ namespace Services.Contracts.ServiceContracts.Services
 
             foreach (KeyValuePair<Player, ISessionCallback> failedEntry in faultedChannels)
             {
+                if (failedEntry.Value is ICommunicationObject communicationObject)
+                {
+                    communicationObject.Abort();
+                }
                 collection.Remove(failedEntry);
             }
         }
         
-        public void KickUser(Guid userID, BanReason reason)
+        public void KickPlayer(Guid playerID, KickReason reason)
         {
-            var onlinePlayer = _playersOnline.FirstOrDefault(p => p.Key.PlayerID == userID);
+            var onlinePlayer = _playersOnline.FirstOrDefault(p => p.Key.PlayerID == playerID);
 
             if (onlinePlayer.Key != null)
             {
@@ -298,7 +318,7 @@ namespace Services.Contracts.ServiceContracts.Services
                 }
                 catch (Exception ex)
                 {
-                    ServerLogger.Log.Warn("Unexpected exception while sending kick notification:", ex);
+                    ServerLogger.Log.Error("Unexpected exception while sending kick notification:", ex);
                 }
                 Disconnect(onlinePlayer.Key);
             }

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ServiceModel;
-using Services.Contracts;
 
 namespace Services.Operations
 {
@@ -11,8 +10,7 @@ namespace Services.Operations
     /// </summary>
     public static class FriendCallbackManager
     {
-        private static readonly Dictionary<Guid, IFriendCallback> _clients =
-            new Dictionary<Guid, IFriendCallback>();
+        private static readonly Dictionary<Guid, IFriendCallback> _clients = new Dictionary<Guid, IFriendCallback>();
 
         /// <summary>
         /// Registers a new client (player) and its callback channel.
@@ -86,9 +84,15 @@ namespace Services.Operations
                 {
                     action(callback);
                 }
-                catch (Exception)
+                catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
                 {
                     Unregister(playerId);
+                    ServerLogger.Log.Warn("Could not send notification to friend service client:", ex);
+                }
+                catch (Exception ex)
+                {
+                    Unregister(playerId);
+                    ServerLogger.Log.Error("Unexpected exception trying to send notification to friend service client: ", ex);
                 }
             }
         }

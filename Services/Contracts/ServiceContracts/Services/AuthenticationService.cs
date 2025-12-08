@@ -6,13 +6,8 @@ using Services.DTO;
 using Services.DTO.Request;
 using Services.Operations;
 using System;
-using System.Data;
 using System.Data.Entity.Core;
-using System.Data.Entity.Infrastructure;
 using System.Data.SqlClient;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace Services.Contracts.ServiceContracts.Services
 {

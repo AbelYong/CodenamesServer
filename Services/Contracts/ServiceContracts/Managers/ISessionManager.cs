@@ -1,5 +1,6 @@
 ﻿using Services.DTO;
 using Services.DTO.Request;
+using System;
 using System.ServiceModel;
 
 namespace Services.Contracts.ServiceContracts.Managers
@@ -18,5 +19,8 @@ namespace Services.Contracts.ServiceContracts.Managers
 
         [OperationContract(IsOneWay = true)]
         void NotifyFriendshipEnded(Player friendA, Player friendB);
+
+        void KickPlayer(Guid playerID, KickReason reason); //Used by moderation service
+        bool IsPlayerOnline(Guid playerId); //Used by moderation service
     }
 }

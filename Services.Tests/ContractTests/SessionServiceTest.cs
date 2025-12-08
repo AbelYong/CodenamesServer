@@ -399,11 +399,11 @@ namespace Services.Tests.ContractTests
             ConnectPlayer(player, callback);
 
             // Act
-            _sessionService.KickUser(player.PlayerID.Value, BanReason.PermanentBan);
+            _sessionService.KickPlayer(player.PlayerID.Value, KickReason.PERMANTENT_BAN);
 
             // Assert
             // 1. Verify notification sent
-            callback.Verify(c => c.NotifyKicked(BanReason.PermanentBan), Times.Once);
+            callback.Verify(c => c.NotifyKicked(KickReason.PERMANTENT_BAN), Times.Once);
 
             // 2. Verify player disconnected
             Assert.That(_sessionService.IsPlayerOnline(player.PlayerID.Value), Is.False);
@@ -417,14 +417,14 @@ namespace Services.Tests.ContractTests
             _friendManagerMock.Setup(f => f.GetFriends(It.IsAny<Guid>())).Returns(new List<Player>());
 
             var callbackMock = new Mock<ISessionCallback>();
-            callbackMock.Setup(c => c.NotifyKicked(It.IsAny<BanReason>()))
+            callbackMock.Setup(c => c.NotifyKicked(It.IsAny<KickReason>()))
                 .Throws(new CommunicationException("Simulated comm error"));
 
             _callbackQueue.Enqueue(callbackMock.Object);
             _sessionService.Connect(player);
 
             // Act
-            _sessionService.KickUser(player.PlayerID.Value, BanReason.TemporaryBan);
+            _sessionService.KickPlayer(player.PlayerID.Value, KickReason.TEMPORARY_BAN);
 
             // Assert
             Assert.That(_sessionService.IsPlayerOnline(player.PlayerID.Value), Is.False);

@@ -179,9 +179,14 @@ namespace DataAccess.Scoreboards
                                   .FirstOrDefault(s => s.playerID == playerID);
                 }
             }
+            catch (Exception ex) when (ex is EntityException || ex is SqlException)
+            {
+                DataAccessLogger.Log.Debug("Failed to retrieve player scoreboard", ex);
+                return null;
+            }
             catch (Exception ex)
             {
-                DataAccessLogger.Log.Error("Error retrieving player scoreboard", ex);
+                DataAccessLogger.Log.Error("Unexpected exception retrieving player scoreboard: ", ex);
                 return null;
             }
         }
@@ -198,9 +203,14 @@ namespace DataAccess.Scoreboards
                                   .ToList();
                 }
             }
+            catch (Exception ex) when (ex is EntityException || ex is SqlException)
+            {
+                DataAccessLogger.Log.Debug("Exception while retrieving top players", ex);
+                return new List<Scoreboard>();
+            }
             catch (Exception ex)
             {
-                DataAccessLogger.Log.Error("Error retrieving top players", ex);
+                DataAccessLogger.Log.Error("Unexpected exception while retrieving top players: ", ex);
                 return new List<Scoreboard>();
             }
         }

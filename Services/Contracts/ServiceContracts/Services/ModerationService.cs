@@ -12,17 +12,16 @@ namespace Services.Contracts.ServiceContracts.Services
     [ServiceBehavior(ConcurrencyMode = ConcurrencyMode.Multiple, InstanceContextMode = InstanceContextMode.PerCall)]
     public class ModerationService : IModerationManager
     {
+        private readonly ISessionManager _sessionService;
         private readonly IReportDAO _reportDAO;
         private readonly IBanDAO _banDAO;
         private readonly IPlayerDAO _playerDAO;
 
-        public ModerationService() : this (new ReportDAO(), new BanDAO(), new PlayerDAO())
-        {
+        public ModerationService() : this (new SessionService(), new ReportDAO(), new BanDAO(), new PlayerDAO()) { }
 
-        }
-
-        public ModerationService(IReportDAO reportDAO, IBanDAO banDAO, IPlayerDAO playerDAO)
+        public ModerationService(ISessionManager sessionService, IReportDAO reportDAO, IBanDAO banDAO, IPlayerDAO playerDAO)
         {
+            _sessionService = sessionService;
             _reportDAO = reportDAO;
             _banDAO = banDAO;
             _playerDAO = playerDAO;
@@ -32,7 +31,7 @@ namespace Services.Contracts.ServiceContracts.Services
         {
             CommunicationRequest request = new CommunicationRequest();
 
-            if (!SessionService.Instance.IsPlayerOnline(reporterPlayerID))
+            if (!_sessionService.IsPlayerOnline(reporterPlayerID))
             {
                 request.IsSuccess = false;
                 request.StatusCode = StatusCode.UNAUTHORIZED;
@@ -78,10 +77,18 @@ namespace Services.Contracts.ServiceContracts.Services
 
                 switch (reportCount)
                 {
-                    case 3: banDuration = TimeSpan.FromHours(1); break;
-                    case 5: banDuration = TimeSpan.FromHours(8); break;
-                    case 7: banDuration = TimeSpan.FromHours(12); break;
-                    case 10: isPermanent = true; break;
+                    case 3:
+                        banDuration = TimeSpan.FromHours(1);
+                        break;
+                    case 5:
+                        banDuration = TimeSpan.FromHours(8);
+                        break;
+                    case 7:
+                        banDuration = TimeSpan.FromHours(12);
+                        break;
+                    case 10:
+                        isPermanent = true;
+                        break;
                 }
 
                 if (banDuration.HasValue || isPermanent)
@@ -99,9 +106,9 @@ namespace Services.Contracts.ServiceContracts.Services
                     };
                     _banDAO.ApplyBan(ban);
 
-                    BanReason kickReason = isPermanent ? BanReason.PermanentBan : BanReason.TemporaryBan;
+                    KickReason kickReason = isPermanent ? KickReason.PERMANTENT_BAN : KickReason.TEMPORARY_BAN;
 
-                    SessionService.Instance.KickUser(reportedPlayerID, kickReason);
+                    _sessionService.KickPlayer(reportedPlayerID, kickReason);
 
                     request.IsSuccess = true;
                     request.StatusCode = StatusCode.USER_KICKED_AND_BANNED;

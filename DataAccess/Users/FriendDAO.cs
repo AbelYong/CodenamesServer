@@ -38,7 +38,7 @@ namespace DataAccess.Users
                 {
                     var q = query.ToLower();
                     var existingContacts = context.Friendships
-                        .Where(f => (f.playerID == excludePlayerId || f.friendID == excludePlayerId) && f.requestStatus == true)
+                        .Where(f => (f.playerID == excludePlayerId || f.friendID == excludePlayerId) && f.requestStatus)
                         .Select(f => f.playerID == excludePlayerId ? f.friendID : f.playerID);
 
                     return context.Players
@@ -109,17 +109,17 @@ namespace DataAccess.Users
             }
             catch (SqlException ex)
             {
-                DataAccessLogger.Log.Error("Database connection error retrieving friends.", ex);
+                DataAccessLogger.Log.Debug("Database connection error retrieving friends.", ex);
                 return Enumerable.Empty<Player>();
             }
             catch (EntityException ex)
             {
-                DataAccessLogger.Log.Error("Entity error retrieving friends.", ex);
+                DataAccessLogger.Log.Debug("Entity error retrieving friends.", ex);
                 return Enumerable.Empty<Player>();
             }
             catch (TimeoutException ex)
             {
-                DataAccessLogger.Log.Error("Timeout retrieving friends.", ex);
+                DataAccessLogger.Log.Debug("Timeout retrieving friends.", ex);
                 return Enumerable.Empty<Player>();
             }
             catch (Exception ex)
@@ -144,7 +144,7 @@ namespace DataAccess.Users
                 using (var context = _contextFactory.Create())
                 {
                     var requesterIds = context.Friendships
-                        .Where(f => f.friendID == playerId && f.requestStatus == false)
+                        .Where(f => f.friendID == playerId && !f.requestStatus)
                         .Select(f => f.playerID);
 
                     return context.Players
@@ -156,12 +156,12 @@ namespace DataAccess.Users
             }
             catch (SqlException ex)
             {
-                DataAccessLogger.Log.Error("Database connection error retrieving incoming requests.", ex);
+                DataAccessLogger.Log.Debug("Database connection error retrieving incoming requests.", ex);
                 return Enumerable.Empty<Player>();
             }
             catch (EntityException ex)
             {
-                DataAccessLogger.Log.Error("Entity error retrieving incoming requests.", ex);
+                DataAccessLogger.Log.Debug("Entity error retrieving incoming requests.", ex);
                 return Enumerable.Empty<Player>();
             }
             catch (Exception ex)
@@ -183,7 +183,7 @@ namespace DataAccess.Users
                 using (var context = _contextFactory.Create())
                 {
                     var targetIds = context.Friendships
-                        .Where(f => f.playerID == playerId && f.requestStatus == false)
+                        .Where(f => f.playerID == playerId && !f.requestStatus)
                         .Select(f => f.friendID);
 
                     return context.Players
@@ -195,12 +195,12 @@ namespace DataAccess.Users
             }
             catch (SqlException ex)
             {
-                DataAccessLogger.Log.Error("Database connection error retrieving sent requests.", ex);
+                DataAccessLogger.Log.Debug("Database connection error retrieving sent requests.", ex);
                 return Enumerable.Empty<Player>();
             }
             catch (EntityException ex)
             {
-                DataAccessLogger.Log.Error("Entity error retrieving sent requests.", ex);
+                DataAccessLogger.Log.Debug("Entity error retrieving sent requests.", ex);
                 return Enumerable.Empty<Player>();
             }
             catch (Exception ex)
@@ -258,19 +258,19 @@ namespace DataAccess.Users
             }
             catch (DbUpdateException ex)
             {
-                DataAccessLogger.Log.Error($"Error saving friend request to DB from {fromPlayerId} to {toPlayerId}", ex);
+                DataAccessLogger.Log.Debug($"Error saving friend request to DB from {fromPlayerId} to {toPlayerId}", ex);
                 result.ErrorType = ErrorType.DB_ERROR;
                 return result;
             }
             catch (EntityException ex)
             {
-                DataAccessLogger.Log.Error($"Entity error sending friend request from {fromPlayerId} to {toPlayerId}", ex);
+                DataAccessLogger.Log.Debug($"Entity error sending friend request from {fromPlayerId} to {toPlayerId}", ex);
                 result.ErrorType = ErrorType.DB_ERROR;
                 return result;
             }
             catch (SqlException ex)
             {
-                DataAccessLogger.Log.Error($"SQL error sending friend request from {fromPlayerId} to {toPlayerId}", ex);
+                DataAccessLogger.Log.Debug($"SQL error sending friend request from {fromPlayerId} to {toPlayerId}", ex);
                 result.ErrorType = ErrorType.DB_ERROR;
                 return result;
             }
@@ -296,7 +296,7 @@ namespace DataAccess.Users
                     var req = context.Friendships
                         .FirstOrDefault(f => f.playerID == requesterPlayerId &&
                                              f.friendID == playerId &&
-                                             f.requestStatus == false);
+                                             !f.requestStatus);
 
                     if (req == null)
                     {
@@ -327,13 +327,13 @@ namespace DataAccess.Users
             }
             catch (DbUpdateException ex)
             {
-                DataAccessLogger.Log.Error($"Error saving changes (Accept Request). User: {playerId}, Requester: {requesterPlayerId}", ex);
+                DataAccessLogger.Log.Debug($"Error saving changes (Accept Request). User: {playerId}, Requester: {requesterPlayerId}", ex);
                 result.ErrorType = ErrorType.DB_ERROR;
                 return result;
             }
             catch (EntityException ex)
             {
-                DataAccessLogger.Log.Error($"Entity error accepting friend request. User: {playerId}", ex);
+                DataAccessLogger.Log.Debug($"Entity error accepting friend request. User: {playerId}", ex);
                 result.ErrorType = ErrorType.DB_ERROR;
                 return result;
             }
@@ -359,7 +359,7 @@ namespace DataAccess.Users
                     var req = context.Friendships
                         .FirstOrDefault(f => f.playerID == requesterPlayerId &&
                                              f.friendID == playerId &&
-                                             f.requestStatus == false);
+                                             !f.requestStatus);
 
                     if (req == null)
                     {
@@ -376,13 +376,13 @@ namespace DataAccess.Users
             }
             catch (DbUpdateException ex)
             {
-                DataAccessLogger.Log.Error($"Error saving changes (Reject Request). User: {playerId}, Requester: {requesterPlayerId}", ex);
+                DataAccessLogger.Log.Debug($"Error saving changes (Reject Request). User: {playerId}, Requester: {requesterPlayerId}", ex);
                 result.ErrorType = ErrorType.DB_ERROR;
                 return result;
             }
             catch (EntityException ex)
             {
-                DataAccessLogger.Log.Error($"Entity error rejecting friend request. User: {playerId}", ex);
+                DataAccessLogger.Log.Debug($"Entity error rejecting friend request. User: {playerId}", ex);
                 result.ErrorType = ErrorType.DB_ERROR;
                 return result;
             }
@@ -406,8 +406,8 @@ namespace DataAccess.Users
                 using (var context = _contextFactory.Create())
                 {
                     var links = context.Friendships.Where(f =>
-                        (f.playerID == playerId && f.friendID == friendId && f.requestStatus == true) ||
-                        (f.playerID == friendId && f.friendID == playerId && f.requestStatus == true)).ToList();
+                        (f.playerID == playerId && f.friendID == friendId && f.requestStatus) ||
+                        (f.playerID == friendId && f.friendID == playerId && f.requestStatus)).ToList();
 
                     if (!links.Any())
                     {
@@ -424,13 +424,13 @@ namespace DataAccess.Users
             }
             catch (DbUpdateException ex)
             {
-                DataAccessLogger.Log.Error($"Error saving changes (Remove Friend). User: {playerId}, Friend: {friendId}", ex);
+                DataAccessLogger.Log.Debug($"Error saving changes (Remove Friend). User: {playerId}, Friend: {friendId}", ex);
                 result.ErrorType = ErrorType.DB_ERROR;
                 return result;
             }
             catch (EntityException ex)
             {
-                DataAccessLogger.Log.Error($"Entity error removing friend. User: {playerId}", ex);
+                DataAccessLogger.Log.Debug($"Entity error removing friend. User: {playerId}", ex);
                 result.ErrorType = ErrorType.DB_ERROR;
                 return result;
             }

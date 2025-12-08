@@ -17,23 +17,24 @@ namespace Services.Contracts.ServiceContracts.Services
     public class MatchService : IMatchManager
     {
         private readonly ICallbackProvider _callbackProvider;
+        private readonly IScoreboardManager _scoreboardService;
         private readonly IScoreboardDAO _scoreboardDAO;
         private readonly ConcurrentDictionary<Guid, IMatchCallback> _connectedPlayers;
         private readonly ConcurrentDictionary<Guid, OngoingMatch> _matches;
         private readonly ConcurrentDictionary<Guid, Guid> _playersOngoingMatchesMap;
 
-        public MatchService() : this(new CallbackProvider())
+        public MatchService() : this(new CallbackProvider(), new ScoreboardService(), new ScoreboardDAO())
         {
-            _scoreboardDAO = new ScoreboardDAO();
             _connectedPlayers = new ConcurrentDictionary<Guid, IMatchCallback>();
             _matches = new ConcurrentDictionary<Guid, OngoingMatch>();
             _playersOngoingMatchesMap = new ConcurrentDictionary<Guid, Guid>();
         }
 
-        public MatchService(ICallbackProvider callbackProvider)
+        public MatchService(ICallbackProvider callbackProvider, IScoreboardManager scoreboardService, IScoreboardDAO scoreboardDAO)
         {
             _callbackProvider = callbackProvider;
-            _scoreboardDAO = new ScoreboardDAO();
+            _scoreboardService = scoreboardService;
+            _scoreboardDAO = scoreboardDAO;
             _connectedPlayers = new ConcurrentDictionary<Guid, IMatchCallback>();
             _matches = new ConcurrentDictionary<Guid, OngoingMatch>();
             _playersOngoingMatchesMap = new ConcurrentDictionary<Guid, Guid>();
@@ -99,10 +100,15 @@ namespace Services.Contracts.ServiceContracts.Services
                 {
                     channel.NotifyCompanionDisconnect();
                 }
-                catch (Exception ex) when (ex is CommunicationException || ex is ObjectDisposedException)
+                catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
                 {
                     RemoveFaultedChannel(channel);
                     ServerLogger.Log.Warn("Player could not be notified of companion disconnect: ", ex);
+                }
+                catch (Exception ex)
+                {
+                    RemoveFaultedChannel(channel);
+                    ServerLogger.Log.Error("Unexpected exception while notifying companion disconnect: ", ex);
                 }
             }
         }
@@ -116,10 +122,9 @@ namespace Services.Contracts.ServiceContracts.Services
                 request.StatusCode = StatusCode.MISSING_DATA;
                 return request;
             }
-            OngoingMatch ongoingMatch;
             lock (_matches)
             {
-                if (_matches.TryGetValue(match.MatchID, out ongoingMatch))
+                if (_matches.TryGetValue(match.MatchID, out OngoingMatch ongoingMatch))
                 {
                     if (match.Requester.PlayerID == playerID)
                     {
@@ -236,11 +241,17 @@ namespace Services.Contracts.ServiceContracts.Services
                     {
                         sendToChannel.NotifyClueReceived(clue);
                     } 
-                    catch (CommunicationException ex)
+                    catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
                     {
                         HandleMatchAbandoned(matchID, sendToID);
                         RemoveFaultedChannel(sendToChannel);
-                        ServerLogger.Log.Warn("Clue could not be sent", ex);
+                        ServerLogger.Log.Warn("Clue could not be sent: ", ex);
+                    }
+                    catch (Exception ex)
+                    {
+                        HandleMatchAbandoned(matchID, sendToID);
+                        RemoveFaultedChannel(sendToChannel);
+                        ServerLogger.Log.Error("Unexpected exception, clue could not be sent: ", ex);
                     }
                 }
             }
@@ -277,18 +288,25 @@ namespace Services.Contracts.ServiceContracts.Services
                 {
                     sendToChannel.NotifyTurnChange();
                 }
-                catch (CommunicationException ex)
+                catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
                 {
                     HandleMatchAbandoned(matchID, toNotifyID);
                     RemoveFaultedChannel(sendToChannel);
-                    ServerLogger.Log.Warn("Turn change due to timeout could not be notified", ex);
+                    ServerLogger.Log.Warn("Turn change due to timeout could not be notified: ", ex);
+                }
+                catch (Exception ex)
+                {
+                    HandleMatchAbandoned(matchID, toNotifyID);
+                    RemoveFaultedChannel(sendToChannel);
+                    ServerLogger.Log.Error("Unexpected exception: Turn change due to timeout could not be notified: ", ex);
                 }
             }
         }
 
         private void NotifyGuesserTurnTimeout(Guid spymasterID, int timerTokens)
         {
-            if (_connectedPlayers.TryGetValue(spymasterID, out IMatchCallback spymasterChannel))
+            if (_connectedPlayers.TryGetValue(spymasterID, out IMatchCallback spymasterChannel) &&
+                _playersOngoingMatchesMap.TryGetValue(spymasterID, out Guid ongoingMatchID))
             {
                 try
                 {
@@ -296,9 +314,16 @@ namespace Services.Contracts.ServiceContracts.Services
                 }
                 catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
                 {
-                    ServerLogger.Log.Warn("Failed to send guesser turn timeout notification", ex);
+                    HandleMatchAbandoned(ongoingMatchID, spymasterID);
+                    RemoveFaultedChannel(spymasterChannel);
+                    ServerLogger.Log.Warn("Failed to send guesser turn timeout notification: ", ex);
                 }
-
+                catch (Exception ex)
+                {
+                    HandleMatchAbandoned(ongoingMatchID, spymasterID);
+                    RemoveFaultedChannel(spymasterChannel);
+                    ServerLogger.Log.Error("Unexpected exception while sending guesser turn timeout notification: ", ex);
+                }
             }
         }
 
@@ -423,7 +448,7 @@ namespace Services.Contracts.ServiceContracts.Services
                     }
                     if (matchesWonUpdated)
                     {
-                        ScoreboardService.NotifyMatchConcluded();
+                        _scoreboardService.NotifyMatchConcluded();
                     }
                 }
                 catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)

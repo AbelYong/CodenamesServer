@@ -174,28 +174,31 @@ namespace Services.Contracts.ServiceContracts.Services
                 return false;
             }
 
-            bool requesterSuccess = false;
-            bool companionSuccess = false;
+            bool requesterSuccess = SendRequestPendingNotification(requesterChannel, requesterID, companionID);
+            bool companionSuccess = SendRequestPendingNotification(companionChannel, requesterID, companionID);
 
-            try
-            {
-                requesterChannel.NotifyRequestPending(requesterID, companionID);
-                requesterSuccess = true;
-            }
-            catch (CommunicationException)
-            {
-                RemoveFaultedChannel(requesterID);
-            }
-            try
-            {
-                companionChannel.NotifyRequestPending(requesterID, companionID);
-                companionSuccess = true;
-            }
-            catch (CommunicationException)
-            {
-                RemoveFaultedChannel(companionID);
-            }
             return requesterSuccess && companionSuccess;
+        }
+
+        private bool SendRequestPendingNotification(IMatchmakingCallback channel, Guid requesterID, Guid companionID)
+        {
+            try
+            {
+                channel.NotifyRequestPending(requesterID, companionID);
+                return true;
+            }
+            catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
+            {
+                ServerLogger.Log.Warn("Failed to send match request pending notification: ", ex);
+                RemoveFaultedChannel(companionID);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                ServerLogger.Log.Error("Unexpected exception while sending match request pending notification: ", ex);
+                RemoveFaultedChannel(companionID);
+                return false;
+            }
         }
 
         private CommunicationRequest SendMatchToPlayers(Match match, Guid requesterID, Guid companionID)
@@ -250,8 +253,16 @@ namespace Services.Contracts.ServiceContracts.Services
                 playerChannel?.NotifyMatchReady(match);
                 return true;
             }
-            catch (CommunicationException)
+            catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
             {
+
+                ServerLogger.Log.Warn("Failed to send Match to player: ", ex);
+                RemoveFaultedChannel(sendToID);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                ServerLogger.Log.Error("Unexpected exception while sending match to player: ", ex);
                 RemoveFaultedChannel(sendToID);
                 return false;
             }
@@ -265,7 +276,7 @@ namespace Services.Contracts.ServiceContracts.Services
             // We use the same lock to ensure atomicity, either timeout or ConfirmMatch remove the confirmation
             lock (_confirmationLock)
             {
-                // If this fails, it's because ConfirmMatchReceived players have confirmed and removed it.
+                // If this fails, it's because ConfirmMatchReceived has confirmed and removed it.
                 if (_matchesAwaitingConfirmation.TryRemove(matchID, out MatchConfirmation confirmation))
                 {
                     confirmation.TimeoutTimer?.Dispose();
@@ -293,8 +304,14 @@ namespace Services.Contracts.ServiceContracts.Services
                 {
                     channel?.NotifyMatchCanceled(matchID, reason);
                 }
-                catch (CommunicationException)
+                catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
                 {
+                    ServerLogger.Log.Warn("Failed to send match canceled notification:", ex);
+                    RemoveFaultedChannel(playerToNotifyID);
+                }
+                catch (Exception ex)
+                {
+                    ServerLogger.Log.Error("Unexpected exception while sending match canceled notification: ", ex);
                     RemoveFaultedChannel(playerToNotifyID);
                 }
             }
@@ -330,7 +347,6 @@ namespace Services.Contracts.ServiceContracts.Services
                 if (confirmation.HasRequesterConfirmed && confirmation.HasCompanionConfirmed &&
                     _matchesAwaitingConfirmation.TryRemove(matchID, out MatchConfirmation removedConfirmation))
                 {
-                    // Players are ready, remove the confirmation inside the lock to prevent the timeout from also removing it.
                     removedConfirmation.TimeoutTimer?.Change(Timeout.Infinite, Timeout.Infinite);
                     removedConfirmation.TimeoutTimer?.Dispose();
                     shouldNotify = true;
@@ -353,23 +369,27 @@ namespace Services.Contracts.ServiceContracts.Services
                 bool companionConnected = _connectedPlayers.TryGetValue(companionID, out IMatchmakingCallback companionChannel);
                 if (requesterConnected && companionConnected)
                 {
-                    try
-                    {
-                        requesterChannel.NotifyPlayersReady(matchID);
-                    }
-                    catch (CommunicationException)
-                    {
-                        RemoveFaultedChannel(requesterID);
-                    }
-                    try
-                    {
-                        companionChannel.NotifyPlayersReady(matchID);
-                    }
-                    catch (CommunicationException)
-                    {
-                        RemoveFaultedChannel(companionID);
-                    }
+                    SendPlayerReadyNotification(requesterID, requesterChannel, matchID);
+                    SendPlayerReadyNotification(companionID, companionChannel, matchID);
                 }
+            }
+        }
+
+        private void SendPlayerReadyNotification(Guid toNotifyID, IMatchmakingCallback toNotifyChannel, Guid matchID)
+        {
+            try
+            {
+                toNotifyChannel.NotifyPlayersReady(matchID);
+            }
+            catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
+            {
+                ServerLogger.Log.Warn("Failed to send player's ready notification: ", ex);
+                RemoveFaultedChannel(toNotifyID);
+            }
+            catch (Exception ex)
+            {
+                ServerLogger.Log.Error("Unexpected exception while sending player's ready notification: ", ex);
+                RemoveFaultedChannel(toNotifyID);
             }
         }
 

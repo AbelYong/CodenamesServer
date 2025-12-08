@@ -84,7 +84,7 @@
     <Compile Include="Contracts\ServiceContracts\Services\ScoreboardService.cs" />
     <Compile Include="Contracts\ServiceContracts\Services\SessionService.cs" />
     <Compile Include="Contracts\Callback\ISessionCallback.cs" />
-    <Compile Include="DTO\BanReason.cs" />
+    <Compile Include="DTO\KickReason.cs" />
     <Compile Include="DTO\DataContract\AgentPickedNotification.cs" />
     <Compile Include="DTO\DataContract\AssassinPickedNotification.cs" />
     <Compile Include="DTO\DataContract\BoardCoordinates.cs" />
@@ -105,6 +105,7 @@
     <Compile Include="DTO\Request\FriendshipRequest.cs" />
     <Compile Include="DTO\Request\JoinPartyRequest.cs" />
     <Compile Include="DTO\Request\AuthenticationRequest.cs" />
+    <Compile Include="DTO\Request\PasswordResetRequest.cs" />
     <Compile Include="DTO\Request\Request.cs" />
     <Compile Include="DTO\DataContract\User.cs" />
     <Compile Include="DTO\Request\CommunicationRequest.cs" />

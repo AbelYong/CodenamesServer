@@ -22,13 +22,13 @@ namespace Services
         private readonly IPlayerDAO _playerDAO;
         private Guid _playerId;
 
-        public FriendService() : this (new FriendDAO(), new PlayerDAO(), new CallbackProvider()) { }
+        public FriendService() : this (new CallbackProvider(), new FriendDAO(), new PlayerDAO()) { }
 
-        public FriendService(IFriendDAO friendDAO, IPlayerDAO playerDAO, ICallbackProvider callbackProvider)
+        public FriendService(ICallbackProvider callbackProvider, IFriendDAO friendDAO, IPlayerDAO playerDAO)
         {
+            _callbackProvider = callbackProvider;
             _friendDAO = friendDAO;
             _playerDAO = playerDAO;
-            _callbackProvider = callbackProvider;
         }
 
         public void Connect(Guid mePlayerId)
@@ -42,7 +42,6 @@ namespace Services
             IFriendCallback callback = _callbackProvider.GetCallback<IFriendCallback>();
 
             FriendCallbackManager.Register(_playerId, callback);
-            Console.WriteLine("{0} registered to friend service", mePlayerId);
 
             var commObject = (ICommunicationObject)callback;
             commObject.Closing += OnClientClosing;
