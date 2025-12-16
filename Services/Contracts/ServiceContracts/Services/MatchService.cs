@@ -273,8 +273,16 @@ namespace Services.Contracts.ServiceContracts.Services
 
                     case MatchRoleType.GUESSER:
                         ongoingMatch.TimerTokens--;
-                        NotifyGuesserTurnTimeout(ongoingMatch.CurrentSpymasterID, ongoingMatch.TimerTokens);
-                        HandleRoleSwitch(ongoingMatch);
+
+                        if (ongoingMatch.TimerTokens < 0)
+                        {
+                            HandleMatchLostTimeout(ongoingMatch, true);
+                        }
+                        else
+                        {
+                            NotifyGuesserTurnTimeout(ongoingMatch.CurrentSpymasterID, ongoingMatch.TimerTokens);
+                            HandleRoleSwitch(ongoingMatch);
+                        }
                         break;
                 }
             }
@@ -536,15 +544,15 @@ namespace Services.Contracts.ServiceContracts.Services
             else
             {
                 match.StopTimer();
-                HandleMatchLostTimeout(match);
+                HandleMatchLostTimeout(match, false);
             }
         }
 
-        private void HandleMatchLostTimeout(OngoingMatch match)
+        private void HandleMatchLostTimeout(OngoingMatch match, bool isTimeOut)
         {
             string finalMatchLength = match.GetMatchDuration;
-            NotifyMatchLostTimeout(match.CurrentGuesserID, finalMatchLength);
-            NotifyMatchLostTimeout(match.CurrentSpymasterID, finalMatchLength);
+            NotifyMatchLostTimeout(match.CurrentGuesserID, finalMatchLength, isTimeOut);
+            NotifyMatchLostTimeout(match.CurrentSpymasterID, finalMatchLength, isTimeOut);
             RemoveMatch(match);
         }
 
@@ -569,13 +577,13 @@ namespace Services.Contracts.ServiceContracts.Services
             }
         }
 
-        private void NotifyMatchLostTimeout(Guid toNotifyID, string finalMatchLength)
+        private void NotifyMatchLostTimeout(Guid toNotifyID, string finalMatchLength, bool isTimeOut)
         {
             if (_connectedPlayers.TryGetValue(toNotifyID, out IMatchCallback channel))
             {
                 try
                 {
-                    channel.NotifyMatchTimeout(finalMatchLength);
+                    channel.NotifyMatchTimeout(finalMatchLength, isTimeOut);
                 }
                 catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
                 {

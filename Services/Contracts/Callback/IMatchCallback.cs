@@ -32,7 +32,7 @@ namespace Services.Contracts.Callback
         void NotifyMatchWon(string finalMatchLength);
 
         [OperationContract(IsOneWay = true)]
-        void NotifyMatchTimeout(string finalMatchLength);
+        void NotifyMatchTimeout(string finalMatchLength, bool isTimeOut);
 
         [OperationContract(IsOneWay = true)]
         void NotifyCompanionDisconnect();
