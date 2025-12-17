@@ -65,7 +65,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Contracts\CallbackProvider.cs" />
-    <Compile Include="Contracts\Callback\CallbackUtil.cs" />
     <Compile Include="Contracts\Callback\IMatchCallback.cs" />
     <Compile Include="Contracts\Callback\IMatchmakingCallback.cs" />
     <Compile Include="Contracts\Callback\ILobbyCallback.cs" />

@@ -55,8 +55,10 @@ namespace Services.Contracts.ServiceContracts.Services
             }
             else
             {
-                request.IsSuccess = false;
-                request.StatusCode = StatusCode.UNAUTHORIZED;
+                Disconnect(playerID);
+                hasConnected = _connectedPlayers.TryAdd(playerID, currentClientChannel);
+                request.IsSuccess = hasConnected;
+                request.StatusCode = hasConnected ? StatusCode.OK : StatusCode.UNAUTHORIZED;
             }
             return request;
         }

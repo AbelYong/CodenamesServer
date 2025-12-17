@@ -1,5 +1,4 @@
-﻿using Services.DTO;
-using Services.DTO.Request;
+﻿using Services.DTO.Request;
 using System;
 using System.ServiceModel;
 

@@ -1,5 +1,6 @@
 ﻿using DataAccess;
 using DataAccess.Users;
+using DataAccess.Moderation;
 using Services.Contracts.ServiceContracts.Managers;
 using Services.DTO;
 using Services.DTO.Request;
@@ -17,7 +18,7 @@ namespace Services.Contracts.ServiceContracts.Services
         private readonly IBanDAO _banDAO;
         private readonly IPlayerDAO _playerDAO;
 
-        public ModerationService() : this (new SessionService(), new ReportDAO(), new BanDAO(), new PlayerDAO()) { }
+        public ModerationService() : this (SessionService.Instance, new ReportDAO(), new BanDAO(), new PlayerDAO()) { }
 
         public ModerationService(ISessionManager sessionService, IReportDAO reportDAO, IBanDAO banDAO, IPlayerDAO playerDAO)
         {

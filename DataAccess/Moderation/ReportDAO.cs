@@ -6,7 +6,7 @@ using System.Data.Entity.Infrastructure;
 using System.Data.SqlClient;
 using System.Linq;
 
-namespace DataAccess.Users
+namespace DataAccess.Moderation
 {
     public class ReportDAO : IReportDAO
     {

@@ -1,7 +1,7 @@
 ﻿using DataAccess.DataRequests;
 using DataAccess.Test;
+using DataAccess.Tests.Util;
 using DataAccess.Users;
-using DataAccess.Util;
 using Moq;
 using NUnit.Framework;
 using System;
@@ -288,7 +288,7 @@ namespace DataAccess.Tests.UserTests
 
             // Assert
             Assert.That(result.Success, Is.True);
-            _friendshipSet.Verify(m => m.Add(It.Is<Friendship>(f => f.playerID == fromId && f.friendID == toId && f.requestStatus == false)), Times.Once);
+            _friendshipSet.Verify(m => m.Add(It.Is<Friendship>(f => f.playerID == fromId && f.friendID == toId && !f.requestStatus)), Times.Once);
             _context.Verify(c => c.SaveChanges(), Times.Once);
         }
 
@@ -380,7 +380,7 @@ namespace DataAccess.Tests.UserTests
             // Assert
             Assert.That(result.Success, Is.True);
             Assert.That(friendship.requestStatus, Is.True);
-            _friendshipSet.Verify(m => m.Add(It.Is<Friendship>(f => f.playerID == meId && f.friendID == requesterId && f.requestStatus == true)), Times.Once); // Reciprocal
+            _friendshipSet.Verify(m => m.Add(It.Is<Friendship>(f => f.playerID == meId && f.friendID == requesterId && f.requestStatus)), Times.Once); // Reciprocal
             _context.Verify(c => c.SaveChanges(), Times.Once);
         }
 
@@ -518,13 +518,5 @@ namespace DataAccess.Tests.UserTests
         }
 
         #endregion
-    }
-
-    internal static class SqlExceptionCreator
-    {
-        public static SqlException Create()
-        {
-            return (SqlException)System.Runtime.Serialization.FormatterServices.GetUninitializedObject(typeof(SqlException));
-        }
     }
 }

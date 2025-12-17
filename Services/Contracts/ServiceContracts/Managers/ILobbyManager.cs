@@ -1,13 +1,8 @@
 ﻿using Services.Contracts.Callback;
 using Services.DTO;
-using Services.DTO.DataContract;
 using Services.DTO.Request;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.ServiceModel;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Services.Contracts.ServiceContracts.Managers
 {

@@ -1,5 +1,4 @@
 ﻿using Services.DTO.DataContract;
-using System;
 using System.ServiceModel;
 
 namespace Services.Contracts.Callback

@@ -1,5 +1,5 @@
 ﻿using DataAccess.Test;
-using DataAccess.Users;
+using DataAccess.Moderation;
 using Moq;
 using NUnit.Framework;
 using System;
@@ -8,9 +8,9 @@ using System.Data.Entity;
 using System.Data.Entity.Core;
 using System.Data.Entity.Infrastructure;
 using System.Data.SqlClient;
-using System.Linq;
+using DataAccess.Tests.Util;
 
-namespace DataAccess.Tests.UserTests
+namespace DataAccess.Tests.ModerationTests
 {
     [TestFixture]
     public class ReportDAOTest
@@ -35,8 +35,6 @@ namespace DataAccess.Tests.UserTests
 
             _reportDAO = new ReportDAO(_contextFactory.Object);
         }
-
-        #region HasPlayerReportedTarget
 
         [Test]
         public void HasPlayerReportedTarget_ReportExists_ReturnsTrue()
@@ -120,10 +118,6 @@ namespace DataAccess.Tests.UserTests
             Assert.That(result, Is.False);
         }
 
-        #endregion
-
-        #region AddReport
-
         [Test]
         public void AddReport_ValidReport_AddsAndSavesChanges()
         {
@@ -187,10 +181,6 @@ namespace DataAccess.Tests.UserTests
             // Act & Assert
             Assert.Throws<Exception>(() => _reportDAO.AddReport(new Report()));
         }
-
-        #endregion
-
-        #region CountUniqueReports
 
         [Test]
         public void CountUniqueReports_ReportsExist_ReturnsCorrectUniqueCount()
@@ -276,7 +266,5 @@ namespace DataAccess.Tests.UserTests
             // Assert
             Assert.That(count, Is.EqualTo(0));
         }
-
-        #endregion
     }
 }

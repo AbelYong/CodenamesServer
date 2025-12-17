@@ -1,6 +1,5 @@
 ﻿using Services.DTO;
 using Services.DTO.Request;
-using Services.DTO.DataContract;
 using System;
 using System.Collections.Generic;
 using System.ServiceModel;

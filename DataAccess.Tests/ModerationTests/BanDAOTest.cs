@@ -1,5 +1,7 @@
-﻿using DataAccess.Test;
-using DataAccess.Users;
+﻿using DataAccess.Moderation;
+using DataAccess.Test;
+using DataAccess.Tests.Util;
+using DataAccess.Util;
 using Moq;
 using NUnit.Framework;
 using System;
@@ -8,9 +10,8 @@ using System.Data.Entity;
 using System.Data.Entity.Core;
 using System.Data.Entity.Infrastructure;
 using System.Data.SqlClient;
-using System.Linq;
 
-namespace DataAccess.Tests.UserTests
+namespace DataAccess.Tests.ModerationTests
 {
     [TestFixture]
     public class BanDAOTest
@@ -35,8 +36,6 @@ namespace DataAccess.Tests.UserTests
 
             _banDAO = new BanDAO(_contextFactory.Object);
         }
-
-        #region GetActiveBan
 
         [Test]
         public void GetActiveBan_UserHasActiveBan_ReturnsBan()
@@ -171,10 +170,6 @@ namespace DataAccess.Tests.UserTests
             Assert.That(result, Is.Null);
         }
 
-        #endregion
-
-        #region ApplyBan
-
         [Test]
         public void ApplyBan_ValidBan_AddsAndSaves()
         {
@@ -238,7 +233,5 @@ namespace DataAccess.Tests.UserTests
             // Act & Assert
             Assert.Throws<Exception>(() => _banDAO.ApplyBan(new Ban()));
         }
-
-        #endregion
     }
 }

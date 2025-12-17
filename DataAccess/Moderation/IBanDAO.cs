@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DataAccess.Users
+namespace DataAccess.Moderation
 {
     public interface IBanDAO
     {

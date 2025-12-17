@@ -1,5 +1,4 @@
-﻿using System.Runtime.Serialization;
-using System.ServiceModel;
+﻿using System.ServiceModel;
 using Services.DTO.Request;
 
 namespace Services.Contracts.ServiceContracts.Managers

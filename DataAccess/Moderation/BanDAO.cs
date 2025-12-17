@@ -1,12 +1,11 @@
 ﻿using DataAccess.Util;
 using System;
-using System.Data.Entity;
 using System.Data.Entity.Core;
 using System.Data.Entity.Infrastructure;
 using System.Data.SqlClient;
 using System.Linq;
 
-namespace DataAccess.Users
+namespace DataAccess.Moderation
 {
     public class BanDAO : IBanDAO
     {

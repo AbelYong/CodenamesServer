@@ -96,12 +96,12 @@
     </Compile>
     <Compile Include="Scoreboards\IScoreboardDAO.cs" />
     <Compile Include="Scoreboards\ScoreboardDAO.cs" />
-    <Compile Include="Users\BanDAO.cs" />
+    <Compile Include="Moderation\BanDAO.cs" />
     <Compile Include="Users\FriendDAO.cs" />
-    <Compile Include="Users\IBanDAO.cs" />
+    <Compile Include="Moderation\IBanDAO.cs" />
     <Compile Include="Users\IFriendDAO.cs" />
     <Compile Include="Users\IPlayerDAO.cs" />
-    <Compile Include="Users\IReportDAO.cs" />
+    <Compile Include="Moderation\IReportDAO.cs" />
     <Compile Include="Users\IUserDAO.cs" />
     <Compile Include="Player.cs">
       <DependentUpon>codenames.tt</DependentUpon>
@@ -113,7 +113,7 @@
     <Compile Include="User.cs">
       <DependentUpon>codenames.tt</DependentUpon>
     </Compile>
-    <Compile Include="Users\ReportDAO.cs" />
+    <Compile Include="Moderation\ReportDAO.cs" />
     <Compile Include="Util\DataAccessLogger.cs" />
     <Compile Include="DataRequests\DataRequest.cs" />
     <Compile Include="DataRequests\ErrorType.cs" />

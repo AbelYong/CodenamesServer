@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.Serialization;
 using System.ServiceModel;
 using Services.DTO;
 using Services.DTO.Request;

@@ -1,6 +1,6 @@
 ﻿using DataAccess.DataRequests;
-using DataAccess.Properties.Langs;
 using DataAccess.Users;
+using DataAccess.Moderation;
 using Services.Contracts.ServiceContracts.Managers;
 using Services.DTO;
 using Services.DTO.Request;

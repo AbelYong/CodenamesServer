@@ -13,9 +13,15 @@ namespace Services.Contracts.ServiceContracts.Services
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Reentrant)]
     public class SessionService : ISessionManager
     {
+        private static readonly Lazy<SessionService> _instance = new Lazy<SessionService>(() => new SessionService());
         private readonly IFriendManager _friendService;
         private readonly ICallbackProvider _callbackProvider;
         private readonly ConcurrentDictionary<Player, ISessionCallback> _playersOnline;
+
+        public static SessionService Instance
+        {
+            get => _instance.Value;
+        }
 
         public SessionService() : this (new FriendService(), new CallbackProvider())
         {

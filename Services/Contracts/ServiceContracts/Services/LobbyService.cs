@@ -54,17 +54,19 @@ namespace Services.Contracts.ServiceContracts.Services
             }
             else
             {
-                request.IsSuccess = false;
-                request.StatusCode = StatusCode.UNAUTHORIZED;
+                Disconnect(playerID);
+                hasConnected = _connectedPlayers.TryAdd(playerID, _currentClientChannel);
+                request.IsSuccess = hasConnected;
+                request.StatusCode = hasConnected ? StatusCode.OK : StatusCode.UNAUTHORIZED;
             }
             return request;
         }
 
         public void Disconnect(Guid playerID)
         {
-            bool hasDisconnected = _connectedPlayers.TryRemove(playerID, out _);
-            if (hasDisconnected &&
-                _playerLobbyMap.TryRemove(playerID, out string lobbyCode) &&
+            _connectedPlayers.TryRemove(playerID, out _);
+            if (_playerLobbyMap.TryRemove(playerID, out string lobbyCode) &&
+                !string.IsNullOrEmpty(lobbyCode) &&
                 _lobbies.TryGetValue(lobbyCode, out Party party))
             {
                 AbandonParty(party, playerID);

@@ -7,6 +7,7 @@ namespace Services.Contracts.Callback
     /// <summary>
     /// Callback interface to notify clients of updates to the scoreboard.
     /// </summary>
+    [ServiceContract]
     public interface IScoreboardCallback
     {
         /// <summary>
