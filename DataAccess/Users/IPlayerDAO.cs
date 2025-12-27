@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using DataAccess.DataRequests;
 using DataAccess.Util;
 
 namespace DataAccess.Users
@@ -14,6 +11,7 @@ namespace DataAccess.Users
         OperationResult UpdateProfile(Player updatedPlayer);
         bool VerifyIsPlayerGuest(Guid playerID);
         bool ValidateEmailNotDuplicated(string email);
+        DataVerificationRequest VerifyEmailInUse(string email);
         bool ValidateUsernameNotDuplicated(string username);
         string GetEmailByPlayerID(Guid playerId);
     }

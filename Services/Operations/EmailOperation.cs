@@ -1,5 +1,5 @@
 ﻿using DataAccess.Properties.Langs;
-using Services.DTO.Request;
+using Services.DTO.DataContract;
 using System;
 using System.Configuration;
 using System.Net;

@@ -77,8 +77,8 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>codenames.edmx</DependentUpon>
     </Compile>
+    <Compile Include="DataRequests\DataVerificationRequest.cs" />
     <Compile Include="DataRequests\PlayerRegistrationRequest.cs" />
-    <Compile Include="DataRequests\PlayerRequest.cs" />
     <Compile Include="DataRequests\UpdateRequest.cs" />
     <Compile Include="DbContextFactory.cs" />
     <Compile Include="Friendship.cs">

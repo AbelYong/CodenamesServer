@@ -10,7 +10,7 @@ namespace Services.Contracts.ServiceContracts.Managers
         AuthenticationRequest Authenticate(string username, string password);
 
         [OperationContract]
-        CommunicationRequest CompletePasswordReset(string email, string code, string newPassword);
+        PasswordResetRequest CompletePasswordReset(string email, string code, string newPassword);
 
         [OperationContract]
         CommunicationRequest UpdatePassword(string username, string currentPassword, string newPassword);

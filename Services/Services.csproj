@@ -100,7 +100,7 @@
     <Compile Include="DTO\DataContract\TokenType.cs" />
     <Compile Include="DTO\Request\ConfirmEmailRequest.cs" />
     <Compile Include="DTO\Request\CreateLobbyRequest.cs" />
-    <Compile Include="DTO\Request\EmailType.cs" />
+    <Compile Include="DTO\DataContract\EmailType.cs" />
     <Compile Include="DTO\Request\FriendshipRequest.cs" />
     <Compile Include="DTO\Request\JoinPartyRequest.cs" />
     <Compile Include="DTO\Request\AuthenticationRequest.cs" />

@@ -1,17 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.ConstrainedExecution;
+﻿using log4net;
+using System;
 using System.ServiceModel;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Host
 {
     internal static class Program
     {
-        private static ManualResetEvent _quitEvent = new ManualResetEvent(false);
+        private static readonly ManualResetEvent _quitEvent = new ManualResetEvent(false);
         private static ServiceHost _authenticationHost;
         private static ServiceHost _sessionHost;
         private static ServiceHost _userHost;
@@ -23,7 +19,7 @@ namespace Host
         private static ServiceHost _matchHost;
         private static ServiceHost _scoreboardHost;
 
-        static void Main(string[] args)
+        static void Main()
         {
             log4net.Config.XmlConfigurator.Configure();
             _authenticationHost = new ServiceHost(typeof(Services.Contracts.ServiceContracts.Services.AuthenticationService));
@@ -39,27 +35,33 @@ namespace Host
 
             try
             {
-                StartServices();
-
                 Console.CancelKeyPress += (sender, eArgs) => {
                     eArgs.Cancel = true;
                     _quitEvent.Set();
                 };
+
+                StartServices();
+                
                 Console.WriteLine("=== Codenames: Duet - Server ===");
+                HostLogger.Log.Info("Codenames Server is online");
                 Console.WriteLine("Running... press Ctrl+C to exit.");
+                
                 _quitEvent.WaitOne();
 
                 CloseServices();
+                HostLogger.Log.Info("Codenames Server shutting down, services closed");
             }
-            catch (CommunicationException cex)
+            catch (Exception ex) when (ex is TimeoutException || ex is CommunicationException)
             {
-                Console.WriteLine("An exception occured: {0}", cex.Message);
                 AbortServices();
+                HostLogger.Log.Debug("An exception occured: ", ex);
+                HostLogger.Log.Info("Codenames Server shutting down, services aborted");
             }
             catch (Exception ex)
             {
-                Console.WriteLine("An exception occured: {0}", ex.Message);
                 AbortServices();
+                HostLogger.Log.Error("An unexpected exception occured: ", ex);
+                HostLogger.Log.Info("Codenames Server shutting down, services aborted");
             }
         }
 
@@ -103,6 +105,11 @@ namespace Host
             _moderationHost.Abort();
             _matchHost.Abort();
             _scoreboardHost.Abort();
+        }
+
+        private static class HostLogger
+        {
+            public static readonly ILog Log = LogManager.GetLogger(typeof(HostLogger));
         }
     }
 }

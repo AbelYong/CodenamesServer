@@ -79,7 +79,6 @@ namespace DataAccess.Users
         /// </summary>
         /// <param name="username">The email to verify.</param>
         /// <returns>True if no matching email was found; false otherwise.</returns>
-        /// </exception>
         public bool ValidateEmailNotDuplicated(string email)
         {
             try
@@ -100,7 +99,38 @@ namespace DataAccess.Users
                 DataAccessLogger.Log.Error("Unexpected exception while verifying email not duplicated: ", ex);
                 return false;
             }
-            
+        }
+
+
+        /// <summary>
+        /// Checks if a given email is in use
+        /// </summary>
+        /// <param name="email">The email address to verify</param>
+        /// <exception cref="EntityException"
+        /// <returns></returns>
+        public DataVerificationRequest VerifyEmailInUse(string email)
+        {
+            DataVerificationRequest request = new DataVerificationRequest();
+            try
+            {
+                using (var context = _contextFactory.Create())
+                {
+                    request.IsSuccess = context.Users.Any(u => u.email == email);
+                }
+            }
+            catch (Exception ex) when (ex is EntityException || ex is SqlException)
+            {
+                DataAccessLogger.Log.Debug("Exception while verifying email not duplicated", ex);
+                request.IsSuccess = false;
+                request.ErrorType = ErrorType.DB_ERROR;
+            }
+            catch (Exception ex)
+            {
+                DataAccessLogger.Log.Error("Unexpected exception while verifying email not duplicated: ", ex);
+                request.IsSuccess = false;
+                request.ErrorType = ErrorType.DB_ERROR;
+            }
+            return request;
         }
 
         /// <summary>

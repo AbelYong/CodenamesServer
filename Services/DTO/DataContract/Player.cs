@@ -7,6 +7,9 @@ namespace Services.DTO
     public class Player
     {
         [DataMember]
+        public bool IsGuest { get; set; }
+
+        [DataMember]
         public Guid? PlayerID { get; set; }
 
         [DataMember]

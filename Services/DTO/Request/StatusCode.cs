@@ -24,7 +24,7 @@
         WRONG_DATA,
         //General code that means something requested by the client could not be found
         NOT_FOUND,
-        //Means the user does not fulfill the requirements to execute 
+        //Means the user does not fulfill the requirements to execute the procedure
         UNAUTHORIZED,
         //Means the request could not be fulfilled because a rule would be infringed
         UNALLOWED,

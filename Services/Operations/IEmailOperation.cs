@@ -1,5 +1,4 @@
-﻿
-using Services.DTO.Request;
+﻿using Services.DTO.DataContract;
 
 namespace Services.Operations
 {

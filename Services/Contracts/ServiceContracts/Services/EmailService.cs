@@ -6,6 +6,8 @@ using Services.DTO;
 using DataAccess.Users;
 using Services.Contracts.ServiceContracts.Managers;
 using Services.DTO.Request;
+using Services.DTO.DataContract;
+using DataAccess.DataRequests;
 
 namespace Services.Contracts.ServiceContracts.Services
 {
@@ -37,11 +39,11 @@ namespace Services.Contracts.ServiceContracts.Services
                 return request;
             }
 
-            bool emailNotExists = _playerDAO.ValidateEmailNotDuplicated(email);
+            DataVerificationRequest result = _playerDAO.VerifyEmailInUse(email);
             switch (emailType)
             {
                 case EmailType.EMAIL_VERIFICATION:
-                    if (emailNotExists)
+                    if (!result.IsSuccess)
                     {
                         request = SendEmail(email, emailType);
                     }
@@ -52,14 +54,14 @@ namespace Services.Contracts.ServiceContracts.Services
                     }
                     break;
                 case EmailType.PASSWORD_RESET:
-                    if (!emailNotExists)
-                    {
-                        request = SendEmail(email, emailType);
-                    }
-                    else
+                    if (!result.IsSuccess || result.ErrorType == ErrorType.DB_ERROR)
                     {
                         request.IsSuccess = false;
                         request.StatusCode = StatusCode.NOT_FOUND;
+                    }
+                    else
+                    {
+                        request = SendEmail(email, emailType);
                     }
                     break;
             }
@@ -109,7 +111,14 @@ namespace Services.Contracts.ServiceContracts.Services
         {
             ConfirmEmailRequest request = new ConfirmEmailRequest();
             VerificationInfo info = GetVerificationInfo(email, emailType);
-            if (info != null && info.RemainingAttempts > 0)
+            if (info == null)
+            {
+                request.IsSuccess = false;
+                request.StatusCode = StatusCode.NOT_FOUND;
+                return request;
+            }
+
+            if (info.RemainingAttempts > 0)
             {
                 if (info.Code == code)
                 {
@@ -128,7 +137,8 @@ namespace Services.Contracts.ServiceContracts.Services
             else
             {
                 request.IsSuccess = false;
-                request.StatusCode = StatusCode.NOT_FOUND;
+                request.StatusCode = StatusCode.UNAUTHORIZED;
+                request.RemainingAttempts = info.RemainingAttempts;
             }
             return request;
         }

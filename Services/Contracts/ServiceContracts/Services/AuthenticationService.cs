@@ -4,6 +4,7 @@ using DataAccess.Moderation;
 using Services.Contracts.ServiceContracts.Managers;
 using Services.DTO;
 using Services.DTO.Request;
+using Services.DTO.DataContract;
 using Services.Operations;
 using System;
 using System.Data.Entity.Core;
@@ -69,9 +70,9 @@ namespace Services.Contracts.ServiceContracts.Services
             return request;
         }
 
-        public CommunicationRequest CompletePasswordReset(string email, string code, string newPassword)
+        public PasswordResetRequest CompletePasswordReset(string email, string code, string newPassword)
         {
-            CommunicationRequest request = new CommunicationRequest();
+            PasswordResetRequest request = new PasswordResetRequest();
 
             ConfirmEmailRequest emailConfirmation = _emailManager.ValidateVerificationCode(email, code, EmailType.PASSWORD_RESET);
             if (emailConfirmation.IsSuccess)
@@ -85,13 +86,14 @@ namespace Services.Contracts.ServiceContracts.Services
                 }
                 else
                 {
-                    return ConvertFromUpdateRequest(result);
+                    return ConvertToPasswordReset(result);
                 }
             }
             else
             {
                 request.IsSuccess = false;
-                request.StatusCode = StatusCode.UNAUTHORIZED;
+                request.StatusCode = emailConfirmation.StatusCode;
+                request.RemainingAttempts = emailConfirmation.RemainingAttempts;
                 return request;
             }
         }
@@ -108,11 +110,25 @@ namespace Services.Contracts.ServiceContracts.Services
             }
             else
             {
-                return ConvertFromUpdateRequest(result);
+                return ConvertToCommunicationRequest(result);
             }
         }
 
-        private static CommunicationRequest ConvertFromUpdateRequest(UpdateRequest updateRequest)
+        private static PasswordResetRequest ConvertToPasswordReset(UpdateRequest updateRequest)
+        {
+            PasswordResetRequest request = new PasswordResetRequest();
+            if (updateRequest == null)
+            {
+                request.IsSuccess = false;
+                request.StatusCode = StatusCode.MISSING_DATA;
+                return request;
+            }
+            request.IsSuccess = updateRequest.IsSuccess;
+            request.StatusCode = GetStatusCodeFromDbError(updateRequest.ErrorType);
+            return request;
+        }
+
+        private static CommunicationRequest ConvertToCommunicationRequest(UpdateRequest updateRequest)
         {
             CommunicationRequest request = new CommunicationRequest();
             if (updateRequest == null)
@@ -122,22 +138,25 @@ namespace Services.Contracts.ServiceContracts.Services
                 return request;
             }
             request.IsSuccess = updateRequest.IsSuccess;
-            switch (updateRequest.ErrorType)
+            request.StatusCode = GetStatusCodeFromDbError(updateRequest.ErrorType);
+            return request;
+        }
+
+        private static StatusCode GetStatusCodeFromDbError(DataAccess.DataRequests.ErrorType errorType)
+        {
+            switch (errorType)
             {
                 case ErrorType.INVALID_DATA:
-                    request.StatusCode = StatusCode.WRONG_DATA;
-                    break;
+                    return StatusCode.WRONG_DATA;
                 case ErrorType.NOT_FOUND:
-                    request.StatusCode = StatusCode.NOT_FOUND;
-                    break;
+                    return StatusCode.NOT_FOUND;
                 case ErrorType.UNALLOWED:
-                    request.StatusCode = StatusCode.UNAUTHORIZED;
-                    break;
+                    return StatusCode.UNAUTHORIZED;
                 case ErrorType.DB_ERROR:
-                    request.StatusCode = StatusCode.SERVER_ERROR;
-                    break;
+                    return StatusCode.SERVER_ERROR;
+                default:
+                    return StatusCode.SERVER_ERROR;
             }
-            return request;
         }
     }
 }
