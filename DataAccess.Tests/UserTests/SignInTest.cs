@@ -3,7 +3,6 @@ using DataAccess.Users;
 using Moq;
 using NUnit.Framework;
 using System;
-using System.Collections.Generic;
 using System.Data.Entity.Core;
 using System.Data.Entity.Core.Objects;
 using System.Data.Entity.Infrastructure;

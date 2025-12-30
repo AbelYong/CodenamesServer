@@ -1,4 +1,4 @@
-﻿namespace Services.DTO
+﻿namespace Services.DTO.Request
 {
     public enum StatusCode
     {

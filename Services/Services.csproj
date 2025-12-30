@@ -83,7 +83,7 @@
     <Compile Include="Contracts\ServiceContracts\Services\ScoreboardService.cs" />
     <Compile Include="Contracts\ServiceContracts\Services\SessionService.cs" />
     <Compile Include="Contracts\Callback\ISessionCallback.cs" />
-    <Compile Include="DTO\KickReason.cs" />
+    <Compile Include="DTO\DataContract\KickReason.cs" />
     <Compile Include="DTO\DataContract\AgentPickedNotification.cs" />
     <Compile Include="DTO\DataContract\AssassinPickedNotification.cs" />
     <Compile Include="DTO\DataContract\BoardCoordinates.cs" />

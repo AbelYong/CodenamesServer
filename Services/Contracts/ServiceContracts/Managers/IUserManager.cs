@@ -1,6 +1,6 @@
 ﻿using System;
 using System.ServiceModel;
-using Services.DTO;
+using Services.DTO.DataContract;
 using Services.DTO.Request;
 
 namespace Services.Contracts.ServiceContracts.Managers

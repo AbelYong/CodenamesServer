@@ -2,7 +2,8 @@
 using NUnit.Framework;
 using Services.Contracts;
 using Services.Contracts.ServiceContracts.Services;
-using Services.DTO;
+using Services.DTO.DataContract;
+using Services.DTO.Request;
 using System;
 using System.Collections.Generic;
 using System.ServiceModel;

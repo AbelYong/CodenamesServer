@@ -1,6 +1,4 @@
-﻿
-
-using DataAccess.Validators;
+﻿using DataAccess.Validators;
 using NUnit.Framework;
 
 namespace DataAccess.Test.ValidatorTests

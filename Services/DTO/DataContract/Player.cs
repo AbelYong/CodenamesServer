@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.Serialization;
 
-namespace Services.DTO
+namespace Services.DTO.DataContract
 {
     [DataContract]
     public class Player

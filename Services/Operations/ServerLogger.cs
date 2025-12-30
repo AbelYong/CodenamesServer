@@ -1,5 +1,5 @@
 ﻿using log4net;
-using Services.DTO;
+using Services.DTO.DataContract;
 
 namespace Services.Operations
 {

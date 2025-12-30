@@ -1,7 +1,6 @@
 ﻿using DataAccess.Moderation;
 using DataAccess.Test;
 using DataAccess.Tests.Util;
-using DataAccess.Util;
 using Moq;
 using NUnit.Framework;
 using System;

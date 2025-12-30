@@ -8,7 +8,6 @@ namespace Services.Operations
     public static class MatchmakingOperation
     {
         private static Random _random = new Random();
-        private const int _MAX_ASSASSINS = 3;
 
         public static Match GenerateMatch(MatchConfiguration configuration)
         {
@@ -43,17 +42,13 @@ namespace Services.Operations
 
         private static MatchRules GetNormalRules()
         {
-            const int TURN_TIMER = 30;
-            const int TIMER_TOKENS = 9;
-            const int BYSTANDER_TOKENS = 0;
-            
             MatchRules rules = new MatchRules();
             rules.Gamemode = Gamemode.NORMAL;
 
-            rules.TurnTimer = TURN_TIMER;
-            rules.TimerTokens = TIMER_TOKENS;
-            rules.BystanderTokens = BYSTANDER_TOKENS;
-            rules.SetMaxAssassins(_MAX_ASSASSINS);
+            rules.TurnTimer = MatchRules.NORMAL_TURN_TIMER;
+            rules.TimerTokens = MatchRules.NORMAL_TIMER_TOKENS;
+            rules.BystanderTokens = MatchRules.NORMAL_BYSTANDER_TOKENS;
+            rules.SetMaxAssassins(MatchRules.NORMAL_MAX_ASSASSINS);
             
             return rules;
         }
@@ -76,25 +71,20 @@ namespace Services.Operations
             int bystanderTokens = configuration.MatchRules.BystanderTokens;
             rules.BystanderTokens = bystanderTokens < maxBystanderTokens ? bystanderTokens : maxBystanderTokens;
 
-            rules.SetMaxAssassins(_MAX_ASSASSINS);
+            rules.SetMaxAssassins(MatchRules.NORMAL_MAX_ASSASSINS);
             
             return rules;
         }
 
         private static MatchRules GetCounterIntelligenceRules()
         {
-            const int TURN_TIMER = 45;
-            const int TIMER_TOKENS = 12;
-            const int BYSTANDER_TOKENS = 0;
-            const int COUNTERINTELLIGENCE_ASSASSINS = 16;
-
             MatchRules rules = new MatchRules();
             rules.Gamemode = Gamemode.COUNTERINTELLIGENCE;
             
-            rules.TurnTimer = TURN_TIMER;
-            rules.TimerTokens = TIMER_TOKENS;
-            rules.BystanderTokens = BYSTANDER_TOKENS;
-            rules.SetMaxAssassins(COUNTERINTELLIGENCE_ASSASSINS);
+            rules.TurnTimer = MatchRules.COUNTERINT_TURN_TIMER;
+            rules.TimerTokens = MatchRules.COUNTERINT_TIMER_TOKENS;
+            rules.BystanderTokens = MatchRules.COUNTERINT_BYSTANDER_TOKENS;
+            rules.SetMaxAssassins(MatchRules.COUNTERINT_ASSASSINS);
 
             return rules;
         }
@@ -139,7 +129,7 @@ namespace Services.Operations
 
         private static void Shuffle(List<int> positions)
         {
-            //Shuffle the positions using Fisher-Yates algorithm
+            //Using Fisher-Yates algorithm
             int n = positions.Count;
             while (n > 1)
             {
@@ -231,7 +221,7 @@ namespace Services.Operations
 
             if (keycardNum == KeycardNumber.KEYCARD_ONE)
             {
-                const int KEYCARD_ONE_SECOND_START = 15;
+                const int KEYCARD_ONE_SECOND_START = 14;
                 const int KEYCARD_ONE_SECOND_END = 24;
                 startPosition = KEYCARD_ONE_SECOND_START;
                 endPosition = KEYCARD_ONE_SECOND_END;

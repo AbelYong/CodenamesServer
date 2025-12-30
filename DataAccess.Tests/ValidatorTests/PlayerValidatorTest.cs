@@ -1,5 +1,4 @@
 ﻿using DataAccess.Validators;
-using DataAccess;
 using NUnit.Framework;
 
 namespace DataAccess.Test.ValidatorTests
@@ -12,7 +11,6 @@ namespace DataAccess.Test.ValidatorTests
         [SetUp]
         public void Setup()
         {
-            // Initialize a valid player object before each test to ensure a clean state
             _validPlayer = new Player
             {
                 username = "NoElTiki",
@@ -207,7 +205,6 @@ namespace DataAccess.Test.ValidatorTests
         public void ValidatePlayerProfile_OptionalFieldsEmpty_ReturnsTrue()
         {
             // Arrange
-            // Assuming empty strings are allowed for optional fields based on logic: !string.IsNullOrEmpty(...) checks length only if not empty.
             _validPlayer.name = "";
             _validPlayer.lastName = "";
             _validPlayer.facebookUsername = "";

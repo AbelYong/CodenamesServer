@@ -1,5 +1,5 @@
 ﻿using Services.Contracts.ServiceContracts.Managers;
-using Services.DTO;
+using Services.DTO.DataContract;
 using Services.DTO.Request;
 using Services.Operations;
 using System;
@@ -79,7 +79,7 @@ namespace Services.Contracts.ServiceContracts.Services
 
             request.IsSuccess = true;
             request.StatusCode = StatusCode.OK;
-            string playerOnlineMessage = string.Format("{0} has connected", player.PlayerID);
+            string playerOnlineMessage = string.Format("{0} has connected", ServerLogger.GetPlayerIdentifier(player));
             ServerLogger.Log.Info(message:playerOnlineMessage);
             return request;
         }
@@ -179,7 +179,7 @@ namespace Services.Contracts.ServiceContracts.Services
 
             Dictionary<Player, ISessionCallback> friendCallbacks = GetFriendsOnlineChannels(friends, playersOnlineSnapshot);
             NotifyDisconnectToOnlineFriends(friendCallbacks, playerID);
-            string playerOfflineMessage = string.Format("{0} has disconnected", player.PlayerID);
+            string playerOfflineMessage = string.Format("{0} has disconnected", ServerLogger.GetPlayerIdentifier(player));
             ServerLogger.Log.Info(message: playerOfflineMessage);
         }
 

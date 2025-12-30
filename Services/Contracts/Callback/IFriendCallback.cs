@@ -1,7 +1,5 @@
-﻿using Services.DTO;
-using System;
+﻿using Services.DTO.DataContract;
 using System.ServiceModel;
-using Services;
 
 namespace Services
 {

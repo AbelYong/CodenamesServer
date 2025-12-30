@@ -1,6 +1,6 @@
 ﻿using System.Runtime.Serialization;
 
-namespace Services.DTO
+namespace Services.DTO.DataContract
 {
     [DataContract]
     public enum KickReason

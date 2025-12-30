@@ -1,5 +1,4 @@
-﻿using DataAccess.DataRequests;
-using DataAccess.Test;
+﻿using DataAccess.Test;
 using DataAccess.Users;
 using Moq;
 using NUnit.Framework;

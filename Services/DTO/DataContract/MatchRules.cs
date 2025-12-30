@@ -5,9 +5,20 @@ namespace Services.DTO.DataContract
     [DataContract]
     public class MatchRules
     {
+        public const int NORMAL_TURN_TIMER = 30;
+        public const int NORMAL_TIMER_TOKENS = 9;
+        public const int NORMAL_BYSTANDER_TOKENS = 0;
+
+        public const int COUNTERINT_TURN_TIMER = 45;
+        public const int COUNTERINT_TIMER_TOKENS = 12;
+        public const int COUNTERINT_BYSTANDER_TOKENS = 0;
+        public const int COUNTERINT_ASSASSINS = 16;
+
         public const int MAX_TURN_TIMER = 60;
         public const int MAX_TIMER_TOKENS = 12;
         public const int MAX_BYSTANDER_TOKENS = 13;
+        public const int NORMAL_MAX_ASSASSINS = 3;
+
         public const int TIMER_TOKENS_TO_TAKE_NON_CUSTOM = 1;
         public const int TIMER_TOKENS_TO_TAKE_CUSTOM = 2;
 

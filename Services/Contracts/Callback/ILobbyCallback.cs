@@ -1,4 +1,4 @@
-﻿using Services.DTO;
+﻿using Services.DTO.DataContract;
 using System;
 using System.ServiceModel;
 

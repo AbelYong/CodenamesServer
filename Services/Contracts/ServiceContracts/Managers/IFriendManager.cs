@@ -1,4 +1,4 @@
-﻿using Services.DTO;
+﻿using Services.DTO.DataContract;
 using Services.DTO.Request;
 using System;
 using System.Collections.Generic;

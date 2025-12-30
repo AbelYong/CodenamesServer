@@ -1,6 +1,6 @@
 ﻿using DataAccess.Users;
 using Services.Contracts;
-using Services.DTO;
+using Services.DTO.DataContract;
 using Services.DTO.Request;
 using Services.Operations;
 using System;
