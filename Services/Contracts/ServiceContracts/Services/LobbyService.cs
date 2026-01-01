@@ -121,7 +121,7 @@ namespace Services.Contracts.ServiceContracts.Services
             if (player != null && player.PlayerID.HasValue)
             {
                 Guid auxID = (Guid)player.PlayerID;
-                if (_playerLobbyMap.ContainsKey(auxID))
+                if (!_playerLobbyMap.ContainsKey(auxID))
                 {
                     Player host = player;
                     string code = GetRandomLobbyCode();
