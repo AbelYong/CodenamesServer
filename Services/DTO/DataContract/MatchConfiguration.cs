@@ -2,6 +2,10 @@
 
 namespace Services.DTO.DataContract
 {
+    /// <summary>
+    /// Used to Generate matches according to the provided MatchRules,
+    /// Requester and Companion (and their playerIDs) are required
+    /// </summary>
     [DataContract]
     public class MatchConfiguration
     {

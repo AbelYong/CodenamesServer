@@ -4,6 +4,9 @@ using System.ServiceModel;
 
 namespace Services.Contracts.ServiceContracts.Managers
 {
+    /// <summary>
+    /// Handles the sending and reception of verification codes
+    /// </summary>
     [ServiceContract]
     public interface IEmailManager
     {
@@ -29,7 +32,11 @@ namespace Services.Contracts.ServiceContracts.Managers
         /// gmail.com, outlook.com, estudiantes.uv.mx</param>
         /// <param name="code">The six-digit code sent to the provided address</param>
         /// <param name="emailType">EMAIL_VERIFICATION to confirm an account verification, PASSWORD_RESET to authorize a password reset</param>
-        /// <returns></returns>
+        /// <returns>A CommunicationRequest, IsSuccess == True if the email was successfuly sent, otherwise False along one of the following StatusCode:
+        /// <para>NOT_FOUND if there's no code pending verification associated to the email (Ran out of attempts, code expired or was never requested) Or the email doesn't belong to a registered user.</para>
+        /// <para>UNAUTHORIZED if the provided code doesn't match the code sent or the client has ran out of attempts</para>
+        /// <para></para>
+        /// </returns>
         [OperationContract]
         ConfirmEmailRequest ValidateVerificationCode(string email, string code, EmailType emailType);
     }

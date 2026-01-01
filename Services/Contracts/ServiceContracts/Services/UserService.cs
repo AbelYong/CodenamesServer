@@ -30,7 +30,7 @@ namespace Services.Contracts.ServiceContracts.Services
         public SignInRequest SignIn(Player svPlayer)
         {
             SignInRequest request = new SignInRequest();
-            if (svPlayer != null)
+            if (svPlayer != null && svPlayer.User != null)
             {
                 svPlayer.Name = string.IsNullOrWhiteSpace(svPlayer.Name) ? null : svPlayer.Name.Trim();
                 svPlayer.LastName = string.IsNullOrWhiteSpace(svPlayer.LastName) ? null : svPlayer.LastName.Trim();

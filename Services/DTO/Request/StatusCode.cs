@@ -1,5 +1,8 @@
 ﻿namespace Services.DTO.Request
 {
+    /// <summary>
+    /// General Status codes used to provide more precise information to the client in case of a failed request
+    /// </summary>
     public enum StatusCode
     {
         //General code meaning the request was successful
@@ -8,7 +11,7 @@
         CREATED,
         //Means a request succesfully updated an object
         UPDATED,
-        //Means a request was rejected because a resource or identificator is in use by another user
+        //Means a request was rejected because a resource or identifier is in use by another user, entity or process
         CONFLICT,
         //Means a request failed because one client requested to cancel the operation
         CLIENT_CANCEL,
@@ -20,7 +23,7 @@
         CLIENT_TIMEOUT,
         //General code that means a request cannot be fulfilled because critical data was not provided
         MISSING_DATA,
-        //General code that means a request cannot be fulfilled because the provided data is flawed
+        //General code that means a request cannot be fulfilled because the provided data is somehow flawed
         WRONG_DATA,
         //General code that means something requested by the client could not be found
         NOT_FOUND,
@@ -40,7 +43,7 @@
         CLIENT_ERROR,
         //Means that someone tried to log in and is banned.
         ACCOUNT_BANNED,
-        //Means a report was successful
+        //Means a report was successfully created
         REPORT_CREATED,
         //Means that the user to be reported has already been reported before (non-repudiation)
         REPORT_DUPLICATED,

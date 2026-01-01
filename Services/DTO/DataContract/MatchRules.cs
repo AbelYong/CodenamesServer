@@ -2,6 +2,11 @@
 
 namespace Services.DTO.DataContract
 {
+    /// <summary>
+    /// Allows for the configuration of a Match. For Gamemodes Normal and Counterintelligence
+    /// only Gamemode is required, for Custom mode values for TurnTimer, TimerTokens
+    /// and BystanderTokens must be provided
+    /// </summary>
     [DataContract]
     public class MatchRules
     {

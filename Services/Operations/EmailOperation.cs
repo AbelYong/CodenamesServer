@@ -91,7 +91,7 @@ namespace Services.Operations
             }
         }
 
-        public static bool ValidateEmailFormat(string email)
+        public bool ValidateEmailFormat(string email)
         {
             return (_gmailRegex.IsMatch(email) || _outlookRegex.IsMatch(email) || _uvEstudiantesMxRegex.IsMatch(email));
         }

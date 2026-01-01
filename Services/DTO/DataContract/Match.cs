@@ -4,6 +4,14 @@ using System.Runtime.Serialization;
 
 namespace Services.DTO.DataContract
 {
+    /// <summary>
+    /// Defines the players, rules and configuration (keycards, wordlist) to be used on a Match
+    /// Requester and Companion (and their playerIDs) are required
+    /// MatchRules are requiered by MatchmakingService.
+    /// The Board of player one is the Requester's board, and the companion's keycard
+    /// The Board of playerTwo is the Companion's board, and the requester's keycard
+    /// SelectedWords is a list of random integers in the range of 0-400
+    /// </summary>
     [DataContract]
     public class Match
     {

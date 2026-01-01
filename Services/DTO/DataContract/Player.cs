@@ -3,6 +3,13 @@ using System.Runtime.Serialization;
 
 namespace Services.DTO.DataContract
 {
+    /// <summary>
+    /// Represents a player's profile
+    /// PlayerID is nullable to allow NULL values returned by the database (ids not found),
+    /// but under other any other circumstances playerID is expected to have a value.
+    /// As a mandatory field, Username is also expected to always have a value.
+    /// User may be null if not required in a particular context
+    /// </summary>
     [DataContract]
     public class Player
     {

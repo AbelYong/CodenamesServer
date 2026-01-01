@@ -158,6 +158,7 @@ namespace Services.Contracts.ServiceContracts.Services
                 if (playerAddedToMatches)
                 {
                     ongoingMatch.CurrentSpymasterID = playerID;
+                    request.IsSuccess = true;
                     request.StatusCode = StatusCode.OK;
                 }
                 else
@@ -183,6 +184,7 @@ namespace Services.Contracts.ServiceContracts.Services
                 if (playerAddedToMatches)
                 {
                     ongoingMatch.CurrentGuesserID = playerID;
+                    request.IsSuccess = true;
                     request.StatusCode = StatusCode.OK;
                 }
                 else

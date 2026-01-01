@@ -121,8 +121,7 @@ namespace Services.Contracts.ServiceContracts.Services
             if (player != null && player.PlayerID.HasValue)
             {
                 Guid auxID = (Guid)player.PlayerID;
-                bool isPlayerInParty = VerifyIsPlayerInParty(auxID);
-                if (!isPlayerInParty)
+                if (_playerLobbyMap.ContainsKey(auxID))
                 {
                     Player host = player;
                     string code = GetRandomLobbyCode();
@@ -154,11 +153,6 @@ namespace Services.Contracts.ServiceContracts.Services
             return request;
         }
 
-        private bool VerifyIsPlayerInParty(Guid playerID)
-        {
-            return _playerLobbyMap.ContainsKey(playerID);
-        }
-
         public CommunicationRequest InviteToParty(Player partyHost, Guid friendToInviteID, string lobbyCode)
         {
             CommunicationRequest request = new CommunicationRequest();
@@ -171,12 +165,12 @@ namespace Services.Contracts.ServiceContracts.Services
                     return request;
                 }
 
-                SendInGameInvatation(friendToInviteID, partyHost, lobbyCode);
+                bool wasGameInviteSent = SendInGameInvitation(friendToInviteID, partyHost, lobbyCode);
 
                 string friendEmailAddress = _playerDAO.GetEmailByPlayerID(friendToInviteID);
                 bool wasEmailSent = _emailOperation.SendGameInvitationEmail(partyHost.Username, friendEmailAddress, lobbyCode);
 
-                request.IsSuccess = true;
+                request.IsSuccess = (wasGameInviteSent || wasEmailSent);
                 request.StatusCode = wasEmailSent ? StatusCode.OK : StatusCode.CLIENT_UNREACHABLE;
             }
             else
@@ -187,7 +181,7 @@ namespace Services.Contracts.ServiceContracts.Services
             return request;
         }
 
-        private void SendInGameInvatation(Guid friendToInviteID, Player partyHost, string lobbyCode)
+        private bool SendInGameInvitation(Guid friendToInviteID, Player partyHost, string lobbyCode)
         {
             bool isFriendOnline = _connectedPlayers.TryGetValue(friendToInviteID, out ILobbyCallback friendChannel);
             if (isFriendOnline)
@@ -195,6 +189,7 @@ namespace Services.Contracts.ServiceContracts.Services
                 try
                 {
                     friendChannel.NotifyMatchInvitationReceived(partyHost, lobbyCode);
+                    return true;
                 }
                 catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
                 {
@@ -205,6 +200,7 @@ namespace Services.Contracts.ServiceContracts.Services
                     ServerLogger.Log.Error("Unexpected exception while sending lobby invitation: ", ex);
                 }
             }
+            return false;
         }
 
         private CommunicationRequest VerifyPlayerCanInvite(Guid partyHostID, string lobbyCode)

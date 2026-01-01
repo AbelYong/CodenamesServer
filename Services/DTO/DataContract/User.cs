@@ -3,6 +3,9 @@ using System.Runtime.Serialization;
 
 namespace Services.DTO.DataContract
 {
+    /// <summary>
+    /// Used to represent the player's user, may be contained inside the associated User's Player
+    /// </summary>
     [DataContract]
     public class User
     {

@@ -2,6 +2,10 @@
 
 namespace Services.DTO.DataContract
 {
+    /// <summary>
+    /// Represents registred player's records.
+    /// FastestMatch only counts Matches that were won
+    /// </summary>
     [DataContract]
     public class Scoreboard
     {

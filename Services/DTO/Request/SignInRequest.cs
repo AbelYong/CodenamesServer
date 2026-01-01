@@ -2,6 +2,9 @@
 
 namespace Services.DTO.Request
 {
+    /// <summary>
+    /// Used by UserService to specify why a Sign-In attempt failed
+    /// </summary>
     [DataContract]
     public class SignInRequest : Request
     {

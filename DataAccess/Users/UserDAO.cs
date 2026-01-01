@@ -115,6 +115,20 @@ namespace DataAccess.Users
                 return request; //Stop, following validations will throw NullReference
             }
 
+            if (!UserValidator.ValidateEmailFormat(player.User.email))
+            {
+                request.IsSuccess = false;
+                request.ErrorType = ErrorType.INVALID_DATA;
+                request.IsEmailValid = false;
+            }
+
+            if (!UserValidator.ValidatePassword(password))
+            {
+                request.IsSuccess = false;
+                request.ErrorType = ErrorType.INVALID_DATA;
+                request.IsPasswordValid = false;
+            }
+
             if (!_playerDAO.ValidateEmailNotDuplicated(player.User.email))
             {
                 request.IsSuccess = false;
@@ -129,18 +143,10 @@ namespace DataAccess.Users
                 request.IsUsernameDuplicate = true;
             }
 
-            if (!UserValidator.ValidateEmailFormat(player.User.email))
+            if (!PlayerValidator.ValidatePlayerProfile(player))
             {
-                request.IsSuccess = false;
-                request.ErrorType = ErrorType.INVALID_DATA;
-                request.IsEmailValid = false;
-            }
-
-            if (!UserValidator.ValidatePassword(password))
-            {
-                request.IsSuccess = false;
-                request.ErrorType = ErrorType.INVALID_DATA;
                 request.IsPasswordValid = false;
+                request.ErrorType = ErrorType.INVALID_DATA;
             }
             return request;
         }
@@ -206,7 +212,7 @@ namespace DataAccess.Users
             try
             {
                 string email = GetEmailByUsername(username);
-                if (string.IsNullOrEmpty(username))
+                if (string.IsNullOrEmpty(email))
                 {
                     request.IsSuccess = false;
                     request.ErrorType = ErrorType.NOT_FOUND;

@@ -2,6 +2,10 @@
 
 namespace Services.DTO.Request
 {
+    /// <summary>
+    /// Base class to wrap requests to the server, providing a quick Success/Failure indicator (IsSuccess),
+    /// and a specific Status to provide more specific error information
+    /// </summary>
     [DataContract]
     [KnownType(typeof(CommunicationRequest))]
     [KnownType(typeof(AuthenticationRequest))]

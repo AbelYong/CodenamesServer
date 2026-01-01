@@ -31,7 +31,7 @@ namespace Services.Contracts.ServiceContracts.Services
         public CommunicationRequest SendVerificationCode(string email, EmailType emailType)
         {
             CommunicationRequest request = new CommunicationRequest();
-            if (!EmailOperation.ValidateEmailFormat(email))
+            if (!_emailOperation.ValidateEmailFormat(email))
             {
                 request.IsSuccess = false;
                 request.StatusCode = StatusCode.WRONG_DATA;
