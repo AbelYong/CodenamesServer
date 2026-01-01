@@ -20,13 +20,13 @@ jobs:
           fetch-depth: 0
       
       - name: Set up MSBuild
-        uses: microsoft/setup-msbuild@v2 #v2.0
+        uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce #v2.0
       
       - name: Set up VSTest
-        uses: darenm/Setup-VSTest@v1 #v1.3
+        uses: darenm/Setup-VSTest@v3a16d909a1f3bbc65b52f8270d475d905e7d3e44 #v1.3
 
       - name: Set up NuGet
-        uses: NuGet/setup-nuget@v2 #v2.0.1
+        uses: NuGet/setup-nuget@v2323ab0502cd38fdc493335025a96c8fdb0edc71f #v2.0.1
         
       - name: Restore NuGet packages
         run: nuget restore CodenamesServer.sln
