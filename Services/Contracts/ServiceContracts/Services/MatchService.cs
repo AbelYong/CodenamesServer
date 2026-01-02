@@ -170,7 +170,7 @@ namespace Services.Contracts.ServiceContracts.Services
             else
             {
                 request.IsSuccess = false;
-                request.StatusCode = StatusCode.WRONG_DATA;
+                request.StatusCode = StatusCode.UNALLOWED;
             }
             return request;
         }
@@ -196,7 +196,7 @@ namespace Services.Contracts.ServiceContracts.Services
             else
             {
                 request.IsSuccess = false;
-                request.StatusCode = StatusCode.WRONG_DATA;
+                request.StatusCode = StatusCode.UNALLOWED;
             }
             return request;
         }

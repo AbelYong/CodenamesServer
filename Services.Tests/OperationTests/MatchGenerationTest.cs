@@ -1,12 +1,11 @@
 ﻿using NUnit.Framework;
-using System;
 using Services.Operations;
 using Services.DTO.DataContract;
 
 namespace Services.Tests.MatchmakingTests
 {
     [TestFixture]
-    public class BoardGenerationTest
+    public class MatchGenerationTest
     {
         private const int _BOARD_SIZE = 5;
         private MatchConfiguration _matchConfig;
@@ -212,6 +211,20 @@ namespace Services.Tests.MatchmakingTests
                 newMatch.Rules.TimerTokens.Equals(MatchRules.COUNTERINT_TIMER_TOKENS) &&
                 newMatch.Rules.BystanderTokens.Equals(MatchRules.COUNTERINT_BYSTANDER_TOKENS) &&
                 newMatch.Rules.MaxAssassins.Equals(MatchRules.COUNTERINT_ASSASSINS));
+        }
+
+        [TestCase(Gamemode.NORMAL)]
+        [TestCase(Gamemode.CUSTOM)]
+        [TestCase(Gamemode.COUNTERINTELLIGENCE)]
+        public void GenerateMatch_AllModes_HaveTwentyFiveWords(Gamemode gamemode)
+        {
+            //Arrange
+            _matchConfig.MatchRules.Gamemode = gamemode;
+            Match newMatch = MatchmakingOperation.GenerateMatch(_matchConfig);
+
+            //Assert
+            int wordlistSize = 25;
+            Assert.That(newMatch.SelectedWords.Count, Is.EqualTo(wordlistSize));
         }
 
         private static void CountBystanders(int[][] boardPlayerOne, ref int amountBoardOne, int[][] boardPlayerTwo, ref int amountBoardTwo)

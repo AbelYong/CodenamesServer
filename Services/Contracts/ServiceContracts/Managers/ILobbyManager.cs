@@ -50,10 +50,13 @@ namespace Services.Contracts.ServiceContracts.Managers
         /// <param name="partyHost">The player's profile, including their playerID</param>
         /// <param name="friendToInviteID">The playerID of the player to invite</param>
         /// <param name="lobbyCode">The lobby code provided by the server when the Party was created</param>
-        /// <returns>A CommunicationRequest IsSuccess == True if the invitation was succesfully sent.
+        /// <returns>A CommunicationRequest IsSuccess == True if the invitation was succesfully sent in-game, through email or both.
         /// Otherwise IsSucess == False along one of the following StatusCode
         /// <para>MISSING_DATA if partyHost or partyHost.playerID is NULL</para>
         /// <para>CLIENT_UNREACHABLE if the email couldn't be sent to the requested friend</para>
+        /// <para>NOT_FOUND if the provided code doesnt' match an existing party's code</para>
+        /// <para>UNAUTHORIZED if partyHost is not the Host of the Party matching the provided lobbyCode</para>
+        /// <para>UNALLOWED if the guest slot is already in use</para>
         /// </returns>
         [OperationContract(IsOneWay = false)]
         CommunicationRequest InviteToParty(Player partyHost, Guid friendToInviteID, string lobbyCode);

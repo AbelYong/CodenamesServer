@@ -1,6 +1,7 @@
 ﻿using Moq;
 using NUnit.Framework;
 using Services.Contracts;
+using Services.Contracts.Callback;
 using Services.Contracts.ServiceContracts.Services;
 using Services.DTO.DataContract;
 using Services.DTO.Request;
@@ -25,8 +26,6 @@ namespace Services.Tests.ContractTests
             _friendManagerMock = new Mock<IFriendManager>();
             _callbackProviderMock = new Mock<ICallbackProvider>();
             _callbackQueue = new Queue<ISessionCallback>();
-
-            // Setup Provider to dequeue mocks so we can assign specific mocks to specific players
             _callbackProviderMock.Setup(cp => cp.GetCallback<ISessionCallback>())
                 .Returns(() => _callbackQueue.Count > 0 ? _callbackQueue.Dequeue() : new Mock<ISessionCallback>().Object);
 
