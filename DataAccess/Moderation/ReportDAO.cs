@@ -53,38 +53,10 @@ namespace DataAccess.Moderation
 
         public void AddReport(Report report)
         {
-            try
+            using (var context = _contextFactory.Create())
             {
-                using (var context = _contextFactory.Create())
-                {
-                    context.Reports.Add(report);
-                    context.SaveChanges();
-                }
-            }
-            catch (DbUpdateException ex)
-            {
-                DataAccessLogger.Log.Error("Error updating database while adding a new report.", ex);
-                throw;
-            }
-            catch (SqlException ex)
-            {
-                DataAccessLogger.Log.Error("SQL error adding a new report.", ex);
-                throw;
-            }
-            catch (EntityException ex)
-            {
-                DataAccessLogger.Log.Error("Entity error adding a new report.", ex);
-                throw;
-            }
-            catch (TimeoutException ex)
-            {
-                DataAccessLogger.Log.Error("Timeout adding a new report.", ex);
-                throw;
-            }
-            catch (Exception ex)
-            {
-                DataAccessLogger.Log.Error("Unexpected exception while adding a new report.", ex);
-                throw;
+                context.Reports.Add(report);
+                context.SaveChanges();
             }
         }
 

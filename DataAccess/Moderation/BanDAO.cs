@@ -54,38 +54,10 @@ namespace DataAccess.Moderation
 
         public void ApplyBan(Ban ban)
         {
-            try
+            using (var context = _contextFactory.Create())
             {
-                using (var context = _contextFactory.Create())
-                {
-                    context.Bans.Add(ban);
-                    context.SaveChanges();
-                }
-            }
-            catch (DbUpdateException ex)
-            {
-                DataAccessLogger.Log.Error("Error updating database while applying ban.", ex);
-                throw;
-            }
-            catch (SqlException ex)
-            {
-                DataAccessLogger.Log.Error("SQL error applying ban.", ex);
-                throw;
-            }
-            catch (EntityException ex)
-            {
-                DataAccessLogger.Log.Error("Entity error applying ban.", ex);
-                throw;
-            }
-            catch (TimeoutException ex)
-            {
-                DataAccessLogger.Log.Error("Timeout applying ban.", ex);
-                throw;
-            }
-            catch (Exception ex)
-            {
-                DataAccessLogger.Log.Error("Unexpected exception while applying ban.", ex);
-                throw;
+                context.Bans.Add(ban);
+                context.SaveChanges();
             }
         }
     }
