@@ -12,9 +12,14 @@ namespace Services.DTO.Request
     {
         [DataMember]
         public Guid? UserID { get; set; }
+
+        [DataMember]
+        public DateTimeOffset? BanExpiration { get; set; }
+
         public AuthenticationRequest()
         {
             UserID = Guid.Empty;
+            BanExpiration = null;
         }
     }
 }

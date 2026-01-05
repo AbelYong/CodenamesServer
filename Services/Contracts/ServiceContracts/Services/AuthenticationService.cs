@@ -41,6 +41,7 @@ namespace Services.Contracts.ServiceContracts.Services
                     {
                         request.IsSuccess = false;
                         request.StatusCode = StatusCode.ACCOUNT_BANNED;
+                        request.BanExpiration = activeBan.timeout;
                         return request;
                     }
 
