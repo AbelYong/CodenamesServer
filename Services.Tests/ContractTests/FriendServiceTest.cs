@@ -38,14 +38,12 @@ namespace Services.Tests.ContractTests
             );
         }
 
-        private Mock<IFriendCallback> CreateMockCallback()
+        private static Mock<IFriendCallback> CreateMockCallback()
         {
             var mock = new Mock<IFriendCallback>();
             mock.As<ICommunicationObject>();
             return mock;
         }
-
-        #region Connect & Disconnect
 
         [Test]
         public void Connect_ValidPlayerId_RegistersCallback()
@@ -81,10 +79,6 @@ namespace Services.Tests.ContractTests
             // Act & Assert
             Assert.DoesNotThrow(() => _friendService.Disconnect(playerId));
         }
-
-        #endregion
-
-        #region SendFriendRequest
 
         [Test]
         public void SendFriendRequest_ValidRequest_ReturnsSuccessAndNotifiesTarget()
@@ -146,10 +140,6 @@ namespace Services.Tests.ContractTests
             Assert.That(StatusCode.CONFLICT.Equals(result.StatusCode));
         }
 
-        #endregion
-
-        #region AcceptFriendRequest
-
         [Test]
         public void AcceptFriendRequest_ValidRequest_ReturnsFriendAddedAndNotifiesRequester()
         {
@@ -195,10 +185,6 @@ namespace Services.Tests.ContractTests
             Assert.That(StatusCode.SERVER_ERROR.Equals(result.StatusCode));
         }
 
-        #endregion
-
-        #region RejectFriendRequest
-
         [Test]
         public void RejectFriendRequest_ValidRequest_ReturnsRejectedAndNotifiesRequester()
         {
@@ -241,10 +227,6 @@ namespace Services.Tests.ContractTests
             Assert.That(StatusCode.SERVER_ERROR.Equals(result.StatusCode));
         }
 
-        #endregion
-
-        #region RemoveFriend
-
         [Test]
         public void RemoveFriend_ValidRequest_ReturnsRemovedAndNotifiesFriend()
         {
@@ -286,10 +268,6 @@ namespace Services.Tests.ContractTests
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(StatusCode.SERVER_ERROR.Equals(result.StatusCode));
         }
-
-        #endregion
-
-        #region SearchPlayers
 
         [Test]
         public void SearchPlayers_ValidQuery_ReturnsFilteredListExcludingSelf()
@@ -342,10 +320,6 @@ namespace Services.Tests.ContractTests
             Assert.Throws<Exception>(() => _friendService.SearchPlayers("test", Guid.NewGuid(), 10));
         }
 
-        #endregion
-
-        #region GetFriends
-
         [Test]
         public void GetFriends_FriendsExist_ReturnsList()
         {
@@ -381,10 +355,6 @@ namespace Services.Tests.ContractTests
             Assert.That(result, Is.Empty);
         }
 
-        #endregion
-
-        #region GetIncomingRequests
-
         [Test]
         public void GetIncomingRequests_RequestsExist_ReturnsList()
         {
@@ -419,10 +389,6 @@ namespace Services.Tests.ContractTests
             Assert.That(result, Is.Empty);
         }
 
-        #endregion
-
-        #region GetSentRequests
-
         [Test]
         public void GetSentRequests_RequestsExist_ReturnsList()
         {
@@ -456,11 +422,7 @@ namespace Services.Tests.ContractTests
             Assert.That(result, Is.Empty);
         }
 
-        #endregion
-
-        #region Helpers
-
-        private DataAccess.Player CreateDataAccessPlayer(Guid id, string username)
+        private static DataAccess.Player CreateDataAccessPlayer(Guid id, string username)
         {
             return new DataAccess.Player
             {
@@ -469,7 +431,5 @@ namespace Services.Tests.ContractTests
                 User = new DataAccess.User { email = "test@test.com" }
             };
         }
-
-        #endregion
     }
 }

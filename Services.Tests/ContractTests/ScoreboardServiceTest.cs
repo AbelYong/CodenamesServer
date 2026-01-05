@@ -30,8 +30,6 @@ namespace Services.Tests.ContractTests
             );
         }
 
-        #region GetMyScore
-
         [Test]
         public void GetMyScore_PlayerExists_ReturnsMappedScoreboard()
         {
@@ -95,10 +93,6 @@ namespace Services.Tests.ContractTests
             Assert.That(result.Username, Is.EqualTo("Unknown"));
         }
 
-        #endregion
-
-        #region SubscribeToScoreboardUpdates
-
         [Test]
         public void Subscribe_NewPlayer_AddsToDictionaryAndSendsUpdate()
         {
@@ -152,10 +146,6 @@ namespace Services.Tests.ContractTests
             Assert.DoesNotThrow(() => _scoreboardService.SubscribeToScoreboardUpdates(playerId));
         }
 
-        #endregion
-
-        #region UnsubscribeFromScoreboardUpdates
-
         [Test]
         public void Unsubscribe_ExistingPlayer_RemovesAndClosesChannel()
         {
@@ -189,10 +179,6 @@ namespace Services.Tests.ContractTests
             // Assert
             Assert.Pass();
         }
-
-        #endregion
-
-        #region NotifyMatchConcluded
 
         [Test]
         public void NotifyMatchConcluded_ClientsConnected_NotifiesAllOpenedClients()
@@ -263,18 +249,12 @@ namespace Services.Tests.ContractTests
             callback1.As<ICommunicationObject>().Verify(co => co.Abort(), Times.Once);
         }
 
-        #endregion
-
-        #region Helpers
-
-        private Mock<IScoreboardCallback> CreateMockCallback(CommunicationState state)
+        private static Mock<IScoreboardCallback> CreateMockCallback(CommunicationState state)
         {
             var mock = new Mock<IScoreboardCallback>();
             var commMock = mock.As<ICommunicationObject>();
             commMock.Setup(c => c.State).Returns(state);
             return mock;
         }
-
-        #endregion
     }
 }

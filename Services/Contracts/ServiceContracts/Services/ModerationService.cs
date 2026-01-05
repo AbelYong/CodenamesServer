@@ -94,7 +94,7 @@ namespace Services.Contracts.ServiceContracts.Services
 
                 if (banDuration.HasValue || isPermanent)
                 {
-                    DateTimeOffset timeout = isPermanent ? new DateTimeOffset(3000, 1, 1, 0, 0, 0, TimeSpan.Zero) : DateTimeOffset.Now.Add(banDuration.Value);
+                    DateTimeOffset timeout = isPermanent ? DateTimeOffset.MaxValue : DateTimeOffset.Now.Add(banDuration.Value);
                     string banReasonText = $"Cumulative reports ({reportCount}). Last reason: {reason}";
 
                     var ban = new Ban

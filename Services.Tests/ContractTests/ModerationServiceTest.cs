@@ -38,8 +38,6 @@ namespace Services.Tests.ContractTests
             );
         }
 
-        #region ReportPlayer Tests
-
         [Test]
         public void ReportPlayer_ReporterOffline_ReturnsUnauthorized()
         {
@@ -246,10 +244,6 @@ namespace Services.Tests.ContractTests
             Assert.That(StatusCode.SERVER_ERROR.Equals(result.StatusCode));
         }
 
-        #endregion
-
-        #region Helpers
-
         private void SetupPlayers(Guid reporterPlayerId, Guid reporterUserId, Guid reportedPlayerId, Guid reportedUserId)
         {
             _sessionManagerMock.Setup(s => s.IsPlayerOnline(reporterPlayerId)).Returns(true);
@@ -265,7 +259,5 @@ namespace Services.Tests.ContractTests
         {
             _banDaoMock.Verify(b => b.ApplyBan(It.IsAny<Ban>()), times);
         }
-
-        #endregion
     }
 }
