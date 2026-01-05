@@ -24,7 +24,7 @@ namespace Services.Contracts.ServiceContracts.Services
             get => _instance.Value;
         }
 
-        public SessionService() : this (new FriendService(), new CallbackProvider())
+        private SessionService() : this (new FriendService(), new CallbackProvider())
         {
             _playersOnline = new ConcurrentDictionary<Player, ISessionCallback>();
         }
@@ -80,7 +80,7 @@ namespace Services.Contracts.ServiceContracts.Services
 
             request.IsSuccess = true;
             request.StatusCode = StatusCode.OK;
-            string playerOnlineMessage = string.Format("{0} has connected", ServerLogger.GetPlayerIdentifier(player));
+            string playerOnlineMessage = string.Format("{0} has connected to SessionService", ServerLogger.GetPlayerIdentifier(player));
             ServerLogger.Log.Info(message:playerOnlineMessage);
             return request;
         }
@@ -180,7 +180,7 @@ namespace Services.Contracts.ServiceContracts.Services
 
             Dictionary<Player, ISessionCallback> friendCallbacks = GetFriendsOnlineChannels(friends, playersOnlineSnapshot);
             NotifyDisconnectToOnlineFriends(friendCallbacks, playerID);
-            string playerOfflineMessage = string.Format("{0} has disconnected", ServerLogger.GetPlayerIdentifier(player));
+            string playerOfflineMessage = string.Format("{0} has disconnected from SessionService", ServerLogger.GetPlayerIdentifier(player));
             ServerLogger.Log.Info(message: playerOfflineMessage);
         }
 
