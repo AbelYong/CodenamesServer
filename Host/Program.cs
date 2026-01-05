@@ -26,7 +26,7 @@ namespace Host
             _userHost = new ServiceHost(typeof(Services.Contracts.ServiceContracts.Services.UserService));
             _friendHost = new ServiceHost(typeof(Services.FriendService));
             _emailHost = new ServiceHost(typeof(Services.Contracts.ServiceContracts.Services.EmailService));
-            _sessionHost = new ServiceHost(typeof(Services.Contracts.ServiceContracts.Services.SessionService));
+            _sessionHost = new ServiceHost(Services.Contracts.ServiceContracts.Services.SessionService.Instance);
             _lobbyHost = new ServiceHost(typeof(Services.Contracts.ServiceContracts.Services.LobbyService));
             _matchmakingHost = new ServiceHost(typeof(Services.Contracts.ServiceContracts.Services.MatchmakingService));
             _moderationHost = new ServiceHost(typeof(Services.Contracts.ServiceContracts.Services.ModerationService));
