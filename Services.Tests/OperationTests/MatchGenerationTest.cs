@@ -1,6 +1,7 @@
 ﻿using NUnit.Framework;
 using Services.Operations;
 using Services.DTO.DataContract;
+using System.Linq;
 
 namespace Services.Tests.MatchmakingTests
 {
@@ -15,21 +16,21 @@ namespace Services.Tests.MatchmakingTests
         {
             MatchConfiguration config = new MatchConfiguration();
             config.MatchRules = new MatchRules();
+            config.Requester = new Player();
+            config.Companion = new Player();
             _matchConfig = config;
         }
 
         [TestCase(Gamemode.NORMAL)]
         [TestCase(Gamemode.CUSTOM)]
         [TestCase(Gamemode.COUNTERINTELLIGENCE)]
-        public void GenerateMatch_AllMatchTypes_HasNineAgents(Gamemode gamemode)
+        public void GenerateMatch_AllMatchTypes_HaveNineAgents(Gamemode gamemode)
         {
-            //Arrange
             _matchConfig.MatchRules.Gamemode = gamemode;
             Match newMatch = MatchmakingOperation.GenerateMatch(_matchConfig);
             int[][] boardPlayerOne = newMatch.BoardPlayerOne;
             int[][] boardPlayerTwo = newMatch.BoardPlayerTwo;
 
-            //Act
             int boardSize = 5;
             int agentCode = 0;
             int agentAmountBoardOne = 0;
@@ -49,9 +50,7 @@ namespace Services.Tests.MatchmakingTests
                     }
                 }
             }
-
-
-            //Assert
+            
             int maxAgents = 9;
             Assert.That(agentAmountBoardOne.Equals(maxAgents) && agentAmountBoardTwo.Equals(maxAgents));
         }
@@ -60,18 +59,15 @@ namespace Services.Tests.MatchmakingTests
         [TestCase(Gamemode.CUSTOM)]
         public void GenerateMatch_StandardTypes_HaveThirteenBystanders(Gamemode gamemode)
         {
-            //Arrange
             _matchConfig.MatchRules.Gamemode = gamemode;
             Match newMatch = MatchmakingOperation.GenerateMatch(_matchConfig);
             int[][] boardPlayerOne = newMatch.BoardPlayerOne;
             int[][] boardPlayerTwo = newMatch.BoardPlayerTwo;
 
-            //Act
             int bystanderAmountBoardOne = 0;
             int bystanderAmountBoardTwo = 0;
             CountBystanders(boardPlayerOne, ref bystanderAmountBoardOne, boardPlayerTwo, ref bystanderAmountBoardTwo);
 
-            //Assert
             int maxBystanders = 13;
             Assert.That(bystanderAmountBoardOne.Equals(maxBystanders) && bystanderAmountBoardTwo.Equals(maxBystanders));
         }
@@ -79,18 +75,15 @@ namespace Services.Tests.MatchmakingTests
         [Test]
         public void GenerateMatch_Counterintelligence_HasZeroBystanders()
         {
-            //Arrange
             _matchConfig.MatchRules.Gamemode = Gamemode.COUNTERINTELLIGENCE;
             Match newMatch = MatchmakingOperation.GenerateMatch(_matchConfig);
             int[][] boardPlayerOne = newMatch.BoardPlayerOne;
             int[][] boardPlayerTwo = newMatch.BoardPlayerTwo;
 
-            //Act
             int bystanderAmountBoardOne = 0;
             int bystanderAmountBoardTwo = 0;
             CountBystanders(boardPlayerOne, ref bystanderAmountBoardOne, boardPlayerTwo, ref bystanderAmountBoardTwo);
 
-            //Assert
             int maxBystanders = 0;
             Assert.That(bystanderAmountBoardOne.Equals(maxBystanders) && bystanderAmountBoardTwo.Equals(maxBystanders));
         }
@@ -99,18 +92,15 @@ namespace Services.Tests.MatchmakingTests
         [TestCase(Gamemode.CUSTOM)]
         public void GenerateMatch_StandardTypes_HaveThreeAssassins(Gamemode gamemode)
         {
-            //Arrange
             _matchConfig.MatchRules.Gamemode = gamemode;
             Match newMatch = MatchmakingOperation.GenerateMatch(_matchConfig);
             int[][] boardPlayerOne = newMatch.BoardPlayerOne;
             int[][] boardPlayerTwo = newMatch.BoardPlayerTwo;
 
-            //Act
             int assassinAmountBoardOne = 0;
             int assassinAmountBoardTwo = 0;
             CountAssassins(boardPlayerOne, ref assassinAmountBoardOne, boardPlayerTwo, ref assassinAmountBoardTwo);
 
-            //Assert
             int maxAssassins = 3;
             Assert.That(assassinAmountBoardOne.Equals(maxAssassins) && assassinAmountBoardTwo.Equals(maxAssassins));
         }
@@ -118,18 +108,15 @@ namespace Services.Tests.MatchmakingTests
         [Test]
         public void GenerateMatch_Counterintelligence_HasSixteenAssassins()
         {
-            //Arrange
             _matchConfig.MatchRules.Gamemode = Gamemode.COUNTERINTELLIGENCE;
             Match newMatch = MatchmakingOperation.GenerateMatch(_matchConfig);
             int[][] boardPlayerOne = newMatch.BoardPlayerOne;
             int[][] boardPlayerTwo = newMatch.BoardPlayerTwo;
 
-            //Act
             int assassinAmountBoardOne = 0;
             int assassinAmountBoardTwo = 0;
             CountAssassins(boardPlayerOne, ref assassinAmountBoardOne, boardPlayerTwo, ref assassinAmountBoardTwo);
 
-            //Assert
             int maxAssassins = 16;
             Assert.That(assassinAmountBoardOne.Equals(maxAssassins) && assassinAmountBoardTwo.Equals(maxAssassins));
         }
@@ -137,46 +124,61 @@ namespace Services.Tests.MatchmakingTests
         [Test]
         public void GenerateMatch_Normal_FollowsStandardRules()
         {
-            //Arrange
             _matchConfig.MatchRules.Gamemode = Gamemode.NORMAL;
+            Match expected = new Match
+            {
+                Requester = _matchConfig.Requester,
+                Companion = _matchConfig.Companion,
+                Rules = new MatchRules
+                {
+                    Gamemode = Gamemode.NORMAL,
+                    TurnTimer = MatchRules.NORMAL_TURN_TIMER,
+                    TimerTokens = MatchRules.NORMAL_TIMER_TOKENS,
+                    BystanderTokens = MatchRules.NORMAL_BYSTANDER_TOKENS,
+                    MaxAssassins = MatchRules.NORMAL_MAX_ASSASSINS
+                }
+            };
+            
             Match newMatch = MatchmakingOperation.GenerateMatch(_matchConfig);
+            CopyGeneratedParameters(newMatch, expected);
 
-            //Assert
-            Assert.That(
-                newMatch.Rules.TurnTimer.Equals(MatchRules.NORMAL_TURN_TIMER) &&
-                newMatch.Rules.TimerTokens.Equals(MatchRules.NORMAL_TIMER_TOKENS) &&
-                newMatch.Rules.BystanderTokens.Equals(MatchRules.NORMAL_BYSTANDER_TOKENS) &&
-                newMatch.Rules.MaxAssassins.Equals(MatchRules.NORMAL_MAX_ASSASSINS));
+            Assert.That(newMatch.Equals(expected));
         }
 
         [Test]
         public void GenerateMatch_Custom_FollowsUpperBoundary()
         {
-            //Arrange
             _matchConfig.MatchRules = new MatchRules
             {
                 Gamemode = Gamemode.CUSTOM,
                 TurnTimer = 999,
                 TimerTokens = 999,
                 BystanderTokens = 999,
-                MaxAssassins = 999, //Note: Max assassins is not set by the client, this verifies the client cannot customize this value
-
+                MaxAssassins = 999,
             };
-            Match newMatch = MatchmakingOperation.GenerateMatch(_matchConfig);
+            Match expected = new Match
+            {
+                Requester = _matchConfig.Requester,
+                Companion = _matchConfig.Companion,
+                Rules = new MatchRules
+                {
+                    Gamemode = Gamemode.CUSTOM,
+                    TurnTimer = MatchRules.MAX_TURN_TIMER,
+                    TimerTokens = MatchRules.MAX_TIMER_TOKENS,
+                    BystanderTokens = MatchRules.MAX_BYSTANDER_TOKENS,
+                    MaxAssassins = MatchRules.NORMAL_MAX_ASSASSINS
+                }
+            };
 
-            //Assert
-            Assert.That(
-                newMatch.Rules.TurnTimer.Equals(MatchRules.MAX_TURN_TIMER) &&
-                newMatch.Rules.TimerTokens.Equals(MatchRules.MAX_TIMER_TOKENS) &&
-                newMatch.Rules.BystanderTokens.Equals(MatchRules.MAX_BYSTANDER_TOKENS) &&
-                newMatch.Rules.MaxAssassins.Equals(MatchRules.NORMAL_MAX_ASSASSINS)
-                );
+            Match newMatch = MatchmakingOperation.GenerateMatch(_matchConfig);
+            CopyGeneratedParameters(newMatch, expected);
+
+            Assert.That(newMatch.Equals(expected));
         }
 
         [Test]
         public void GenerateMatchCustom_FollowsPlayerSelection()
         {
-            //Arrange
             int customTurnTimer = 50;
             int customTimerTokens = 12;
             int customBystanderTokens = 4;
@@ -187,30 +189,48 @@ namespace Services.Tests.MatchmakingTests
                 TimerTokens = customTimerTokens,
                 BystanderTokens = customBystanderTokens,
             };
-            Match newMatch = MatchmakingOperation.GenerateMatch(_matchConfig);
+            Match expected = new Match
+            {
+                Requester = _matchConfig.Requester,
+                Companion = _matchConfig.Companion,
+                Rules = new MatchRules
+                {
+                    Gamemode = Gamemode.CUSTOM,
+                    TurnTimer = customTurnTimer,
+                    TimerTokens = customTimerTokens,
+                    BystanderTokens = customBystanderTokens,
+                    MaxAssassins = MatchRules.NORMAL_MAX_ASSASSINS
+                }
+            };
 
-            //Assert
-            Assert.That(
-                newMatch.Rules.TurnTimer.Equals(customTurnTimer) &&
-                newMatch.Rules.TimerTokens.Equals(customTimerTokens) &&
-                newMatch.Rules.BystanderTokens.Equals(customBystanderTokens) &&
-                newMatch.Rules.MaxAssassins.Equals(MatchRules.NORMAL_MAX_ASSASSINS)
-                );
+            Match newMatch = MatchmakingOperation.GenerateMatch(_matchConfig);
+            CopyGeneratedParameters(newMatch, expected);
+
+            Assert.That(newMatch.Equals(expected));
         }
 
         [Test]
         public void GenerateMatch_Counterintelligence_FollowsCounterintellegenceRules()
         {
-            //Arrange
             _matchConfig.MatchRules.Gamemode = Gamemode.COUNTERINTELLIGENCE;
-            Match newMatch = MatchmakingOperation.GenerateMatch(_matchConfig);
+            Match expected = new Match
+            {
+                Requester = _matchConfig.Requester,
+                Companion = _matchConfig.Companion,
+                Rules = new MatchRules
+                {
+                    Gamemode = Gamemode.COUNTERINTELLIGENCE,
+                    TurnTimer = MatchRules.COUNTERINT_TURN_TIMER,
+                    TimerTokens = MatchRules.COUNTERINT_TIMER_TOKENS,
+                    BystanderTokens = MatchRules.COUNTERINT_BYSTANDER_TOKENS,
+                    MaxAssassins = MatchRules.COUNTERINT_ASSASSINS
+                }
+            };
 
-            //Assert
-            Assert.That(
-                newMatch.Rules.TurnTimer.Equals(MatchRules.COUNTERINT_TURN_TIMER) &&
-                newMatch.Rules.TimerTokens.Equals(MatchRules.COUNTERINT_TIMER_TOKENS) &&
-                newMatch.Rules.BystanderTokens.Equals(MatchRules.COUNTERINT_BYSTANDER_TOKENS) &&
-                newMatch.Rules.MaxAssassins.Equals(MatchRules.COUNTERINT_ASSASSINS));
+            Match newMatch = MatchmakingOperation.GenerateMatch(_matchConfig);
+            CopyGeneratedParameters(newMatch, expected);
+
+            Assert.That(newMatch.Equals(expected));
         }
 
         [TestCase(Gamemode.NORMAL)]
@@ -218,13 +238,19 @@ namespace Services.Tests.MatchmakingTests
         [TestCase(Gamemode.COUNTERINTELLIGENCE)]
         public void GenerateMatch_AllModes_HaveTwentyFiveWords(Gamemode gamemode)
         {
-            //Arrange
             _matchConfig.MatchRules.Gamemode = gamemode;
             Match newMatch = MatchmakingOperation.GenerateMatch(_matchConfig);
 
-            //Assert
             int wordlistSize = 25;
             Assert.That(newMatch.SelectedWords.Count, Is.EqualTo(wordlistSize));
+        }
+
+        private static void CopyGeneratedParameters(Match generated, Match copy)
+        {
+            copy.MatchID = generated.MatchID;
+            copy.BoardPlayerTwo = generated.BoardPlayerTwo;
+            copy.BoardPlayerOne = generated.BoardPlayerOne;
+            copy.SelectedWords = generated.SelectedWords;
         }
 
         private static void CountBystanders(int[][] boardPlayerOne, ref int amountBoardOne, int[][] boardPlayerTwo, ref int amountBoardTwo)

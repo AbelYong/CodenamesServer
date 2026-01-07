@@ -44,8 +44,8 @@ namespace Services.Contracts.ServiceContracts.Services
         public CommunicationRequest Connect(Guid playerID)
         {
             CommunicationRequest request = new CommunicationRequest();
-            ILobbyCallback _currentClientChannel = _callbackProvider.GetCallback<ILobbyCallback>();
-            bool hasConnected = _connectedPlayers.TryAdd(playerID, _currentClientChannel);
+            ILobbyCallback currentClientChannel = _callbackProvider.GetCallback<ILobbyCallback>();
+            bool hasConnected = _connectedPlayers.TryAdd(playerID, currentClientChannel);
             if (hasConnected)
             {
                 request.IsSuccess = true;
@@ -54,7 +54,7 @@ namespace Services.Contracts.ServiceContracts.Services
             else
             {
                 Disconnect(playerID);
-                hasConnected = _connectedPlayers.TryAdd(playerID, _currentClientChannel);
+                hasConnected = _connectedPlayers.TryAdd(playerID, currentClientChannel);
                 request.IsSuccess = hasConnected;
                 request.StatusCode = hasConnected ? StatusCode.OK : StatusCode.UNAUTHORIZED;
             }
@@ -76,7 +76,6 @@ namespace Services.Contracts.ServiceContracts.Services
         {
             _playerLobbyMap.TryRemove(leavingPlayerID, out _);
 
-            //If the player who abandoned is the party's host, also remove their lobby and notify the guest
             if (party.PartyHost.PlayerID == leavingPlayerID)
             {
                 _lobbies.TryRemove(party.LobbyCode, out _);
@@ -90,7 +89,7 @@ namespace Services.Contracts.ServiceContracts.Services
             else if (party.PartyGuest != null && party.PartyGuest.PlayerID == leavingPlayerID)
             {
                 Guid partyHostID = (Guid)party.PartyHost.PlayerID;
-                party.PartyGuest = null; //Free the guest slot
+                party.PartyGuest = null;
                 NotifyPlayerLeft(leavingPlayerID, partyHostID);
             }
         }
@@ -118,37 +117,43 @@ namespace Services.Contracts.ServiceContracts.Services
         public CreateLobbyRequest CreateParty(Player player)
         {
             CreateLobbyRequest request = new CreateLobbyRequest();
-            if (player != null && player.PlayerID.HasValue)
+            if (player == null || !player.PlayerID.HasValue)
             {
-                Guid auxID = (Guid)player.PlayerID;
-                if (!_playerLobbyMap.ContainsKey(auxID))
+                request.IsSuccess = false;
+                request.StatusCode = StatusCode.MISSING_DATA;
+                return request;
+            }
+
+            Guid auxID = (Guid)player.PlayerID;
+            if (!_connectedPlayers.TryGetValue(auxID, out _))
+            {
+                request.IsSuccess = false;
+                request.StatusCode = StatusCode.CLIENT_DISCONNECT;
+                return request;
+            }
+
+            if (!_playerLobbyMap.ContainsKey(auxID))
+            {
+                Player host = player;
+                string code = GetRandomLobbyCode();
+                Party party = new Party(host, code);
+                if (_lobbies.TryAdd(code, party))
                 {
-                    Player host = player;
-                    string code = GetRandomLobbyCode();
-                    Party party = new Party(host, code);
-                    if (_lobbies.TryAdd(code, party))
-                    {
-                        _playerLobbyMap.TryAdd(auxID, code);
-                        request.LobbyCode = code;
-                        request.IsSuccess = true;
-                        request.StatusCode = StatusCode.CREATED;
-                    }
-                    else
-                    {
-                        request.IsSuccess = false;
-                        request.StatusCode = StatusCode.SERVER_ERROR;
-                    }
+                    _playerLobbyMap.TryAdd(auxID, code);
+                    request.LobbyCode = code;
+                    request.IsSuccess = true;
+                    request.StatusCode = StatusCode.CREATED;
                 }
                 else
                 {
                     request.IsSuccess = false;
-                    request.StatusCode = StatusCode.UNALLOWED;
+                    request.StatusCode = StatusCode.SERVER_ERROR;
                 }
             }
             else
             {
                 request.IsSuccess = false;
-                request.StatusCode = StatusCode.MISSING_DATA;
+                request.StatusCode = StatusCode.UNALLOWED;
             }
             return request;
         }
@@ -261,7 +266,7 @@ namespace Services.Contracts.ServiceContracts.Services
                     if (party.PartyGuest != null)
                     {
                         request.IsSuccess = false;
-                        request.StatusCode = StatusCode.CONFLICT; // Party is full
+                        request.StatusCode = StatusCode.CONFLICT;
                         return request;
                     }
 
@@ -273,7 +278,6 @@ namespace Services.Contracts.ServiceContracts.Services
                 bool wasHostReached = NotifyJoinedToParty(partyHostID, joiningPlayer);
                 if (!wasHostReached)
                 {
-                    // Party host is disconnected. Rollback the join.
                     party.PartyGuest = null;
                     _playerLobbyMap.TryRemove(joiningPlayerID, out _);
 

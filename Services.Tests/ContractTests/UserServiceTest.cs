@@ -28,90 +28,92 @@ namespace Services.Tests.ContractTests
         [Test]
         public void GetPlayerByUserID_UserExists_ReturnsPlayer()
         {
-            // Arrange
             Guid userId = Guid.NewGuid();
-            var dbPlayer = new DataAccess.Player
-            {
-                playerID = userId,
-                User = new DataAccess.User { email = "test@test.com" }
-            };
-
+            Guid playerId = Guid.NewGuid();
+            var dbPlayer = new DataAccess.Player { playerID = playerId };
             _playerDaoMock.Setup(p => p.GetPlayerByUserID(userId))
                 .Returns(dbPlayer);
+            Player expected = new Player { PlayerID = playerId };
 
-            // Act
             var result = _userService.GetPlayerByUserID(userId);
 
-            // Assert
-            Assert.That(result, Is.Not.Null);
-            Assert.That(userId.Equals(result.PlayerID));
+            Assert.That(result.Equals(expected));
         }
 
         [Test]
         public void GetPlayerByUserID_UserNotExists_ReturnsPlayerWithEmptyID()
         {
-            // Arrange
             Guid notFoundUserId = Guid.NewGuid();
-
             _playerDaoMock.Setup(p => p.GetPlayerByUserID(notFoundUserId))
                 .Returns((DataAccess.Player)null);
 
-            // Act
             var result = _userService.GetPlayerByUserID(notFoundUserId);
 
-            // Assert
             Assert.That(result.PlayerID.Equals(Guid.Empty));
         }
 
         [Test]
         public void SignIn_NullPlayer_ReturnsMissingData()
         {
-            // Act
+            SignInRequest expected = new SignInRequest
+            {
+                IsSuccess = false,
+                StatusCode = StatusCode.MISSING_DATA
+            };
+
             var result = _userService.SignIn(null);
 
-            // Assert
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(StatusCode.MISSING_DATA.Equals(result.StatusCode));
+            Assert.That(result.Equals(expected));
         }
 
         [Test]
         public void SignIn_NullUser_ReturnsMissingData()
         {
-            // Arrange
             var player = new Player { User = null };
+            SignInRequest expected = new SignInRequest
+            {
+                IsSuccess = false,
+                StatusCode = StatusCode.MISSING_DATA
+            };
 
-            // Act
             var result = _userService.SignIn(player);
 
-            // Assert
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(StatusCode.MISSING_DATA.Equals(result.StatusCode));
+            Assert.That(result.Equals(expected));
         }
 
         [Test]
-        public void SignIn_Success_ReturnsTrue()
+        public void SignIn_Success_ReturnsSuccess()
         {
-            // Arrange
             var player = CreateTestPlayer();
-
-            // DAO returns success
+            PlayerRegistrationRequest dbResponse = new PlayerRegistrationRequest
+            {
+                IsSuccess = true,
+                IsEmailDuplicate = false,
+                IsUsernameDuplicate = false,
+                IsEmailValid = true,
+                IsPasswordValid = true
+            };
             _userDaoMock.Setup(u => u.SignIn(It.IsAny<DataAccess.Player>(), It.IsAny<string>()))
-                .Returns(new PlayerRegistrationRequest { IsSuccess = true });
+                .Returns(dbResponse);
+            SignInRequest expected = new SignInRequest
+            {
+                IsSuccess = true,
+                StatusCode = StatusCode.OK,
+                IsEmailDuplicate = false,
+                IsUsernameDuplicate = false,
+                IsEmailValid = true,
+                IsPasswordValid = true
+            };
 
-            // Act
             var result = _userService.SignIn(player);
 
-            // Assert
-            Assert.That(result.IsSuccess);
+            Assert.That(result.Equals(expected));
         }
 
         [Test]
         public void SignIn_InvalidData_ReturnsWrongData()
         {
-            // Arrange
             var player = CreateTestPlayer();
-
-            // DAO returns Invalid Data (e.g. Password too short, invalid email format)
             _userDaoMock.Setup(u => u.SignIn(It.IsAny<DataAccess.Player>(), It.IsAny<string>()))
                 .Returns(new PlayerRegistrationRequest
                 {
@@ -119,23 +121,22 @@ namespace Services.Tests.ContractTests
                     ErrorType = ErrorType.INVALID_DATA,
                     IsPasswordValid = false
                 });
+            SignInRequest expected = new SignInRequest
+            {
+                IsSuccess = false,
+                StatusCode = StatusCode.WRONG_DATA,
+                IsPasswordValid = false
+            };
 
-            // Act
             var result = _userService.SignIn(player);
 
-            // Assert
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(StatusCode.WRONG_DATA.Equals(result.StatusCode));
-            Assert.That(result.IsPasswordValid, Is.False);
+            Assert.That(result.Equals(expected));
         }
 
         [Test]
         public void SignIn_DuplicateEntry_ReturnsUnallowed()
         {
-            // Arrange
             var player = CreateTestPlayer();
-
-            // DAO returns Duplicate (e.g. Username taken)
             _userDaoMock.Setup(u => u.SignIn(It.IsAny<DataAccess.Player>(), It.IsAny<string>()))
                 .Returns(new PlayerRegistrationRequest
                 {
@@ -143,142 +144,143 @@ namespace Services.Tests.ContractTests
                     ErrorType = ErrorType.DUPLICATE,
                     IsUsernameDuplicate = true
                 });
+            SignInRequest expected = new SignInRequest
+            {
+                IsSuccess = false,
+                StatusCode = StatusCode.UNALLOWED,
+                IsUsernameDuplicate = true
+            };
 
-            // Act
             var result = _userService.SignIn(player);
 
-            // Assert
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(StatusCode.UNALLOWED.Equals(result.StatusCode));
-            Assert.That(result.IsUsernameDuplicate);
+            Assert.That(result.Equals(expected));
         }
 
         [Test]
         public void SignIn_DaoMissingData_ReturnsMissingData()
         {
-            // Arrange
             var player = CreateTestPlayer();
-
             _userDaoMock.Setup(u => u.SignIn(It.IsAny<DataAccess.Player>(), It.IsAny<string>()))
                 .Returns(new PlayerRegistrationRequest
                 {
                     IsSuccess = false,
                     ErrorType = ErrorType.MISSING_DATA
                 });
+            SignInRequest expected = new SignInRequest
+            {
+                IsSuccess = false,
+                StatusCode = StatusCode.MISSING_DATA
+            };
 
-            // Act
             var result = _userService.SignIn(player);
 
-            // Assert
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(StatusCode.MISSING_DATA.Equals(result.StatusCode));
+            Assert.That(result.Equals(expected));
         }
 
         [Test]
         public void SignIn_DbError_ReturnsServerError()
         {
-            // Arrange
             var player = CreateTestPlayer();
-
             _userDaoMock.Setup(u => u.SignIn(It.IsAny<DataAccess.Player>(), It.IsAny<string>()))
                 .Returns(new PlayerRegistrationRequest
                 {
                     IsSuccess = false,
                     ErrorType = ErrorType.DB_ERROR
                 });
+            SignInRequest expected = new SignInRequest
+            {
+                IsSuccess = false,
+                StatusCode = StatusCode.SERVER_ERROR
+            };
 
-            // Act
             var result = _userService.SignIn(player);
 
-            // Assert
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(StatusCode.SERVER_ERROR.Equals(result.StatusCode));
+            Assert.That(result.Equals(expected));
         }
 
         [Test]
         public void UpdateProfile_Success_ReturnsUpdated()
         {
-            // Arrange
             var player = CreateTestPlayer();
-
             _playerDaoMock.Setup(p => p.UpdateProfile(It.IsAny<DataAccess.Player>()))
                 .Returns(new OperationResult { Success = true });
+            CommunicationRequest expected = new CommunicationRequest
+            {
+                IsSuccess = true,
+                StatusCode = StatusCode.UPDATED
+            };
 
-            // Act
             var result = _userService.UpdateProfile(player);
 
-            // Assert
-            Assert.That(result.IsSuccess);
-            Assert.That(StatusCode.UPDATED.Equals(result.StatusCode));
+            Assert.That(result.Equals(expected));
         }
 
         [Test]
         public void UpdateProfile_DbError_ReturnsServerError()
         {
-            // Arrange
             var player = CreateTestPlayer();
-
             _playerDaoMock.Setup(p => p.UpdateProfile(It.IsAny<DataAccess.Player>()))
                 .Returns(new OperationResult { Success = false, ErrorType = ErrorType.DB_ERROR });
+            CommunicationRequest expected = new CommunicationRequest
+            {
+                IsSuccess = false,
+                StatusCode = StatusCode.SERVER_ERROR
+            };
 
-            // Act
             var result = _userService.UpdateProfile(player);
 
-            // Assert
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(StatusCode.SERVER_ERROR.Equals(result.StatusCode));
+            Assert.That(result.Equals(expected));
         }
 
         [Test]
-        public void UpdateProfile_NotFound_ReturnsNotFound()
+        public void UpdateProfile_DaoNotFound_ReturnsNotFound()
         {
-            // Arrange
             var player = CreateTestPlayer();
-
             _playerDaoMock.Setup(p => p.UpdateProfile(It.IsAny<DataAccess.Player>()))
                 .Returns(new OperationResult { Success = false, ErrorType = ErrorType.NOT_FOUND });
+            CommunicationRequest expected = new CommunicationRequest
+            {
+                IsSuccess = false,
+                StatusCode = StatusCode.NOT_FOUND
+            };
 
-            // Act
             var result = _userService.UpdateProfile(player);
 
-            // Assert
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(StatusCode.NOT_FOUND.Equals(result.StatusCode));
+            Assert.That(result.Equals(expected));
         }
 
         [Test]
-        public void UpdateProfile_Duplicate_ReturnsUnallowed()
+        public void UpdateProfile_DaoDuplicate_ReturnsUnallowed()
         {
-            // Arrange (e.g. Trying to change email to one that already exists)
             var player = CreateTestPlayer();
-
             _playerDaoMock.Setup(p => p.UpdateProfile(It.IsAny<DataAccess.Player>()))
                 .Returns(new OperationResult { Success = false, ErrorType = ErrorType.DUPLICATE });
+            CommunicationRequest expected = new CommunicationRequest
+            {
+                IsSuccess = false,
+                StatusCode = StatusCode.UNALLOWED
+            };
 
-            // Act
             var result = _userService.UpdateProfile(player);
 
-            // Assert
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(StatusCode.UNALLOWED.Equals(result.StatusCode));
+            Assert.That(result.Equals(expected));
         }
 
         [Test]
         public void UpdateProfile_NullResult_ReturnsMissingData()
         {
-            // Arrange
             var player = CreateTestPlayer();
-
-            // Simulate DAO returning null (unexpected, but handled by defensive code)
             _playerDaoMock.Setup(p => p.UpdateProfile(It.IsAny<DataAccess.Player>()))
                 .Returns((OperationResult)null);
+            CommunicationRequest expected = new CommunicationRequest
+            {
+                IsSuccess = false,
+                StatusCode = StatusCode.MISSING_DATA
+            };
 
-            // Act
             var result = _userService.UpdateProfile(player);
 
-            // Assert
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(StatusCode.MISSING_DATA.Equals(result.StatusCode));
+            Assert.That(result.Equals(expected));
         }
 
         private Player CreateTestPlayer()

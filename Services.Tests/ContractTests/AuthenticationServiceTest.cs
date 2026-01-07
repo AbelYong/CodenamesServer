@@ -38,235 +38,225 @@ namespace Services.Tests.ContractTests
         [Test]
         public void Authenticate_ValidCredentials_NoActiveBan_ReturnsSuccess()
         {
-            // Arrange
             string username = "validUser";
             string password = "validPassword";
             Guid userId = Guid.NewGuid();
+            _userDaoMock.Setup(u => u.Authenticate(username, password))
+                .Returns(userId);
+            _banDaoMock.Setup(b => b.GetActiveBan(userId))
+                .Returns((Ban)null);
+            AuthenticationRequest expected = new AuthenticationRequest
+            {
+                IsSuccess = true,
+                StatusCode = StatusCode.OK,
+                UserID = userId
+            };
 
-            // 1. Authenticate returns a valid ID
-            _userDaoMock.Setup(u => u.Authenticate(username, password)).Returns(userId);
-
-            // 2. No active ban found (returns null)
-            _banDaoMock.Setup(b => b.GetActiveBan(userId)).Returns((Ban)null);
-
-            // Act
             var result = _authService.Authenticate(username, password);
 
-            // Assert
-            Assert.That(result.IsSuccess);
-            Assert.That(StatusCode.OK.Equals(result.StatusCode));
-            Assert.That(userId.Equals(result.UserID));
+            Assert.That(result.Equals(expected));
         }
 
         [Test]
         public void Authenticate_ValidCredentials_ActiveBanExists_ReturnsAccountBanned()
         {
-            // Arrange
             string username = "bannedUser";
             string password = "password";
             Guid userId = Guid.NewGuid();
-            var activeBan = new Ban(); // Assuming Ban entity has a default constructor
+            var timeout = new DateTimeOffset();
+            var activeBan = new Ban { timeout = timeout };
+            _userDaoMock.Setup(u => u.Authenticate(username, password))
+                .Returns(userId);
+            _banDaoMock.Setup(b => b.GetActiveBan(userId))
+                .Returns(activeBan);
+            AuthenticationRequest expected = new AuthenticationRequest
+            {
+                IsSuccess = false,
+                StatusCode = StatusCode.ACCOUNT_BANNED,
+                BanExpiration = timeout
+            };
 
-            // 1. Authenticate returns valid ID
-            _userDaoMock.Setup(u => u.Authenticate(username, password)).Returns(userId);
-
-            // 2. Ban IS found
-            _banDaoMock.Setup(b => b.GetActiveBan(userId)).Returns(activeBan);
-
-            // Act
             var result = _authService.Authenticate(username, password);
 
-            // Assert
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(StatusCode.ACCOUNT_BANNED.Equals(result.StatusCode));
+            Assert.That(result.Equals(expected));
         }
 
         [Test]
         public void Authenticate_InvalidCredentials_ReturnsUnauthorized()
         {
-            // Arrange
             string username = "wrongUser";
             string password = "wrongPassword";
+            Guid userID = Guid.Empty;
+            _userDaoMock.Setup(u => u.Authenticate(username, password))
+                .Returns((Guid?)null);
+            AuthenticationRequest expected = new AuthenticationRequest
+            { 
+                IsSuccess = false,
+                StatusCode = StatusCode.UNAUTHORIZED,
+                UserID = userID
+            };
 
-            // Authenticate returns null
-            _userDaoMock.Setup(u => u.Authenticate(username, password)).Returns((Guid?)null);
-
-            // Act
             var result = _authService.Authenticate(username, password);
 
-            // Assert
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(StatusCode.UNAUTHORIZED.Equals(result.StatusCode));
-            Assert.That(result.UserID.Equals(Guid.Empty));
+            Assert.That(result.Equals(expected));
         }
 
         [Test]
         public void Authenticate_EntityException_ReturnsServerError()
         {
-            // Arrange
             string username = "errorUser";
             string password = "password";
-
-            // Simulate DB error
             _userDaoMock.Setup(u => u.Authenticate(username, password))
                 .Throws(new EntityException("DB Connection failed"));
+            AuthenticationRequest expected = new AuthenticationRequest
+            {
+                IsSuccess = false,
+                StatusCode = StatusCode.SERVER_ERROR,
+            };
 
-            // Act
             var result = _authService.Authenticate(username, password);
 
-            // Assert
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(StatusCode.SERVER_ERROR.Equals(result.StatusCode));
+            Assert.That(result.Equals(expected));
         }
 
         [Test]
         public void Authenticate_GeneralException_ReturnsServerError()
         {
-            // Arrange
             _userDaoMock.Setup(u => u.Authenticate(It.IsAny<string>(), It.IsAny<string>()))
                 .Throws(new Exception("Unexpected error"));
-
-            // Act
-            var result = _authService.Authenticate("user", "pass");
-
-            // Assert
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(StatusCode.SERVER_ERROR.Equals(result.StatusCode));
-        }
-
-        [Test]
-        public void CompletePasswordReset_InvalidCode_ReturnsErrorFromEmailManager()
-        {
-            // Arrange
-            string email = "test@test.com";
-            string code = "000000";
-            string newPass = "NewPass123";
-
-            // Simulate code validation failure (e.g. Wrong Code)
-            var emailResponse = new ConfirmEmailRequest
+            AuthenticationRequest expected = new AuthenticationRequest
             {
                 IsSuccess = false,
-                StatusCode = StatusCode.UNAUTHORIZED,
-                RemainingAttempts = 2
+                StatusCode = StatusCode.SERVER_ERROR,
             };
 
-            _emailManagerMock.Setup(m => m.ValidateVerificationCode(email, code, EmailType.PASSWORD_RESET))
-                .Returns(emailResponse);
+            var result = _authService.Authenticate("user", "pass");
 
-            // Act
-            var result = _authService.CompletePasswordReset(email, code, newPass);
-
-            // Assert
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(StatusCode.UNAUTHORIZED.Equals(result.StatusCode));
-            Assert.That(2.Equals(result.RemainingAttempts));
-            // Verify we didn't try to touch the DB
-            _userDaoMock.Verify(u => u.ResetPassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            Assert.That(result.Equals(expected));
         }
 
         [Test]
         public void CompletePasswordReset_ValidCode_UpdateSuccess_ReturnsUpdated()
         {
-            // Arrange
             string email = "test@test.com";
             string code = "123456";
             string newPass = "ValidPass123";
-
-            // 1. Email validation success
             _emailManagerMock.Setup(m => m.ValidateVerificationCode(email, code, EmailType.PASSWORD_RESET))
                 .Returns(new ConfirmEmailRequest { IsSuccess = true });
-
-            // 2. DB Update success
             _userDaoMock.Setup(u => u.ResetPassword(email, newPass))
                 .Returns(new UpdateRequest { IsSuccess = true });
+            PasswordResetRequest expected = new PasswordResetRequest
+            {
+                IsSuccess = true,
+                StatusCode = StatusCode.UPDATED,
+            };
 
-            // Act
             var result = _authService.CompletePasswordReset(email, code, newPass);
 
-            // Assert
-            Assert.That(result.IsSuccess);
-            Assert.That(StatusCode.UPDATED.Equals(result.StatusCode));
+            Assert.That(result.Equals(expected));
         }
 
         [Test]
-        public void CompletePasswordReset_ValidCode_DbUpdateFails_ReturnsMappedStatusCode()
+        public void CompletePasswordReset_InvalidCode_ReturnsUnauthorizedPasswordUnchanged()
         {
-            // Arrange
+            string email = "test@test.com";
+            string code = "000000";
+            string newPass = "NewPass123";
+            int remainingAttempts = 2;
+            var emailResponse = new ConfirmEmailRequest
+            {
+                IsSuccess = false,
+                StatusCode = StatusCode.UNAUTHORIZED,
+                RemainingAttempts = remainingAttempts
+            };
+            _emailManagerMock.Setup(m => m.ValidateVerificationCode(email, code, EmailType.PASSWORD_RESET))
+                .Returns(emailResponse);
+            PasswordResetRequest expected = new PasswordResetRequest
+            {
+                IsSuccess = false,
+                StatusCode = StatusCode.UNAUTHORIZED,
+                RemainingAttempts = remainingAttempts
+            };
+
+            var result = _authService.CompletePasswordReset(email, code, newPass);
+
+            Assert.That(result.Equals(expected));
+            _userDaoMock.Verify(u => u.ResetPassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Test]
+        public void CompletePasswordReset_ValidCode_DbValidationFails_ReturnsWrongData()
+        {
             string email = "test@test.com";
             string code = "123456";
             string newPass = "InvalidPass";
-
-            // 1. Email validation success
             _emailManagerMock.Setup(m => m.ValidateVerificationCode(email, code, EmailType.PASSWORD_RESET))
                 .Returns(new ConfirmEmailRequest { IsSuccess = true });
-
-            // 2. DB Update fails (e.g. Password policy violation triggers INVALID_DATA in DAO)
             _userDaoMock.Setup(u => u.ResetPassword(email, newPass))
                 .Returns(new UpdateRequest { IsSuccess = false, ErrorType = ErrorType.INVALID_DATA });
+            PasswordResetRequest expected = new PasswordResetRequest
+            {
+                IsSuccess = false,
+                StatusCode = StatusCode.WRONG_DATA,
+            };
 
-            // Act
             var result = _authService.CompletePasswordReset(email, code, newPass);
 
-            // Assert
-            Assert.That(result.IsSuccess, Is.False);
-            // AuthenticationService maps ErrorType.INVALID_DATA -> StatusCode.WRONG_DATA
-            Assert.That(StatusCode.WRONG_DATA.Equals(result.StatusCode));
+            Assert.That(result.Equals(expected));
         }
 
         [Test]
         public void UpdatePassword_Success_ReturnsUpdated()
         {
-            // Arrange
             string username = "User1";
             string oldPass = "OldPass";
             string newPass = "NewPass";
-
             _userDaoMock.Setup(u => u.UpdatePassword(username, oldPass, newPass))
                 .Returns(new UpdateRequest { IsSuccess = true });
+            CommunicationRequest expected = new CommunicationRequest
+            {
+                IsSuccess = true,
+                StatusCode = StatusCode.UPDATED,
+            };
 
-            // Act
             var result = _authService.UpdatePassword(username, oldPass, newPass);
 
-            // Assert
-            Assert.That(result.IsSuccess);
-            Assert.That(StatusCode.UPDATED.Equals(result.StatusCode));
+            Assert.That(result.Equals(expected));
         }
 
         [Test]
         public void UpdatePassword_WrongCredentials_ReturnsUnauthorized()
         {
-            // Arrange
             string username = "User1";
             string oldPass = "WrongOldPass";
             string newPass = "NewPass";
-
-            // Simulate DAO returning UNALLOWED (which implies auth failure in this context)
             _userDaoMock.Setup(u => u.UpdatePassword(username, oldPass, newPass))
                 .Returns(new UpdateRequest { IsSuccess = false, ErrorType = ErrorType.UNALLOWED });
+            CommunicationRequest expected = new CommunicationRequest
+            {
+                IsSuccess = false,
+                StatusCode = StatusCode.UNAUTHORIZED
+            };
 
-            // Act
             var result = _authService.UpdatePassword(username, oldPass, newPass);
 
-            // Assert
-            Assert.That(result.IsSuccess, Is.False);
-            // Mapped: UNALLOWED -> UNAUTHORIZED
-            Assert.That(StatusCode.UNAUTHORIZED.Equals(result.StatusCode));
+            Assert.That(result.Equals(expected));
         }
 
         [Test]
         public void UpdatePassword_DbError_ReturnsServerError()
         {
-            // Arrange
             _userDaoMock.Setup(u => u.UpdatePassword(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
                 .Returns(new UpdateRequest { IsSuccess = false, ErrorType = ErrorType.DB_ERROR });
+            CommunicationRequest expected = new CommunicationRequest
+            {
+                IsSuccess = false,
+                StatusCode = StatusCode.SERVER_ERROR
+            };
 
-            // Act
             var result = _authService.UpdatePassword("user", "old", "new");
 
-            // Assert
-            Assert.That(result.IsSuccess, Is.False);
-            // Mapped: DB_ERROR -> SERVER_ERROR
-            Assert.That(StatusCode.SERVER_ERROR.Equals(result.StatusCode));
+            Assert.That(result.Equals(expected));
         }
     }
 }

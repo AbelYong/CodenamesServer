@@ -101,13 +101,6 @@ namespace DataAccess.Users
             }
         }
 
-
-        /// <summary>
-        /// Checks if a given email is in use
-        /// </summary>
-        /// <param name="email">The email address to verify</param>
-        /// <exception cref="EntityException"
-        /// <returns></returns>
         public DataVerificationRequest VerifyEmailInUse(string email)
         {
             DataVerificationRequest request = new DataVerificationRequest();

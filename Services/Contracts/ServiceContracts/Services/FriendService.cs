@@ -85,7 +85,7 @@ namespace Services
             else
             {
                 response.IsSuccess = false;
-                response.StatusCode = StatusCode.CONFLICT;
+                response.StatusCode = StatusCode.SERVER_ERROR;
             }
 
             return response;

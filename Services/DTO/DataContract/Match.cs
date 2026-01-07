@@ -47,5 +47,29 @@ namespace Services.DTO.DataContract
             BoardPlayerTwo = new int[BOARD_SIZE][];
             SelectedWords= new List<int>();
         }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is Match other)
+            {
+                return
+                    MatchID.Equals(other.MatchID) &&
+                    Requester.Equals(other.Requester) &&
+                    Companion.Equals(other.Companion) &&
+                    Rules.Equals(other.Rules) &&
+                    BoardPlayerOne.Equals(other.BoardPlayerOne) &&
+                    BoardPlayerTwo.Equals(other.BoardPlayerTwo) &&
+                    SelectedWords.Equals(other.SelectedWords);
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return new
+            {
+                Requester, Companion, Rules, BoardPlayerOne, BoardPlayerTwo, SelectedWords
+            }.GetHashCode();
+        }
     }
 }

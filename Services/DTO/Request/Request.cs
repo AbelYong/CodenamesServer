@@ -22,5 +22,8 @@ namespace Services.DTO.Request
         
         [DataMember]
         public StatusCode StatusCode { get; set; }
+
+        public abstract override bool Equals(object obj);
+        public abstract override int GetHashCode();
     }
 }

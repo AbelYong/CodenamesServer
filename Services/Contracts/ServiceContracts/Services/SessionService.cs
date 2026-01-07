@@ -220,7 +220,9 @@ namespace Services.Contracts.ServiceContracts.Services
                 SendNewFriendshipNotification(channelA, friendA, friendB);
             }
 
-            if (isBOnline)
+            isAOnline = _playersOnline.TryGetValue(friendA, out _);
+
+            if (isBOnline && isAOnline)
             {
                 SendNewFriendshipNotification(channelB, friendB, friendA);
             }

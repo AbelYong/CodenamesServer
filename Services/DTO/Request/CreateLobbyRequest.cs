@@ -9,6 +9,23 @@ namespace Services.DTO.Request
     public class CreateLobbyRequest : Request
     {
         [DataMember]
-        public string LobbyCode { get; set; }
+        public string LobbyCode { get; set; } = string.Empty;
+
+        public override bool Equals(object obj)
+        {
+            if (obj is CreateLobbyRequest other)
+            {
+                return
+                    IsSuccess.Equals(other.IsSuccess) &&
+                    StatusCode.Equals(other.StatusCode) &&
+                    LobbyCode.Equals(other.LobbyCode);
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return new { IsSuccess, StatusCode, LobbyCode }.GetHashCode();
+        }
     }
 }

@@ -274,10 +274,8 @@ namespace Services.Contracts.ServiceContracts.Services
             Guid matchID = (Guid)state;
             Match matchToCancel = null;
 
-            // We use the same lock to ensure atomicity, either timeout or ConfirmMatch remove the confirmation
             lock (_confirmationLock)
             {
-                // If this fails, it's because ConfirmMatchReceived has confirmed and removed it.
                 if (_matchesAwaitingConfirmation.TryRemove(matchID, out MatchConfirmation confirmation))
                 {
                     confirmation.TimeoutTimer?.Dispose();
@@ -286,7 +284,6 @@ namespace Services.Contracts.ServiceContracts.Services
                 }
             }
 
-            // Only notify the players if the match timed out
             if (matchToCancel != null)
             {
                 Guid requesterId = (Guid)matchToCancel.Requester.PlayerID;
@@ -318,20 +315,17 @@ namespace Services.Contracts.ServiceContracts.Services
             }
         }
 
-        //Checks if match is awaiting confirmation, 
         public void ConfirmMatchReceived(Guid playerID, Guid matchID)
         {
             bool shouldNotify = false;
 
-            // We use a lock to prevent OnMatchConfirmationTimeout from discarding the match mid-confirmation
             lock (_confirmationLock)
             {
                 if (!_matchesAwaitingConfirmation.TryGetValue(matchID, out MatchConfirmation confirmation))
                 {
-                    return; // No confirmation found. It either timed out or was already completed.
+                    return;
                 }
 
-                // Double-check the match wasn't removed while waiting for the lock
                 if (_pendingMatches.TryGetValue(matchID, out Match match))
                 {
                     if (match.Requester.PlayerID == playerID)
@@ -344,7 +338,6 @@ namespace Services.Contracts.ServiceContracts.Services
                     }
                 }
 
-                //Check if the players are ready
                 if (confirmation.HasRequesterConfirmed && confirmation.HasCompanionConfirmed &&
                     _matchesAwaitingConfirmation.TryRemove(matchID, out MatchConfirmation removedConfirmation))
                 {

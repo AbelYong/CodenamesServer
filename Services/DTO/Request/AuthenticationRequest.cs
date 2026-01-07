@@ -21,5 +21,23 @@ namespace Services.DTO.Request
             UserID = Guid.Empty;
             BanExpiration = null;
         }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is AuthenticationRequest other)
+            {
+                return
+                    IsSuccess.Equals(other.IsSuccess) &&
+                    StatusCode.Equals(other.StatusCode) &&
+                    UserID.Equals(other.UserID) &&
+                    BanExpiration.Equals(other.BanExpiration);
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return new { IsSuccess, StatusCode, UserID, BanExpiration }.GetHashCode();
+        }
     }
 }

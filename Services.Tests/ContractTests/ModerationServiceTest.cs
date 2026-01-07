@@ -41,207 +41,191 @@ namespace Services.Tests.ContractTests
         [Test]
         public void ReportPlayer_ReporterOffline_ReturnsUnauthorized()
         {
-            // Arrange
             Guid reporterId = Guid.NewGuid();
             Guid reportedId = Guid.NewGuid();
-
             _sessionManagerMock.Setup(s => s.IsPlayerOnline(reporterId)).Returns(false);
+            CommunicationRequest expected = new CommunicationRequest
+            {
+                IsSuccess = false,
+                StatusCode = StatusCode.UNAUTHORIZED
+            };
 
-            // Act
             var result = _moderationService.ReportPlayer(reporterId, reportedId, "Toxic behavior");
 
-            // Assert
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(StatusCode.UNAUTHORIZED.Equals(result.StatusCode));
-
-            _playerDaoMock.Verify(p => p.GetPlayerById(It.IsAny<Guid>()), Times.Never);
+            Assert.That(result.Equals(expected));
         }
 
         [Test]
         public void ReportPlayer_ReporterNotFoundInDb_ReturnsNotFound()
         {
-            // Arrange
             Guid reporterId = Guid.NewGuid();
             Guid reportedId = Guid.NewGuid();
-
             _sessionManagerMock.Setup(s => s.IsPlayerOnline(reporterId)).Returns(true);
-
             _playerDaoMock.Setup(p => p.GetPlayerById(reporterId)).Returns((DataAccess.Player)null);
+            CommunicationRequest expected = new CommunicationRequest
+            {
+                IsSuccess = false,
+                StatusCode = StatusCode.NOT_FOUND
+            };
 
-            // Act
             var result = _moderationService.ReportPlayer(reporterId, reportedId, "Reason");
 
-            // Assert
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(StatusCode.NOT_FOUND.Equals(result.StatusCode));
+            Assert.That(result.Equals(expected));
         }
 
         [Test]
         public void ReportPlayer_ReportedTargetNotFoundInDb_ReturnsNotFound()
         {
-            // Arrange
             Guid reporterId = Guid.NewGuid();
             Guid reportedId = Guid.NewGuid();
-
             _sessionManagerMock.Setup(s => s.IsPlayerOnline(reporterId)).Returns(true);
-
             _playerDaoMock.Setup(p => p.GetPlayerById(reporterId))
                 .Returns(new DataAccess.Player { playerID = reporterId, userID = Guid.NewGuid() });
-
             _playerDaoMock.Setup(p => p.GetPlayerById(reportedId)).Returns((DataAccess.Player)null);
+            CommunicationRequest expected = new CommunicationRequest
+            {
+                IsSuccess = false,
+                StatusCode = StatusCode.NOT_FOUND
+            };
 
-            // Act
             var result = _moderationService.ReportPlayer(reporterId, reportedId, "Reason");
 
-            // Assert
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(StatusCode.NOT_FOUND.Equals(result.StatusCode));
+            Assert.That(result.Equals(expected));
         }
 
         [Test]
-        public void ReportPlayer_ReportAlreadyExists_ReturnsReportDuplicated()
+        public void ReportPlayer_ReportAlreadyExists_ReturnsReportDuplicatedReportNotAdded()
         {
-            // Arrange
             Guid reporterPlayerId = Guid.NewGuid();
             Guid reportedPlayerId = Guid.NewGuid();
             Guid reporterUserId = Guid.NewGuid();
             Guid reportedUserId = Guid.NewGuid();
-
             SetupPlayers(reporterPlayerId, reporterUserId, reportedPlayerId, reportedUserId);
-
             _reportDaoMock.Setup(r => r.HasPlayerReportedTarget(reporterUserId, reportedUserId))
                 .Returns(true);
+            CommunicationRequest expected = new CommunicationRequest
+            {
+                IsSuccess = false,
+                StatusCode = StatusCode.REPORT_DUPLICATED
+            };
 
-            // Act
             var result = _moderationService.ReportPlayer(reporterPlayerId, reportedPlayerId, "Reason");
 
-            // Assert
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(StatusCode.REPORT_DUPLICATED.Equals(result.StatusCode));
-
+            Assert.That(result.Equals(expected));
             _reportDaoMock.Verify(r => r.AddReport(It.IsAny<Report>()), Times.Never);
         }
 
         [Test]
-        public void ReportPlayer_ValidReport_NoBanThreshold_ReturnsReportCreated()
+        public void ReportPlayer_ValidReport_NoBanThreshold_ReturnsReportCreatedBanNotAppliedTargetNotKicked()
         {
-            // Arrange
             Guid reporterPlayerId = Guid.NewGuid();
             Guid reportedPlayerId = Guid.NewGuid();
             Guid reporterUserId = Guid.NewGuid();
             Guid reportedUserId = Guid.NewGuid();
-
             SetupPlayers(reporterPlayerId, reporterUserId, reportedPlayerId, reportedUserId);
-
             _reportDaoMock.Setup(r => r.HasPlayerReportedTarget(reporterUserId, reportedUserId)).Returns(false);
-
             _reportDaoMock.Setup(r => r.CountUniqueReports(reportedUserId)).Returns(1);
+            CommunicationRequest expected = new CommunicationRequest
+            {
+                IsSuccess = true,
+                StatusCode = StatusCode.REPORT_CREATED
+            };
 
-            // Act
             var result = _moderationService.ReportPlayer(reporterPlayerId, reportedPlayerId, "Reason");
 
-            // Assert
-            Assert.That(result.IsSuccess);
-            Assert.That(StatusCode.REPORT_CREATED.Equals(result.StatusCode));
-
+            Assert.That(result.Equals(expected));
             _reportDaoMock.Verify(r => r.AddReport(It.IsAny<Report>()), Times.Once);
-            _banDAO_VerifyBanApplied(Times.Never());
+            _banDaoMock.Verify(b => b.ApplyBan(It.IsAny<Ban>()), Times.Never);
             _sessionManagerMock.Verify(s => s.KickPlayer(It.IsAny<Guid>(), It.IsAny<KickReason>()), Times.Never);
         }
 
         [Test]
-        public void ReportPlayer_ThresholdReached_3Reports_Applies1HourBanAndKicks()
+        public void ReportPlayer_ThresholdReached_3Reports_ReturnsUserKickedApplies1HourBanAndKicks()
         {
-            // Arrange
             Guid reporterPlayerId = Guid.NewGuid();
             Guid reportedPlayerId = Guid.NewGuid();
             Guid reporterUserId = Guid.NewGuid();
             Guid reportedUserId = Guid.NewGuid();
-
             SetupPlayers(reporterPlayerId, reporterUserId, reportedPlayerId, reportedUserId);
-
             _reportDaoMock.Setup(r => r.CountUniqueReports(reportedUserId)).Returns(3);
+            CommunicationRequest expected = new CommunicationRequest
+            {
+                IsSuccess = true,
+                StatusCode = StatusCode.USER_KICKED_AND_BANNED
+            };
 
-            // Act
             var result = _moderationService.ReportPlayer(reporterPlayerId, reportedPlayerId, "Spam");
 
-            // Assert
-            Assert.That(result.IsSuccess);
-            Assert.That(StatusCode.USER_KICKED_AND_BANNED.Equals(result.StatusCode));
-
+            Assert.That(result.Equals(expected));
             _banDaoMock.Verify(b => b.ApplyBan(It.Is<Ban>(ban =>
                 ban.userID == reportedUserId &&
                 ban.timeout > DateTimeOffset.Now.AddMinutes(50) &&
                 ban.timeout < DateTimeOffset.Now.AddMinutes(70)
             )), Times.Once);
-
             _sessionManagerMock.Verify(s => s.KickPlayer(reportedPlayerId, KickReason.TEMPORARY_BAN), Times.Once);
         }
 
         [Test]
-        public void ReportPlayer_ThresholdReached_10Reports_AppliesPermanentBanAndKicks()
+        public void ReportPlayer_ThresholdReached_10Reports_ReturnsUserKickedAppliesPermanentBanAndKicks()
         {
-            // Arrange
             Guid reporterPlayerId = Guid.NewGuid();
             Guid reportedPlayerId = Guid.NewGuid();
             Guid reporterUserId = Guid.NewGuid();
             Guid reportedUserId = Guid.NewGuid();
-
             SetupPlayers(reporterPlayerId, reporterUserId, reportedPlayerId, reportedUserId);
-
             _reportDaoMock.Setup(r => r.CountUniqueReports(reportedUserId)).Returns(10);
+            CommunicationRequest expected = new CommunicationRequest
+            {
+                IsSuccess = true,
+                StatusCode = StatusCode.USER_KICKED_AND_BANNED
+            };
 
-            // Act
             var result = _moderationService.ReportPlayer(reporterPlayerId, reportedPlayerId, "Severe insults");
 
-            // Assert
-            Assert.That(result.IsSuccess);
-            Assert.That(StatusCode.USER_KICKED_AND_BANNED.Equals(result.StatusCode));
-
+            Assert.That(result.Equals(expected));
             _banDaoMock.Verify(b => b.ApplyBan(It.Is<Ban>(ban =>
                 ban.userID == reportedUserId &&
                 ban.timeout == DateTimeOffset.MaxValue
             )), Times.Once);
-
             _sessionManagerMock.Verify(s => s.KickPlayer(reportedPlayerId, KickReason.PERMANTENT_BAN), Times.Once);
         }
 
         [Test]
         public void ReportPlayer_DbUpdateException_ReturnsReportDuplicated()
         {
-            // Arrange
             Guid reporterPlayerId = Guid.NewGuid();
             Guid reportedPlayerId = Guid.NewGuid();
             SetupPlayers(reporterPlayerId, Guid.NewGuid(), reportedPlayerId, Guid.NewGuid());
-
             _reportDaoMock.Setup(r => r.AddReport(It.IsAny<Report>()))
                 .Throws(new DbUpdateException());
+            CommunicationRequest expected = new CommunicationRequest
+            {
+                IsSuccess = false,
+                StatusCode = StatusCode.REPORT_DUPLICATED
+            };
 
-            // Act
             var result = _moderationService.ReportPlayer(reporterPlayerId, reportedPlayerId, "Reason");
 
-            // Assert
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(StatusCode.REPORT_DUPLICATED.Equals(result.StatusCode));
+            Assert.That(result.Equals(expected));
         }
 
         [Test]
         public void ReportPlayer_GeneralException_ReturnsServerError()
         {
-            // Arrange
             Guid reporterPlayerId = Guid.NewGuid();
             Guid reportedPlayerId = Guid.NewGuid();
             SetupPlayers(reporterPlayerId, Guid.NewGuid(), reportedPlayerId, Guid.NewGuid());
-
             _reportDaoMock.Setup(r => r.AddReport(It.IsAny<Report>()))
                 .Throws(new Exception("Database connection lost"));
+            CommunicationRequest expected = new CommunicationRequest
+            {
+                IsSuccess = false,
+                StatusCode = StatusCode.SERVER_ERROR
+            };
 
-            // Act
             var result = _moderationService.ReportPlayer(reporterPlayerId, reportedPlayerId, "Reason");
 
-            // Assert
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(StatusCode.SERVER_ERROR.Equals(result.StatusCode));
+            Assert.That(result.Equals(expected));
         }
 
         private void SetupPlayers(Guid reporterPlayerId, Guid reporterUserId, Guid reportedPlayerId, Guid reportedUserId)
@@ -253,11 +237,6 @@ namespace Services.Tests.ContractTests
 
             _playerDaoMock.Setup(p => p.GetPlayerById(reportedPlayerId))
                 .Returns(new DataAccess.Player { playerID = reportedPlayerId, userID = reportedUserId });
-        }
-
-        private void _banDAO_VerifyBanApplied(Times times)
-        {
-            _banDaoMock.Verify(b => b.ApplyBan(It.IsAny<Ban>()), times);
         }
     }
 }

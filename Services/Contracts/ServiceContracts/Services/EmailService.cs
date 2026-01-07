@@ -39,6 +39,12 @@ namespace Services.Contracts.ServiceContracts.Services
             }
 
             DataVerificationRequest result = _playerDAO.VerifyEmailInUse(email);
+            if (result.ErrorType == ErrorType.DB_ERROR)
+            {
+                request.IsSuccess = false;
+                request.StatusCode = StatusCode.SERVER_ERROR;
+                return request;
+            }
             switch (emailType)
             {
                 case EmailType.EMAIL_VERIFICATION:
@@ -53,7 +59,7 @@ namespace Services.Contracts.ServiceContracts.Services
                     }
                     break;
                 case EmailType.PASSWORD_RESET:
-                    if (!result.IsSuccess || result.ErrorType == ErrorType.DB_ERROR)
+                    if (!result.IsSuccess)
                     {
                         request.IsSuccess = false;
                         request.StatusCode = StatusCode.NOT_FOUND;
@@ -131,10 +137,15 @@ namespace Services.Contracts.ServiceContracts.Services
                     request.IsSuccess = false;
                     request.StatusCode = StatusCode.UNAUTHORIZED;
                     request.RemainingAttempts = info.RemainingAttempts;
+                    if (info.RemainingAttempts == 0)
+                    {
+                        RemoveVerificationInfo(email, emailType);
+                    }
                 }
             }
             else
             {
+                RemoveVerificationInfo(email, emailType);
                 request.IsSuccess = false;
                 request.StatusCode = StatusCode.UNAUTHORIZED;
                 request.RemainingAttempts = info.RemainingAttempts;

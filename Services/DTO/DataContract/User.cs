@@ -21,8 +21,8 @@ namespace Services.DTO.DataContract
         public static User AssembleSvUser(DataAccess.User dbUser)
         {
             User user = new User();
-            user.UserID = dbUser.userID;
-            user.Email = dbUser.email;
+            user.UserID = dbUser != null ? dbUser.userID : Guid.Empty;
+            user.Email = dbUser != null ? dbUser.email : string.Empty;
             user.Password = "";
             return user;
         }

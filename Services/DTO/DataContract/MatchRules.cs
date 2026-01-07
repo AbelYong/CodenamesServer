@@ -46,5 +46,27 @@ namespace Services.DTO.DataContract
             const int MIN_ASSASSINS = 3;
             MaxAssassins = maxAssassins > MIN_ASSASSINS ? maxAssassins : MIN_ASSASSINS;
         }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is MatchRules other)
+            {
+                return
+                    Gamemode.Equals(other.Gamemode) &&
+                    TurnTimer.Equals(other.TurnTimer) &&
+                    TimerTokens.Equals(other.TimerTokens) &&
+                    BystanderTokens.Equals(other.BystanderTokens) &&
+                    MaxAssassins.Equals(other.MaxAssassins);
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return new
+            {
+                Gamemode, TurnTimer, TimerTokens, BystanderTokens, MaxAssassins
+            }.GetHashCode();
+        }
     }
 }

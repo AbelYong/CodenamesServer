@@ -51,6 +51,12 @@ namespace Services.Contracts.ServiceContracts.Services
             DataAccess.Player dbPlayer = Player.AssembleDbPlayer(svPlayer);
             string password = svPlayer.User.Password;
             PlayerRegistrationRequest dbRequest = _userDAO.SignIn(dbPlayer, password);
+            
+            request.IsEmailDuplicate = dbRequest.IsEmailDuplicate;
+            request.IsEmailValid = dbRequest.IsEmailValid;
+            request.IsUsernameDuplicate = dbRequest.IsUsernameDuplicate;
+            request.IsPasswordValid = dbRequest.IsPasswordValid;
+
             if (dbRequest.IsSuccess)
             {
                 request.IsSuccess = true;
@@ -58,10 +64,6 @@ namespace Services.Contracts.ServiceContracts.Services
             else
             {
                 request.IsSuccess = false;
-                request.IsEmailDuplicate = dbRequest.IsEmailDuplicate;
-                request.IsEmailValid = dbRequest.IsEmailValid;
-                request.IsUsernameDuplicate = dbRequest.IsUsernameDuplicate;
-                request.IsPasswordValid = dbRequest.IsPasswordValid;
 
                 switch (dbRequest.ErrorType)
                 {

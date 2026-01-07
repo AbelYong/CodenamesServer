@@ -11,5 +11,58 @@ namespace Services.DTO.Request
     {
         [DataMember]
         public Party Party { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is JoinPartyRequest other)
+            {
+                return EqualityHelper(other);
+            }
+            return false;
+        }
+
+        private bool EqualityHelper(JoinPartyRequest other)
+        {
+            bool equalNullParties = Party == null && other.Party == null;
+            bool equalNullHosts = false;
+            bool equalNullGuests = false;
+            if (equalNullParties)
+            {
+                return
+                    IsSuccess.Equals(other.IsSuccess) &&
+                    StatusCode.Equals(other.StatusCode);
+            }
+            if (other.Party.PartyHost == null)
+            {
+                equalNullHosts = Party.PartyHost == null && other.Party.PartyHost == null;
+            }
+            if (other.Party.PartyGuest == null)
+            {
+                equalNullGuests = Party.PartyGuest == null && other.Party.PartyGuest == null;
+            }
+            if (!equalNullHosts && (Party.PartyHost == null || other.Party.PartyHost == null))
+            {
+                return false;
+            }
+            if (!equalNullGuests && (Party.PartyGuest == null || other.Party.PartyGuest == null))
+            {
+                return false;
+            }
+
+            return
+                IsSuccess.Equals(other.IsSuccess) &&
+                StatusCode.Equals(other.StatusCode) &&
+                Party.PartyHost.Equals(other.Party.PartyHost) &&
+                Party.PartyGuest.Equals(other.Party.PartyGuest) &&
+                Party.LobbyCode.Equals(other.Party.LobbyCode);
+        }
+
+        public override int GetHashCode()
+        {
+            var host = Party.PartyHost;
+            var guest = Party.PartyGuest;
+            var lobbyCode = Party.LobbyCode;
+            return new { IsSuccess, StatusCode, host, guest, lobbyCode }.GetHashCode();
+        }
     }
 }

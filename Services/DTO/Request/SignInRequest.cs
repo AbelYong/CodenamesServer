@@ -16,5 +16,25 @@ namespace Services.DTO.Request
         public bool IsEmailValid { get; set; }
         [DataMember]
         public bool IsPasswordValid { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is  SignInRequest other)
+            {
+                return
+                    IsSuccess.Equals(other.IsSuccess) &&
+                    StatusCode.Equals(other.StatusCode) &&
+                    IsUsernameDuplicate.Equals(other.IsUsernameDuplicate) &&
+                    IsEmailDuplicate.Equals(other.IsEmailDuplicate) &&
+                    IsEmailValid.Equals(other.IsEmailValid) &&
+                    IsPasswordValid.Equals(other.IsPasswordValid);
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return new { IsSuccess, StatusCode, IsUsernameDuplicate, IsEmailDuplicate, IsEmailValid, IsPasswordValid }.GetHashCode();
+        }
     }
 }

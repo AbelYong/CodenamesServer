@@ -9,5 +9,20 @@ namespace Services.DTO.Request
     [DataContract]
     public class CommunicationRequest : Request
     {
+        public override bool Equals(object obj)
+        {
+            if (obj is  CommunicationRequest other)
+            {
+                return 
+                    IsSuccess.Equals(other.IsSuccess) &&
+                    StatusCode.Equals(other.StatusCode);
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return new { IsSuccess, StatusCode }.GetHashCode();
+        }
     }
 }

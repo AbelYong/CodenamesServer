@@ -21,10 +21,29 @@ namespace Services.DTO.DataContract
         [DataMember]
         public Player PartyGuest { get; set; }
         
+        public Party()
+        {
+
+        }
+
         public Party(Player partyHost, string lobbyCode)
         {
             PartyHost = partyHost;
             LobbyCode = lobbyCode;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is Party other)
+            {
+                return LobbyCode.Equals(other.LobbyCode);
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return new { LobbyCode, PartyHost, PartyGuest }.GetHashCode();
         }
     }
 }

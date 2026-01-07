@@ -10,5 +10,22 @@ namespace Services.DTO.Request
     {
         [DataMember]
         public int RemainingAttempts { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is ConfirmEmailRequest other)
+            {
+                return
+                    IsSuccess.Equals(other.IsSuccess) &&
+                    StatusCode.Equals(other.StatusCode) &&
+                    RemainingAttempts.Equals(other.RemainingAttempts);
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return new { IsSuccess, StatusCode, RemainingAttempts }.GetHashCode();
+        }
     }
 }
