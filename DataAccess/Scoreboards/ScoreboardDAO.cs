@@ -91,13 +91,14 @@ namespace DataAccess.Scoreboards
                             if (matchLength.CompareTo(fastestGame) < 0)
                             {
                                 scoreboard.fastestGame = matchLength;
+                                context.SaveChanges();
                             }
                         }
                         else
                         {
                             scoreboard.fastestGame = matchLength;
+                            context.SaveChanges();
                         }
-                        context.SaveChanges();
                         return true;
                     }
                     else

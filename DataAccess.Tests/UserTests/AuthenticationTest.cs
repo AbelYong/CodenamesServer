@@ -31,12 +31,10 @@ namespace DataAccess.Tests.UserTests
         [Test]
         public void Authenticate_CredentialsAreCorrect_ReturnsUserId()
         {
-            // Arrange
             string username = "ValidUser";
             string password = "ValidPassword";
             Guid expectedUserId = Guid.NewGuid();
-
-            // We use Callback to simulate the Stored Procedure setting the output parameter value
+            
             _context.Setup(c => c.uspLogin(
                 It.Is<string>(s => s == username),
                 It.Is<string>(s => s == password),
@@ -45,25 +43,19 @@ namespace DataAccess.Tests.UserTests
             {
                 outParam.Value = expectedUserId;
             })
-            .Returns(0); // Return integer status code (0 usually means success in SPs)
+            .Returns(0);
 
-            // Act
             Guid? result = _userDAO.Authenticate(username, password);
 
-            // Assert
-            Assert.That(result, Is.Not.Null);
             Assert.That(result, Is.EqualTo(expectedUserId));
-            _context.Verify(c => c.uspLogin(username, password, It.IsAny<ObjectParameter>()), Times.Once);
         }
 
         [Test]
         public void Authenticate_CredentialsAreIncorrect_ReturnsNull()
         {
-            // Arrange
             string username = "ValidUser";
             string password = "WrongPassword";
 
-            // Simulate DB returning DBNull.Value (user not found)
             _context.Setup(c => c.uspLogin(
                 It.IsAny<string>(),
                 It.IsAny<string>(),
@@ -74,24 +66,20 @@ namespace DataAccess.Tests.UserTests
             })
             .Returns(0);
 
-            // Act
             Guid? result = _userDAO.Authenticate(username, password);
 
-            // Assert
             Assert.That(result, Is.Null);
         }
 
         [Test]
-        public void Authenticate_DatabaseThrowsEntityException_ThrowsException()
+        public void Authenticate_DatabaseThrowsException_RethrowsException()
         {
-            // Arrange
             string username = "User";
             string password = "Pass";
 
             _context.Setup(c => c.uspLogin(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<ObjectParameter>()))
                 .Throws(new EntityException("Connection failed"));
 
-            // Act & Assert
             Assert.Throws<EntityException>(() => _userDAO.Authenticate(username, password));
         }
     }

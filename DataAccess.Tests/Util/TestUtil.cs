@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
 
-namespace DataAccess.Test
+namespace DataAccess.Tests.Util
 {
     public static class TestUtil
     {
@@ -19,7 +19,6 @@ namespace DataAccess.Test
 
             dbSet.Setup(d => d.Add(It.IsAny<T>())).Callback<T>((s) => sourceList.Add(s));
 
-            // This prevents the chain from breaking or returning null when .Include(...) is called in an EF 
             dbSet.Setup(d => d.Include(It.IsAny<string>())).Returns(dbSet.Object);
             dbSet.Setup(d => d.AsNoTracking()).Returns(dbSet.Object);
 

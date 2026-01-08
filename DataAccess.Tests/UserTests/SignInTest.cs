@@ -31,18 +31,15 @@ namespace DataAccess.Test.UserTests
         }
 
         [Test]
-        public void SignIn_ValidData_ReturnsSuccessWithId()
+        public void SignIn_ValidData_CallsBDReturnsSuccessWithId()
         {
-            // Arrange
             var player = CreateValidPlayer();
             string password = "ValidPassword1!";
             Guid expectedNewId = Guid.NewGuid();
 
-            // Mock dependencies to pass validation
             _playerDAO.Setup(p => p.ValidateEmailNotDuplicated(It.IsAny<string>())).Returns(true);
             _playerDAO.Setup(p => p.ValidateUsernameNotDuplicated(It.IsAny<string>())).Returns(true);
 
-            // Mock Stored Procedure execution
             _context.Setup(c => c.uspSignIn(
                 It.IsAny<string>(),
                 It.IsAny<string>(),
@@ -55,14 +52,19 @@ namespace DataAccess.Test.UserTests
                 outParam.Value = expectedNewId;
             })
             .Returns(0);
+            PlayerRegistrationRequest expected = new PlayerRegistrationRequest
+            {
+                IsSuccess = true,
+                NewPlayerID = expectedNewId,
+                IsEmailValid = true,
+                IsEmailDuplicate = false,
+                IsUsernameDuplicate = false,
+                IsPasswordValid = true,
+            };
 
-            // Act
             var result = _userDAO.SignIn(player, password);
 
-            // Assert
-            Assert.That(result.IsSuccess, Is.True);
-            Assert.That(result.NewPlayerID, Is.EqualTo(expectedNewId));
-            Assert.That(result.IsEmailValid, Is.True);
+            Assert.That(result.Equals(expected));
             _context.Verify(c => c.uspSignIn(
                 player.User.email,
                 password,
@@ -75,158 +77,160 @@ namespace DataAccess.Test.UserTests
         [Test]
         public void SignIn_MissingData_ReturnsMissingDataError()
         {
-            // Arrange
-            Player player = null; // Invalid
+            Player player = null;
             string password = "Password1!";
+            PlayerRegistrationRequest expected = new PlayerRegistrationRequest
+            {
+                IsSuccess = false,
+                ErrorType = ErrorType.MISSING_DATA
+            };
 
-            // Act
             var result = _userDAO.SignIn(player, password);
 
-            // Assert
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(result.ErrorType, Is.EqualTo(ErrorType.MISSING_DATA));
+            Assert.That(result.Equals(expected));
         }
 
         [Test]
         public void SignIn_EmailDuplicated_ReturnsDuplicateError()
         {
-            // Arrange
             var player = CreateValidPlayer();
             string password = "ValidPassword1!";
-
             _playerDAO.Setup(p => p.ValidateEmailNotDuplicated(player.User.email)).Returns(false);
-            // Assume username is valid to isolate error
             _playerDAO.Setup(p => p.ValidateUsernameNotDuplicated(It.IsAny<string>())).Returns(true);
+            PlayerRegistrationRequest expected = new PlayerRegistrationRequest
+            {
+                IsSuccess = false,
+                ErrorType = ErrorType.DUPLICATE,
+                IsEmailDuplicate = true
+            };
 
-            // Act
             var result = _userDAO.SignIn(player, password);
 
-            // Assert
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(result.ErrorType, Is.EqualTo(ErrorType.DUPLICATE));
-            Assert.That(result.IsEmailDuplicate, Is.True);
-            _context.Verify(c => c.uspSignIn(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<ObjectParameter>()), Times.Never);
+            Assert.That(result.Equals(expected));
         }
 
         [Test]
         public void SignIn_UsernameDuplicated_ReturnsDuplicateError()
         {
-            // Arrange
             var player = CreateValidPlayer();
             string password = "ValidPassword1!";
-
             _playerDAO.Setup(p => p.ValidateEmailNotDuplicated(It.IsAny<string>())).Returns(true);
             _playerDAO.Setup(p => p.ValidateUsernameNotDuplicated(player.username)).Returns(false);
+            PlayerRegistrationRequest expected = new PlayerRegistrationRequest
+            {
+                IsSuccess = false,
+                ErrorType = ErrorType.DUPLICATE,
+                IsUsernameDuplicate = true
+            };
 
-            // Act
             var result = _userDAO.SignIn(player, password);
 
-            // Assert
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(result.ErrorType, Is.EqualTo(ErrorType.DUPLICATE));
-            Assert.That(result.IsUsernameDuplicate, Is.True);
+            Assert.That(result.Equals(expected));
         }
 
         [Test]
         public void SignIn_InvalidEmailFormat_ReturnsInvalidDataError()
         {
-            // Arrange
             var player = CreateValidPlayer();
-            player.User.email = "invalid-email"; // No @ or domain
+            player.User.email = "invalid-email";
             string password = "ValidPassword1!";
-
             _playerDAO.Setup(p => p.ValidateEmailNotDuplicated(It.IsAny<string>())).Returns(true);
             _playerDAO.Setup(p => p.ValidateUsernameNotDuplicated(It.IsAny<string>())).Returns(true);
+            PlayerRegistrationRequest expected = new PlayerRegistrationRequest
+            {
+                IsSuccess = false,
+                ErrorType = ErrorType.INVALID_DATA,
+                IsEmailValid = false
+            };
 
-            // Act
             var result = _userDAO.SignIn(player, password);
 
-            // Assert
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(result.ErrorType, Is.EqualTo(ErrorType.INVALID_DATA));
-            Assert.That(result.IsEmailValid, Is.False);
+            Assert.That(result.Equals(expected));
         }
 
         [Test]
         public void SignIn_InvalidPassword_ReturnsInvalidDataError()
         {
-            // Arrange
             var player = CreateValidPlayer();
-            string password = "123"; // Too short
-
+            string password = "123";
             _playerDAO.Setup(p => p.ValidateEmailNotDuplicated(It.IsAny<string>())).Returns(true);
             _playerDAO.Setup(p => p.ValidateUsernameNotDuplicated(It.IsAny<string>())).Returns(true);
+            PlayerRegistrationRequest expected = new PlayerRegistrationRequest
+            {
+                IsSuccess = false,
+                ErrorType = ErrorType.INVALID_DATA,
+                IsPasswordValid = false
+            };
 
-            // Act
             var result = _userDAO.SignIn(player, password);
 
-            // Assert
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(result.ErrorType, Is.EqualTo(ErrorType.INVALID_DATA));
-            Assert.That(result.IsPasswordValid, Is.False);
+            Assert.That(result.Equals(expected));
         }
 
         [Test]
         public void SignIn_DbUpdateException_ReturnsDbError()
         {
-            // Arrange
             var player = CreateValidPlayer();
             string password = "ValidPassword1!";
-
             _playerDAO.Setup(p => p.ValidateEmailNotDuplicated(It.IsAny<string>())).Returns(true);
             _playerDAO.Setup(p => p.ValidateUsernameNotDuplicated(It.IsAny<string>())).Returns(true);
-
             _context.Setup(c => c.uspSignIn(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<ObjectParameter>()))
                 .Throws(new DbUpdateException("Simulated DB Error"));
+            PlayerRegistrationRequest expected = new PlayerRegistrationRequest
+            {
+                IsSuccess = false,
+                ErrorType = ErrorType.DB_ERROR,
+                IsEmailValid = true,
+                IsPasswordValid = true,
+            };
 
-            // Act
             var result = _userDAO.SignIn(player, password);
 
-            // Assert
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(result.ErrorType, Is.EqualTo(ErrorType.DB_ERROR));
+            Assert.That(result.Equals(expected));
         }
 
         [Test]
         public void SignIn_EntityException_ReturnsDbError()
         {
-            // Arrange
             var player = CreateValidPlayer();
             string password = "ValidPassword1!";
-
             _playerDAO.Setup(p => p.ValidateEmailNotDuplicated(It.IsAny<string>())).Returns(true);
             _playerDAO.Setup(p => p.ValidateUsernameNotDuplicated(It.IsAny<string>())).Returns(true);
-
             _context.Setup(c => c.uspSignIn(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<ObjectParameter>()))
                 .Throws(new EntityException("Simulated Entity Error"));
+            PlayerRegistrationRequest expected = new PlayerRegistrationRequest
+            {
+                IsSuccess = false,
+                ErrorType = ErrorType.DB_ERROR,
+                IsEmailValid = true,
+                IsPasswordValid = true,
+            };
 
-            // Act
             var result = _userDAO.SignIn(player, password);
 
-            // Assert
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(result.ErrorType, Is.EqualTo(ErrorType.DB_ERROR));
+            Assert.That(result.Equals(expected));
         }
 
         [Test]
         public void SignIn_InvalidCastException_ReturnsDbError()
         {
-            // Arrange
             var player = CreateValidPlayer();
             string password = "ValidPassword1!";
-
             _playerDAO.Setup(p => p.ValidateEmailNotDuplicated(It.IsAny<string>())).Returns(true);
             _playerDAO.Setup(p => p.ValidateUsernameNotDuplicated(It.IsAny<string>())).Returns(true);
-
             _context.Setup(c => c.uspSignIn(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<ObjectParameter>()))
                 .Throws(new InvalidCastException("Simulated Cast Error"));
+            PlayerRegistrationRequest expected = new PlayerRegistrationRequest
+            {
+                IsSuccess = false,
+                ErrorType = ErrorType.DB_ERROR,
+                IsEmailValid = true,
+                IsPasswordValid = true,
+            };
 
-            // Act
             var result = _userDAO.SignIn(player, password);
 
-            // Assert
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(result.ErrorType, Is.EqualTo(ErrorType.DB_ERROR));
+            Assert.That(result.Equals(expected));
         }
 
         private Player CreateValidPlayer()

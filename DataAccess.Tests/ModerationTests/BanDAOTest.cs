@@ -1,5 +1,4 @@
 ﻿using DataAccess.Moderation;
-using DataAccess.Test;
 using DataAccess.Tests.Util;
 using Moq;
 using NUnit.Framework;
@@ -39,7 +38,6 @@ namespace DataAccess.Tests.ModerationTests
         [Test]
         public void GetActiveBan_UserHasActiveBan_ReturnsBan()
         {
-            // Arrange
             Guid userId = Guid.NewGuid();
             var activeBan = new Ban
             {
@@ -48,18 +46,14 @@ namespace DataAccess.Tests.ModerationTests
             };
             _bansData.Add(activeBan);
 
-            // Act
             var result = _banDAO.GetActiveBan(userId);
 
-            // Assert
-            Assert.That(result, Is.Not.Null);
             Assert.That(result, Is.EqualTo(activeBan));
         }
 
         [Test]
         public void GetActiveBan_UserHasExpiredBan_ReturnsNull()
         {
-            // Arrange
             Guid userId = Guid.NewGuid();
             var expiredBan = new Ban
             {
@@ -68,17 +62,14 @@ namespace DataAccess.Tests.ModerationTests
             };
             _bansData.Add(expiredBan);
 
-            // Act
             var result = _banDAO.GetActiveBan(userId);
 
-            // Assert
             Assert.That(result, Is.Null);
         }
 
         [Test]
         public void GetActiveBan_UserHasMultipleActiveBans_ReturnsLatestTimeout()
         {
-            // Arrange
             Guid userId = Guid.NewGuid();
             var shortBan = new Ban
             {
@@ -96,89 +87,66 @@ namespace DataAccess.Tests.ModerationTests
             _bansData.Add(shortBan);
             _bansData.Add(longBan);
 
-            // Act
             var result = _banDAO.GetActiveBan(userId);
 
-            // Assert
-            Assert.That(result, Is.Not.Null);
             Assert.That(result.banID, Is.EqualTo(longBan.banID));
         }
 
         [Test]
         public void GetActiveBan_UserHasNoBans_ReturnsNull()
         {
-            // Arrange
-            // Lista vacía
-
-            // Act
             var result = _banDAO.GetActiveBan(Guid.NewGuid());
 
-            // Assert
             Assert.That(result, Is.Null);
         }
 
         [Test]
-        public void GetActiveBan_SqlException_ReturnsNullAndLogs()
+        public void GetActiveBan_SqlException_ReturnsNull()
         {
-            // Arrange
             _context.Setup(c => c.Bans).Throws(SqlExceptionCreator.Create());
 
-            // Act
             var result = _banDAO.GetActiveBan(Guid.NewGuid());
 
-            // Assert
             Assert.That(result, Is.Null);
         }
 
         [Test]
-        public void GetActiveBan_EntityException_ReturnsNullAndLogs()
+        public void GetActiveBan_EntityException_ReturnsNull()
         {
-            // Arrange
             _context.Setup(c => c.Bans).Throws(new EntityException());
 
-            // Act
             var result = _banDAO.GetActiveBan(Guid.NewGuid());
 
-            // Assert
             Assert.That(result, Is.Null);
         }
 
         [Test]
-        public void GetActiveBan_TimeoutException_ReturnsNullAndLogs()
+        public void GetActiveBan_TimeoutException_ReturnsNull()
         {
-            // Arrange
             _context.Setup(c => c.Bans).Throws(new TimeoutException());
 
-            // Act
             var result = _banDAO.GetActiveBan(Guid.NewGuid());
 
-            // Assert
             Assert.That(result, Is.Null);
         }
 
         [Test]
-        public void GetActiveBan_GeneralException_ReturnsNullAndLogs()
+        public void GetActiveBan_GeneralException_ReturnsNull()
         {
-            // Arrange
             _context.Setup(c => c.Bans).Throws(new Exception());
 
-            // Act
             var result = _banDAO.GetActiveBan(Guid.NewGuid());
 
-            // Assert
             Assert.That(result, Is.Null);
         }
 
         [Test]
         public void ApplyBan_ValidBan_AddsAndSaves()
         {
-            // Arrange
             var ban = new Ban { banID = Guid.NewGuid() };
 
-            // Act
             _banDAO.ApplyBan(ban);
 
-            // Assert
             _banSet.Verify(m => m.Add(ban), Times.Once);
             _context.Verify(c => c.SaveChanges(), Times.Once);
         }
@@ -186,50 +154,40 @@ namespace DataAccess.Tests.ModerationTests
         [Test]
         public void ApplyBan_DbUpdateException_RethrowsException()
         {
-            // Arrange
             _context.Setup(c => c.SaveChanges()).Throws(new DbUpdateException());
 
-            // Act & Assert
             Assert.Throws<DbUpdateException>(() => _banDAO.ApplyBan(new Ban()));
         }
 
         [Test]
         public void ApplyBan_SqlException_RethrowsException()
         {
-            // Arrange
             _context.Setup(c => c.SaveChanges()).Throws(SqlExceptionCreator.Create());
 
-            // Act & Assert
             Assert.Throws<SqlException>(() => _banDAO.ApplyBan(new Ban()));
         }
 
         [Test]
         public void ApplyBan_EntityException_RethrowsException()
         {
-            // Arrange
             _context.Setup(c => c.SaveChanges()).Throws(new EntityException());
 
-            // Act & Assert
             Assert.Throws<EntityException>(() => _banDAO.ApplyBan(new Ban()));
         }
 
         [Test]
         public void ApplyBan_TimeoutException_RethrowsException()
         {
-            // Arrange
             _context.Setup(c => c.SaveChanges()).Throws(new TimeoutException());
 
-            // Act & Assert
             Assert.Throws<TimeoutException>(() => _banDAO.ApplyBan(new Ban()));
         }
 
         [Test]
         public void ApplyBan_GeneralException_RethrowsException()
         {
-            // Arrange
             _context.Setup(c => c.SaveChanges()).Throws(new Exception());
 
-            // Act & Assert
             Assert.Throws<Exception>(() => _banDAO.ApplyBan(new Ban()));
         }
     }

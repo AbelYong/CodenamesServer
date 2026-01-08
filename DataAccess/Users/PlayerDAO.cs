@@ -92,7 +92,7 @@ namespace DataAccess.Users
             catch (Exception ex) when (ex is EntityException || ex is SqlException)
             {
                 DataAccessLogger.Log.Debug("Exception while verifying email not duplicated", ex);
-                return false; //Assume it's in use if validation failed
+                return false;
             }
             catch (Exception ex)
             {
@@ -144,7 +144,7 @@ namespace DataAccess.Users
             catch (Exception ex) when (ex is EntityException || ex is SqlException)
             {
                 DataAccessLogger.Log.Debug("Exception while verifying username not duplicated", ex);
-                return false; //Assume it's in use if validation failed
+                return false;
             }
             catch (Exception ex)
             {
@@ -201,7 +201,7 @@ namespace DataAccess.Users
             catch (Exception ex) when (ex is EntityException || ex is SqlException)
             {
                 DataAccessLogger.Log.Debug("Failed to verify if player is a guest: ", ex);
-                return true; //We assume the player is a guest if its identity could not be verified
+                return true;
             }
             catch (Exception ex)
             {

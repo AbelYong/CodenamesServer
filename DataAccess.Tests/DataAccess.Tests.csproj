@@ -145,7 +145,7 @@
     <Compile Include="UserTests\ProfileUpdateTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ScoreboardTests\ScoreboardDAOTests.cs" />
-    <Compile Include="TestUtil.cs" />
+    <Compile Include="Util\TestUtil.cs" />
     <Compile Include="UserTests\PlayerDAOTest.cs" />
     <Compile Include="ModerationTests\ReportDAOTest.cs" />
     <Compile Include="UserTests\SignInTest.cs" />
