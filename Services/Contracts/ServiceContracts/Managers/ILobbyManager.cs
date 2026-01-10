@@ -61,6 +61,9 @@ namespace Services.Contracts.ServiceContracts.Managers
         [OperationContract(IsOneWay = false)]
         CommunicationRequest InviteToParty(Player partyHost, Guid friendToInviteID, string lobbyCode);
 
+        [OperationContract(IsOneWay = false)]
+        CommunicationRequest SendEmailInvitation(Guid partyHostID, string email);
+
         /// <summary>
         /// Allows the client to join another player's existing Party through the Party's LobbyCode
         /// </summary>
@@ -81,7 +84,7 @@ namespace Services.Contracts.ServiceContracts.Managers
         /// </summary>
         /// <param name="playerID"></param>
         /// <param name="lobbyCode"></param>
-        [OperationContract(IsOneWay = true)]
+        [OperationContract(IsOneWay = false)]
         void LeaveParty(Guid playerID, string lobbyCode);
     }
 }

@@ -671,6 +671,63 @@ namespace Services.Contracts.ServiceContracts.Services
             }
         }
 
+        public bool CheckCompanionStatus(Guid senderID)
+        {
+            bool isPlayerInOngoingMatch = _playersOngoingMatchesMap.TryGetValue(senderID, out Guid matchID);
+            if (isPlayerInOngoingMatch)
+            {
+                bool shouldMatchContinue = true;
+                Guid leavingPlayerID = Guid.Empty;
+                _matches.TryGetValue(matchID, out OngoingMatch match);
+                lock (match)
+                {
+                    if (match.CurrentGuesserID == senderID)
+                    {
+                        leavingPlayerID = match.CurrentSpymasterID;
+                        shouldMatchContinue = CheckPlayerStatus(match.CurrentSpymasterID);
+
+                    }
+                    else if (match.CurrentSpymasterID == senderID)
+                    {
+                        leavingPlayerID = match.CurrentGuesserID;
+                        shouldMatchContinue = CheckPlayerStatus(match.CurrentGuesserID);
+                    }
+                }
+                if (!shouldMatchContinue)
+                {
+                    HandleMatchAbandoned(match.MatchID, leavingPlayerID);
+                }
+                return shouldMatchContinue;
+            }
+            return false;
+        }
+
+        private bool CheckPlayerStatus(Guid toCheckID)
+        {
+            try
+            {
+                if (_connectedPlayers.TryGetValue(toCheckID, out IMatchCallback channel))
+                {
+                    channel.CheckPlayerStatus();
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
+            {
+                ServerLogger.Log.Warn("Could not check on player's connection status to MatchService: ", ex);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                ServerLogger.Log.Error("Unexpected exception while checking a player's connection status to MatchService: ", ex);
+                return false;
+            }
+        }
+
         private void RemoveMatch(OngoingMatch match)
         {
             _playersOngoingMatchesMap.TryRemove(match.CurrentSpymasterID, out _);

@@ -21,7 +21,9 @@ namespace Host
 
         static void Main()
         {
+            System.Threading.Thread.CurrentThread.CurrentUICulture = System.Globalization.CultureInfo.InvariantCulture;
             log4net.Config.XmlConfigurator.Configure();
+
             _authenticationHost = new ServiceHost(typeof(Services.Contracts.ServiceContracts.Services.AuthenticationService));
             _userHost = new ServiceHost(typeof(Services.Contracts.ServiceContracts.Services.UserService));
             _friendHost = new ServiceHost(typeof(Services.FriendService));

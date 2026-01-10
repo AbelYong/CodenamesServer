@@ -158,6 +158,40 @@ namespace Services.Contracts.ServiceContracts.Services
             return request;
         }
 
+        public CommunicationRequest SendEmailInvitation(Guid partyHostID, string email)
+        {
+            CommunicationRequest request = new CommunicationRequest();
+            if (_playerLobbyMap.TryGetValue(partyHostID, out string lobbyCode))
+            {
+                request = VerifyPlayerCanInvite(partyHostID, lobbyCode);
+                if (!request.IsSuccess)
+                {
+                    return request;
+                }
+
+                if (_lobbies.TryGetValue(lobbyCode, out Party party))
+                {
+                    bool wasEmailSent = _emailOperation.SendGameInvitationEmail(party.PartyHost.Username, email, lobbyCode);
+
+                    request.IsSuccess = wasEmailSent;
+                    request.StatusCode = wasEmailSent ? StatusCode.OK : StatusCode.CLIENT_UNREACHABLE;
+                }
+                else
+                {
+                    request.IsSuccess = false;
+                    request.StatusCode = StatusCode.NOT_FOUND;
+                }
+                return request;
+                
+            }
+            else
+            {
+                request.IsSuccess = false;
+                request.StatusCode = StatusCode.UNALLOWED;
+                return request;
+            }
+        }
+
         public CommunicationRequest InviteToParty(Player partyHost, Guid friendToInviteID, string lobbyCode)
         {
             CommunicationRequest request = new CommunicationRequest();

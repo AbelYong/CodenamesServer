@@ -89,5 +89,8 @@ namespace Services.Contracts.ServiceContracts.Managers
         /// by the server, its value will be ignored if set</param>
         [OperationContract(IsOneWay = false)]
         void NotifyPickedAssassin(AssassinPickedNotification notification);
+
+        [OperationContract(IsOneWay = false)]
+        bool CheckCompanionStatus(Guid senderID);
     }
 }

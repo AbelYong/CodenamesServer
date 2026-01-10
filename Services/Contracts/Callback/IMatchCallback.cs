@@ -90,5 +90,8 @@ namespace Services.Contracts.Callback
         /// </summary>
         [OperationContract(IsOneWay = true)]
         void NotifyStatsCouldNotBeSaved();
+
+        [OperationContract(IsOneWay = true)]
+        void CheckPlayerStatus();
     }
 }
