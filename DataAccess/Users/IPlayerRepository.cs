@@ -4,7 +4,7 @@ using DataAccess.Util;
 
 namespace DataAccess.Users
 {
-    public interface IPlayerDAO
+    public interface IPlayerRepository
     {
         Player GetPlayerByUserID(Guid userID);
         Player GetPlayerById(Guid playerId);

@@ -15,7 +15,7 @@ namespace DataAccess.Test.ScoreboardTests
     {
         private Mock<IDbContextFactory> _contextFactory;
         private Mock<ICodenamesContext> _context;
-        private Mock<IPlayerDAO> _playerDAO;
+        private Mock<IPlayerRepository> _playerDAO;
         private Mock<DbSet<Scoreboard>> _scoreboardSet;
         private ScoreboardDAO _scoreboardDAO;
         private List<Scoreboard> _data;
@@ -32,7 +32,7 @@ namespace DataAccess.Test.ScoreboardTests
             _contextFactory = new Mock<IDbContextFactory>();
             _contextFactory.Setup(f => f.Create()).Returns(_context.Object);
 
-            _playerDAO = new Mock<IPlayerDAO>();
+            _playerDAO = new Mock<IPlayerRepository>();
 
             _scoreboardDAO = new ScoreboardDAO(_contextFactory.Object, _playerDAO.Object);
         }

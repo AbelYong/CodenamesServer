@@ -3,7 +3,7 @@ using System;
 
 namespace DataAccess.Users
 {
-    public interface IUserDAO
+    public interface IUserRepository
     {
         Guid? Authenticate(string username, string password);
         PlayerRegistrationRequest SignIn(Player player, string password);

@@ -16,7 +16,7 @@ namespace Services.Tests.ContractTests
     [TestFixture]
     public class AuthenticationServiceTest
     {
-        private Mock<IUserDAO> _userDaoMock;
+        private Mock<IUserRepository> _userRepositoryMock;
         private Mock<IBanDAO> _banDaoMock;
         private Mock<IEmailManager> _emailManagerMock;
         private AuthenticationService _authService;
@@ -24,12 +24,12 @@ namespace Services.Tests.ContractTests
         [SetUp]
         public void Setup()
         {
-            _userDaoMock = new Mock<IUserDAO>();
+            _userRepositoryMock = new Mock<IUserRepository>();
             _banDaoMock = new Mock<IBanDAO>();
             _emailManagerMock = new Mock<IEmailManager>();
 
             _authService = new AuthenticationService(
-                _userDaoMock.Object,
+                _userRepositoryMock.Object,
                 _banDaoMock.Object,
                 _emailManagerMock.Object
             );
@@ -41,7 +41,7 @@ namespace Services.Tests.ContractTests
             string username = "validUser";
             string password = "validPassword";
             Guid userId = Guid.NewGuid();
-            _userDaoMock.Setup(u => u.Authenticate(username, password))
+            _userRepositoryMock.Setup(u => u.Authenticate(username, password))
                 .Returns(userId);
             _banDaoMock.Setup(b => b.GetActiveBan(userId))
                 .Returns((Ban)null);
@@ -65,7 +65,7 @@ namespace Services.Tests.ContractTests
             Guid userId = Guid.NewGuid();
             var timeout = new DateTimeOffset();
             var activeBan = new Ban { timeout = timeout };
-            _userDaoMock.Setup(u => u.Authenticate(username, password))
+            _userRepositoryMock.Setup(u => u.Authenticate(username, password))
                 .Returns(userId);
             _banDaoMock.Setup(b => b.GetActiveBan(userId))
                 .Returns(activeBan);
@@ -87,7 +87,7 @@ namespace Services.Tests.ContractTests
             string username = "wrongUser";
             string password = "wrongPassword";
             Guid userID = Guid.Empty;
-            _userDaoMock.Setup(u => u.Authenticate(username, password))
+            _userRepositoryMock.Setup(u => u.Authenticate(username, password))
                 .Returns((Guid?)null);
             AuthenticationRequest expected = new AuthenticationRequest
             { 
@@ -106,7 +106,7 @@ namespace Services.Tests.ContractTests
         {
             string username = "errorUser";
             string password = "password";
-            _userDaoMock.Setup(u => u.Authenticate(username, password))
+            _userRepositoryMock.Setup(u => u.Authenticate(username, password))
                 .Throws(new EntityException("DB Connection failed"));
             AuthenticationRequest expected = new AuthenticationRequest
             {
@@ -122,7 +122,7 @@ namespace Services.Tests.ContractTests
         [Test]
         public void Authenticate_GeneralException_ReturnsServerError()
         {
-            _userDaoMock.Setup(u => u.Authenticate(It.IsAny<string>(), It.IsAny<string>()))
+            _userRepositoryMock.Setup(u => u.Authenticate(It.IsAny<string>(), It.IsAny<string>()))
                 .Throws(new Exception("Unexpected error"));
             AuthenticationRequest expected = new AuthenticationRequest
             {
@@ -143,12 +143,33 @@ namespace Services.Tests.ContractTests
             string newPass = "ValidPass123";
             _emailManagerMock.Setup(m => m.ValidateVerificationCode(email, code, EmailType.PASSWORD_RESET))
                 .Returns(new ConfirmEmailRequest { IsSuccess = true });
-            _userDaoMock.Setup(u => u.ResetPassword(email, newPass))
+            _userRepositoryMock.Setup(u => u.ResetPassword(email, newPass))
                 .Returns(new UpdateRequest { IsSuccess = true });
             PasswordResetRequest expected = new PasswordResetRequest
             {
                 IsSuccess = true,
                 StatusCode = StatusCode.UPDATED,
+            };
+
+            var result = _authService.CompletePasswordReset(email, code, newPass);
+
+            Assert.That(result.Equals(expected));
+        }
+
+        [Test]
+        public void CompletePasswordReset_DbError_ServerError()
+        {
+            string email = "test@test.com";
+            string code = "123456";
+            string newPass = "ValidPass123";
+            _emailManagerMock.Setup(m => m.ValidateVerificationCode(email, code, EmailType.PASSWORD_RESET))
+                .Returns(new ConfirmEmailRequest { IsSuccess = true });
+            _userRepositoryMock.Setup(u => u.ResetPassword(email, newPass))
+                .Returns(new UpdateRequest { IsSuccess = false, ErrorType = ErrorType.DB_ERROR });
+            PasswordResetRequest expected = new PasswordResetRequest
+            {
+                IsSuccess = false,
+                StatusCode = StatusCode.SERVER_ERROR,
             };
 
             var result = _authService.CompletePasswordReset(email, code, newPass);
@@ -181,7 +202,7 @@ namespace Services.Tests.ContractTests
             var result = _authService.CompletePasswordReset(email, code, newPass);
 
             Assert.That(result.Equals(expected));
-            _userDaoMock.Verify(u => u.ResetPassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            _userRepositoryMock.Verify(u => u.ResetPassword(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
         }
 
         [Test]
@@ -192,7 +213,7 @@ namespace Services.Tests.ContractTests
             string newPass = "InvalidPass";
             _emailManagerMock.Setup(m => m.ValidateVerificationCode(email, code, EmailType.PASSWORD_RESET))
                 .Returns(new ConfirmEmailRequest { IsSuccess = true });
-            _userDaoMock.Setup(u => u.ResetPassword(email, newPass))
+            _userRepositoryMock.Setup(u => u.ResetPassword(email, newPass))
                 .Returns(new UpdateRequest { IsSuccess = false, ErrorType = ErrorType.INVALID_DATA });
             PasswordResetRequest expected = new PasswordResetRequest
             {
@@ -211,7 +232,7 @@ namespace Services.Tests.ContractTests
             string username = "User1";
             string oldPass = "OldPass";
             string newPass = "NewPass";
-            _userDaoMock.Setup(u => u.UpdatePassword(username, oldPass, newPass))
+            _userRepositoryMock.Setup(u => u.UpdatePassword(username, oldPass, newPass))
                 .Returns(new UpdateRequest { IsSuccess = true });
             CommunicationRequest expected = new CommunicationRequest
             {
@@ -230,7 +251,7 @@ namespace Services.Tests.ContractTests
             string username = "User1";
             string oldPass = "WrongOldPass";
             string newPass = "NewPass";
-            _userDaoMock.Setup(u => u.UpdatePassword(username, oldPass, newPass))
+            _userRepositoryMock.Setup(u => u.UpdatePassword(username, oldPass, newPass))
                 .Returns(new UpdateRequest { IsSuccess = false, ErrorType = ErrorType.UNALLOWED });
             CommunicationRequest expected = new CommunicationRequest
             {
@@ -246,7 +267,7 @@ namespace Services.Tests.ContractTests
         [Test]
         public void UpdatePassword_DbError_ReturnsServerError()
         {
-            _userDaoMock.Setup(u => u.UpdatePassword(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+            _userRepositoryMock.Setup(u => u.UpdatePassword(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
                 .Returns(new UpdateRequest { IsSuccess = false, ErrorType = ErrorType.DB_ERROR });
             CommunicationRequest expected = new CommunicationRequest
             {

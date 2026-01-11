@@ -10,9 +10,7 @@ using System.Threading;
 
 namespace Services.Contracts.ServiceContracts.Services
 {
-    [ServiceBehavior(
-        InstanceContextMode = InstanceContextMode.Single,
-        ConcurrencyMode = ConcurrencyMode.Multiple)]
+    [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
     public class MatchmakingService : IMatchmakingManager
     {
         public const int MAX_MATCH_STORAGE = 60;
@@ -51,6 +49,9 @@ namespace Services.Contracts.ServiceContracts.Services
             {
                 request.IsSuccess = true;
                 request.StatusCode = StatusCode.OK;
+
+                string audit = string.Format("{0} has connected to MatchmakingService", ServerLogger.GetPlayerIdentifier(playerID));
+                ServerLogger.Log.Info(audit);
             }
             else
             {
@@ -58,6 +59,9 @@ namespace Services.Contracts.ServiceContracts.Services
                 hasConnected = _connectedPlayers.TryAdd(playerID, currentClientChannel);
                 request.IsSuccess = hasConnected;
                 request.StatusCode = hasConnected ? StatusCode.OK : StatusCode.UNAUTHORIZED;
+
+                string audit = string.Format("Connection request to MatchmakingService by {0} procesed with code {1}", ServerLogger.GetPlayerIdentifier(playerID), request.StatusCode);
+                ServerLogger.Log.Info(audit);
             }
             return request;
         }
@@ -68,6 +72,9 @@ namespace Services.Contracts.ServiceContracts.Services
             if (hasDisconnected)
             {
                 CancelPendingMatches(playerID);
+
+                string audit = string.Format("{0} has disconnected from MatchmakingService", ServerLogger.GetPlayerIdentifier(playerID));
+                ServerLogger.Log.Info(audit);
             }
         }
 

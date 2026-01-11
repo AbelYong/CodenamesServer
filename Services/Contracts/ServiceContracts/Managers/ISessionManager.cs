@@ -55,7 +55,8 @@ namespace Services.Contracts.ServiceContracts.Managers
         [OperationContract(IsOneWay = true)]
         void NotifyFriendshipEnded(Player friendA, Player friendB);
 
-        bool IsPlayerOnline(Guid playerId); //Used by moderation service
-        void KickPlayer(Guid playerID, KickReason reason); //Used by moderation service
+        Player GetOnlinePlayer(Guid playerID);
+        bool IsPlayerOnline(Guid playerId);
+        void KickPlayer(Guid playerID, KickReason reason);
     }
 }

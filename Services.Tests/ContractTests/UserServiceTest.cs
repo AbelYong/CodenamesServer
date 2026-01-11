@@ -13,16 +13,16 @@ namespace Services.Tests.ContractTests
     [TestFixture]
     public class UserServiceTest
     {
-        private Mock<IUserDAO> _userDaoMock;
-        private Mock<IPlayerDAO> _playerDaoMock;
+        private Mock<IUserRepository> _userRepositoryMock;
+        private Mock<IPlayerRepository> _playerRepositoryMock;
         private UserService _userService;
 
         [SetUp]
         public void Setup()
         {
-            _userDaoMock = new Mock<IUserDAO>();
-            _playerDaoMock = new Mock<IPlayerDAO>();
-            _userService = new UserService(_userDaoMock.Object, _playerDaoMock.Object);
+            _userRepositoryMock = new Mock<IUserRepository>();
+            _playerRepositoryMock = new Mock<IPlayerRepository>();
+            _userService = new UserService(_userRepositoryMock.Object, _playerRepositoryMock.Object);
         }
 
         [Test]
@@ -31,7 +31,7 @@ namespace Services.Tests.ContractTests
             Guid userId = Guid.NewGuid();
             Guid playerId = Guid.NewGuid();
             var dbPlayer = new DataAccess.Player { playerID = playerId };
-            _playerDaoMock.Setup(p => p.GetPlayerByUserID(userId))
+            _playerRepositoryMock.Setup(p => p.GetPlayerByUserID(userId))
                 .Returns(dbPlayer);
             Player expected = new Player { PlayerID = playerId };
 
@@ -44,7 +44,7 @@ namespace Services.Tests.ContractTests
         public void GetPlayerByUserID_UserNotExists_ReturnsPlayerWithEmptyID()
         {
             Guid notFoundUserId = Guid.NewGuid();
-            _playerDaoMock.Setup(p => p.GetPlayerByUserID(notFoundUserId))
+            _playerRepositoryMock.Setup(p => p.GetPlayerByUserID(notFoundUserId))
                 .Returns((DataAccess.Player)null);
 
             var result = _userService.GetPlayerByUserID(notFoundUserId);
@@ -93,7 +93,7 @@ namespace Services.Tests.ContractTests
                 IsEmailValid = true,
                 IsPasswordValid = true
             };
-            _userDaoMock.Setup(u => u.SignIn(It.IsAny<DataAccess.Player>(), It.IsAny<string>()))
+            _userRepositoryMock.Setup(u => u.SignIn(It.IsAny<DataAccess.Player>(), It.IsAny<string>()))
                 .Returns(dbResponse);
             SignInRequest expected = new SignInRequest
             {
@@ -114,7 +114,7 @@ namespace Services.Tests.ContractTests
         public void SignIn_InvalidData_ReturnsWrongData()
         {
             var player = CreateTestPlayer();
-            _userDaoMock.Setup(u => u.SignIn(It.IsAny<DataAccess.Player>(), It.IsAny<string>()))
+            _userRepositoryMock.Setup(u => u.SignIn(It.IsAny<DataAccess.Player>(), It.IsAny<string>()))
                 .Returns(new PlayerRegistrationRequest
                 {
                     IsSuccess = false,
@@ -137,7 +137,7 @@ namespace Services.Tests.ContractTests
         public void SignIn_DuplicateEntry_ReturnsUnallowed()
         {
             var player = CreateTestPlayer();
-            _userDaoMock.Setup(u => u.SignIn(It.IsAny<DataAccess.Player>(), It.IsAny<string>()))
+            _userRepositoryMock.Setup(u => u.SignIn(It.IsAny<DataAccess.Player>(), It.IsAny<string>()))
                 .Returns(new PlayerRegistrationRequest
                 {
                     IsSuccess = false,
@@ -157,10 +157,10 @@ namespace Services.Tests.ContractTests
         }
 
         [Test]
-        public void SignIn_DaoMissingData_ReturnsMissingData()
+        public void SignIn_MissingData_ReturnsMissingData()
         {
             var player = CreateTestPlayer();
-            _userDaoMock.Setup(u => u.SignIn(It.IsAny<DataAccess.Player>(), It.IsAny<string>()))
+            _userRepositoryMock.Setup(u => u.SignIn(It.IsAny<DataAccess.Player>(), It.IsAny<string>()))
                 .Returns(new PlayerRegistrationRequest
                 {
                     IsSuccess = false,
@@ -181,7 +181,7 @@ namespace Services.Tests.ContractTests
         public void SignIn_DbError_ReturnsServerError()
         {
             var player = CreateTestPlayer();
-            _userDaoMock.Setup(u => u.SignIn(It.IsAny<DataAccess.Player>(), It.IsAny<string>()))
+            _userRepositoryMock.Setup(u => u.SignIn(It.IsAny<DataAccess.Player>(), It.IsAny<string>()))
                 .Returns(new PlayerRegistrationRequest
                 {
                     IsSuccess = false,
@@ -202,7 +202,7 @@ namespace Services.Tests.ContractTests
         public void UpdateProfile_Success_ReturnsUpdated()
         {
             var player = CreateTestPlayer();
-            _playerDaoMock.Setup(p => p.UpdateProfile(It.IsAny<DataAccess.Player>()))
+            _playerRepositoryMock.Setup(p => p.UpdateProfile(It.IsAny<DataAccess.Player>()))
                 .Returns(new OperationResult { Success = true });
             CommunicationRequest expected = new CommunicationRequest
             {
@@ -219,7 +219,7 @@ namespace Services.Tests.ContractTests
         public void UpdateProfile_DbError_ReturnsServerError()
         {
             var player = CreateTestPlayer();
-            _playerDaoMock.Setup(p => p.UpdateProfile(It.IsAny<DataAccess.Player>()))
+            _playerRepositoryMock.Setup(p => p.UpdateProfile(It.IsAny<DataAccess.Player>()))
                 .Returns(new OperationResult { Success = false, ErrorType = ErrorType.DB_ERROR });
             CommunicationRequest expected = new CommunicationRequest
             {
@@ -233,10 +233,10 @@ namespace Services.Tests.ContractTests
         }
 
         [Test]
-        public void UpdateProfile_DaoNotFound_ReturnsNotFound()
+        public void UpdateProfile_DataNotFound_ReturnsNotFound()
         {
             var player = CreateTestPlayer();
-            _playerDaoMock.Setup(p => p.UpdateProfile(It.IsAny<DataAccess.Player>()))
+            _playerRepositoryMock.Setup(p => p.UpdateProfile(It.IsAny<DataAccess.Player>()))
                 .Returns(new OperationResult { Success = false, ErrorType = ErrorType.NOT_FOUND });
             CommunicationRequest expected = new CommunicationRequest
             {
@@ -250,10 +250,10 @@ namespace Services.Tests.ContractTests
         }
 
         [Test]
-        public void UpdateProfile_DaoDuplicate_ReturnsUnallowed()
+        public void UpdateProfile_DuplicateData_ReturnsUnallowed()
         {
             var player = CreateTestPlayer();
-            _playerDaoMock.Setup(p => p.UpdateProfile(It.IsAny<DataAccess.Player>()))
+            _playerRepositoryMock.Setup(p => p.UpdateProfile(It.IsAny<DataAccess.Player>()))
                 .Returns(new OperationResult { Success = false, ErrorType = ErrorType.DUPLICATE });
             CommunicationRequest expected = new CommunicationRequest
             {
@@ -270,7 +270,7 @@ namespace Services.Tests.ContractTests
         public void UpdateProfile_NullResult_ReturnsMissingData()
         {
             var player = CreateTestPlayer();
-            _playerDaoMock.Setup(p => p.UpdateProfile(It.IsAny<DataAccess.Player>()))
+            _playerRepositoryMock.Setup(p => p.UpdateProfile(It.IsAny<DataAccess.Player>()))
                 .Returns((OperationResult)null);
             CommunicationRequest expected = new CommunicationRequest
             {

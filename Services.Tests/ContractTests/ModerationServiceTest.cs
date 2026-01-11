@@ -19,7 +19,7 @@ namespace Services.Tests.ContractTests
         private Mock<ISessionManager> _sessionManagerMock;
         private Mock<IReportDAO> _reportDaoMock;
         private Mock<IBanDAO> _banDaoMock;
-        private Mock<IPlayerDAO> _playerDaoMock;
+        private Mock<IPlayerRepository> _playerRepositoryMock;
         private ModerationService _moderationService;
 
         [SetUp]
@@ -28,13 +28,13 @@ namespace Services.Tests.ContractTests
             _sessionManagerMock = new Mock<ISessionManager>();
             _reportDaoMock = new Mock<IReportDAO>();
             _banDaoMock = new Mock<IBanDAO>();
-            _playerDaoMock = new Mock<IPlayerDAO>();
+            _playerRepositoryMock = new Mock<IPlayerRepository>();
 
             _moderationService = new ModerationService(
                 _sessionManagerMock.Object,
                 _reportDaoMock.Object,
                 _banDaoMock.Object,
-                _playerDaoMock.Object
+                _playerRepositoryMock.Object
             );
         }
 
@@ -61,7 +61,7 @@ namespace Services.Tests.ContractTests
             Guid reporterId = Guid.NewGuid();
             Guid reportedId = Guid.NewGuid();
             _sessionManagerMock.Setup(s => s.IsPlayerOnline(reporterId)).Returns(true);
-            _playerDaoMock.Setup(p => p.GetPlayerById(reporterId)).Returns((DataAccess.Player)null);
+            _playerRepositoryMock.Setup(p => p.GetPlayerById(reporterId)).Returns((DataAccess.Player)null);
             CommunicationRequest expected = new CommunicationRequest
             {
                 IsSuccess = false,
@@ -79,9 +79,9 @@ namespace Services.Tests.ContractTests
             Guid reporterId = Guid.NewGuid();
             Guid reportedId = Guid.NewGuid();
             _sessionManagerMock.Setup(s => s.IsPlayerOnline(reporterId)).Returns(true);
-            _playerDaoMock.Setup(p => p.GetPlayerById(reporterId))
+            _playerRepositoryMock.Setup(p => p.GetPlayerById(reporterId))
                 .Returns(new DataAccess.Player { playerID = reporterId, userID = Guid.NewGuid() });
-            _playerDaoMock.Setup(p => p.GetPlayerById(reportedId)).Returns((DataAccess.Player)null);
+            _playerRepositoryMock.Setup(p => p.GetPlayerById(reportedId)).Returns((DataAccess.Player)null);
             CommunicationRequest expected = new CommunicationRequest
             {
                 IsSuccess = false,
@@ -232,10 +232,10 @@ namespace Services.Tests.ContractTests
         {
             _sessionManagerMock.Setup(s => s.IsPlayerOnline(reporterPlayerId)).Returns(true);
 
-            _playerDaoMock.Setup(p => p.GetPlayerById(reporterPlayerId))
+            _playerRepositoryMock.Setup(p => p.GetPlayerById(reporterPlayerId))
                 .Returns(new DataAccess.Player { playerID = reporterPlayerId, userID = reporterUserId });
 
-            _playerDaoMock.Setup(p => p.GetPlayerById(reportedPlayerId))
+            _playerRepositoryMock.Setup(p => p.GetPlayerById(reportedPlayerId))
                 .Returns(new DataAccess.Player { playerID = reportedPlayerId, userID = reportedUserId });
         }
     }

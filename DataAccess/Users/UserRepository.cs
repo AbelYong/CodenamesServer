@@ -11,17 +11,17 @@ using System.Linq;
 
 namespace DataAccess.Users
 {
-    public class UserDAO : IUserDAO
+    public class UserRepository : IUserRepository
     {
         private readonly IDbContextFactory _contextFactory;
-        private readonly IPlayerDAO _playerDAO;
+        private readonly IPlayerRepository _playerRepository;
 
-        public UserDAO() : this (new DbContextFactory(), new PlayerDAO()) { }
+        public UserRepository() : this (new DbContextFactory(), new PlayerRepository()) { }
 
-        public UserDAO(IDbContextFactory contextFactory, IPlayerDAO playerDAO)
+        public UserRepository(IDbContextFactory contextFactory, IPlayerRepository playerRepository)
         {
             _contextFactory = contextFactory;
-            _playerDAO = playerDAO;
+            _playerRepository = playerRepository;
         }
 
         /// <summary>
@@ -53,13 +53,14 @@ namespace DataAccess.Users
 
         public PlayerRegistrationRequest SignIn(Player player, string password)
         {
-            PlayerRegistrationRequest request = ValidateNewUser(player, password);
-            if (!request.IsSuccess)
-            {
-                return request;
-            }
+            PlayerRegistrationRequest request = new PlayerRegistrationRequest();
             try
             {
+                request = ValidateNewUser(player, password);
+                if (!request.IsSuccess)
+                {
+                    return request;
+                }
                 SetRequestToValid(request);
                 Guid? newUserID = null;
                 using (var context = _contextFactory.Create())
@@ -107,12 +108,12 @@ namespace DataAccess.Users
         private PlayerRegistrationRequest ValidateNewUser(Player player, string password)
         {
             PlayerRegistrationRequest request = new PlayerRegistrationRequest();
-            request.IsSuccess = true; //Start assuming it's valid
+            request.IsSuccess = true;
             if (player == null || player.User == null)
             {
                 request.IsSuccess = false;
                 request.ErrorType = ErrorType.MISSING_DATA;
-                return request; //Stop, following validations will throw NullReference
+                return request;
             }
 
             if (!UserValidator.ValidateEmailFormat(player.User.email))
@@ -129,14 +130,14 @@ namespace DataAccess.Users
                 request.IsPasswordValid = false;
             }
 
-            if (!_playerDAO.ValidateEmailNotDuplicated(player.User.email))
+            if (!_playerRepository.ValidateEmailNotDuplicated(player.User.email))
             {
                 request.IsSuccess = false;
                 request.ErrorType = ErrorType.DUPLICATE;
                 request.IsEmailDuplicate = true;
             }
 
-            if (!_playerDAO.ValidateUsernameNotDuplicated(player.username))
+            if (!_playerRepository.ValidateUsernameNotDuplicated(player.username))
             {
                 request.IsSuccess = false;
                 request.ErrorType = ErrorType.DUPLICATE;

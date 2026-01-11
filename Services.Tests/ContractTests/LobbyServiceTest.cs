@@ -15,7 +15,7 @@ namespace Services.Tests.ContractTests
     [TestFixture]
     public class LobbyServiceTest
     {
-        private Mock<IPlayerDAO> _playerDaoMock;
+        private Mock<IPlayerRepository> _playerRepositoryMock;
         private Mock<ICallbackProvider> _callbackProviderMock;
         private Mock<IEmailOperation> _emailOperationMock;
         private LobbyService _lobbyService;
@@ -24,14 +24,14 @@ namespace Services.Tests.ContractTests
         [SetUp]
         public void Setup()
         {
-            _playerDaoMock = new Mock<IPlayerDAO>();
+            _playerRepositoryMock = new Mock<IPlayerRepository>();
             _callbackProviderMock = new Mock<ICallbackProvider>();
             _emailOperationMock = new Mock<IEmailOperation>();
             _callbackQueue = new System.Collections.Generic.Queue<ILobbyCallback>();
             _callbackProviderMock.Setup(cp => cp.GetCallback<ILobbyCallback>())
                 .Returns(() => _callbackQueue.Count > 0 ? _callbackQueue.Dequeue() : new Mock<ILobbyCallback>().Object);
 
-            _lobbyService = new LobbyService(_playerDaoMock.Object, _callbackProviderMock.Object, _emailOperationMock.Object);
+            _lobbyService = new LobbyService(_callbackProviderMock.Object, _playerRepositoryMock.Object, _emailOperationMock.Object);
         }
 
         [Test]
@@ -124,7 +124,7 @@ namespace Services.Tests.ContractTests
             var guestCallback = new Mock<ILobbyCallback>();
             _callbackQueue.Enqueue(guestCallback.Object);
             _lobbyService.Connect(guestId);
-            _playerDaoMock.Setup(d => d.GetEmailByPlayerID(guestId))
+            _playerRepositoryMock.Setup(d => d.GetEmailByPlayerID(guestId))
                 .Returns(guestEmail);
             _emailOperationMock.Setup(e => e.SendGameInvitationEmail(host.Username, guestEmail, lobbyCode))
                 .Returns(true);
@@ -143,7 +143,7 @@ namespace Services.Tests.ContractTests
             _lobbyService.Connect(host.PlayerID.Value);
             var createResult = _lobbyService.CreateParty(host);
             string lobbyCode = createResult.LobbyCode;
-            _playerDaoMock.Setup(d => d.GetEmailByPlayerID(offlineGuestId)).Returns("offline@test.com");
+            _playerRepositoryMock.Setup(d => d.GetEmailByPlayerID(offlineGuestId)).Returns("offline@test.com");
             _emailOperationMock.Setup(e => e.SendGameInvitationEmail(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns(true);
 
             var result = _lobbyService.InviteToParty(host, offlineGuestId, lobbyCode);

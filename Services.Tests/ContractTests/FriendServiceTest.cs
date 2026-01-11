@@ -17,7 +17,7 @@ namespace Services.Tests.ContractTests
     {
         private Mock<ICallbackProvider> _callbackProviderMock;
         private Mock<IFriendDAO> _friendDaoMock;
-        private Mock<IPlayerDAO> _playerDaoMock;
+        private Mock<IPlayerRepository> _playerRepositoryMock;
         private FriendService _friendService;
         private Queue<IFriendCallback> _callbackQueue;
 
@@ -26,7 +26,7 @@ namespace Services.Tests.ContractTests
         {
             _callbackProviderMock = new Mock<ICallbackProvider>();
             _friendDaoMock = new Mock<IFriendDAO>();
-            _playerDaoMock = new Mock<IPlayerDAO>();
+            _playerRepositoryMock = new Mock<IPlayerRepository>();
             _callbackQueue = new Queue<IFriendCallback>();
             _callbackProviderMock.Setup(cp => cp.GetCallback<IFriendCallback>())
                 .Returns(() => _callbackQueue.Count > 0 ? _callbackQueue.Dequeue() : CreateMockCallback().Object);
@@ -34,7 +34,7 @@ namespace Services.Tests.ContractTests
             _friendService = new FriendService(
                 _callbackProviderMock.Object,
                 _friendDaoMock.Object,
-                _playerDaoMock.Object
+                _playerRepositoryMock.Object
             );
         }
 
@@ -79,7 +79,7 @@ namespace Services.Tests.ContractTests
             Guid fromId = Guid.NewGuid();
             Guid toId = Guid.NewGuid();
             var fromPlayerEntity = CreateDataAccessPlayer(fromId, "SenderUser");
-            _playerDaoMock.Setup(p => p.GetPlayerById(fromId))
+            _playerRepositoryMock.Setup(p => p.GetPlayerById(fromId))
                 .Returns(fromPlayerEntity);
             _friendDaoMock.Setup(d => d.SendFriendRequest(fromId, toId))
                 .Returns(new OperationResult { Success = true });
@@ -138,7 +138,7 @@ namespace Services.Tests.ContractTests
             Guid meId = Guid.NewGuid();
             Guid requesterId = Guid.NewGuid();
             var mePlayerEntity = CreateDataAccessPlayer(meId, "MeUser");
-            _playerDaoMock.Setup(p => p.GetPlayerById(meId))
+            _playerRepositoryMock.Setup(p => p.GetPlayerById(meId))
                 .Returns(mePlayerEntity);
             _friendDaoMock.Setup(d => d.AcceptFriendRequest(meId, requesterId))
                 .Returns(new OperationResult { Success = true });
@@ -181,7 +181,7 @@ namespace Services.Tests.ContractTests
             Guid meId = Guid.NewGuid();
             Guid requesterId = Guid.NewGuid();
             var mePlayerEntity = CreateDataAccessPlayer(meId, "MeUser");
-            _playerDaoMock.Setup(p => p.GetPlayerById(meId)).Returns(mePlayerEntity);
+            _playerRepositoryMock.Setup(p => p.GetPlayerById(meId)).Returns(mePlayerEntity);
             _friendDaoMock.Setup(d => d.RejectFriendRequest(meId, requesterId))
                 .Returns(new OperationResult { Success = true });
             var requesterCallback = CreateMockCallback();
@@ -221,7 +221,7 @@ namespace Services.Tests.ContractTests
             Guid meId = Guid.NewGuid();
             Guid friendId = Guid.NewGuid();
             var mePlayerEntity = CreateDataAccessPlayer(meId, "MeUser");
-            _playerDaoMock.Setup(p => p.GetPlayerById(meId)).Returns(mePlayerEntity);
+            _playerRepositoryMock.Setup(p => p.GetPlayerById(meId)).Returns(mePlayerEntity);
             _friendDaoMock.Setup(d => d.RemoveFriend(meId, friendId))
                 .Returns(new OperationResult { Success = true });
             var friendCallback = CreateMockCallback();

@@ -100,9 +100,9 @@
     <Compile Include="Users\FriendDAO.cs" />
     <Compile Include="Moderation\IBanDAO.cs" />
     <Compile Include="Users\IFriendDAO.cs" />
-    <Compile Include="Users\IPlayerDAO.cs" />
+    <Compile Include="Users\IPlayerRepository.cs" />
     <Compile Include="Moderation\IReportDAO.cs" />
-    <Compile Include="Users\IUserDAO.cs" />
+    <Compile Include="Users\IUserRepository.cs" />
     <Compile Include="Player.cs">
       <DependentUpon>codenames.tt</DependentUpon>
     </Compile>
@@ -118,8 +118,8 @@
     <Compile Include="DataRequests\DataRequest.cs" />
     <Compile Include="DataRequests\ErrorType.cs" />
     <Compile Include="Util\OperationResult.cs" />
-    <Compile Include="Users\PlayerDAO.cs" />
-    <Compile Include="Users\UserDAO.cs" />
+    <Compile Include="Users\PlayerRepository.cs" />
+    <Compile Include="Users\UserRepository.cs" />
     <Compile Include="Validators\PlayerValidator.cs" />
     <Compile Include="Validators\UserValidator.cs" />
   </ItemGroup>

@@ -12,19 +12,19 @@ namespace DataAccess.Scoreboards
     public class ScoreboardDAO : IScoreboardDAO
     {
         private readonly IDbContextFactory _contextFactory;
-        private readonly IPlayerDAO _playerDAO;
+        private readonly IPlayerRepository _playerRepository;
 
-        public ScoreboardDAO() : this(new DbContextFactory(), new PlayerDAO()) { }
+        public ScoreboardDAO() : this(new DbContextFactory(), new PlayerRepository()) { }
 
-        public ScoreboardDAO(IDbContextFactory contextFactory, IPlayerDAO playerDAO)
+        public ScoreboardDAO(IDbContextFactory contextFactory, IPlayerRepository playerRepository)
         {
             _contextFactory = contextFactory;
-            _playerDAO = playerDAO;
+            _playerRepository = playerRepository;
         }
 
         public bool UpdateMatchesWon(Guid playerID)
         {
-            if (_playerDAO.VerifyIsPlayerGuest(playerID))
+            if (_playerRepository.VerifyIsPlayerGuest(playerID))
             {
                 return true;
             }
@@ -70,7 +70,7 @@ namespace DataAccess.Scoreboards
 
         public bool UpdateFastestMatchRecord(Guid playerID, TimeSpan matchLength)
         {
-            if (_playerDAO.VerifyIsPlayerGuest(playerID))
+            if (_playerRepository.VerifyIsPlayerGuest(playerID))
             {
                 return true;
             }
@@ -126,7 +126,7 @@ namespace DataAccess.Scoreboards
 
         public bool UpdateAssassinsPicked(Guid playerID)
         {
-            if (_playerDAO.VerifyIsPlayerGuest(playerID))
+            if (_playerRepository.VerifyIsPlayerGuest(playerID))
             {
                 return true;
             }

@@ -1,17 +1,22 @@
 ﻿using log4net;
+using Services.Contracts.ServiceContracts.Managers;
+using Services.Contracts.ServiceContracts.Services;
 using Services.DTO.DataContract;
+using System;
 
 namespace Services.Operations
 {
     public static class ServerLogger
     {
         public static readonly ILog Log = LogManager.GetLogger(typeof(ServerLogger));
+        private static readonly ISessionManager _sessionService = SessionService.Instance;
 
-        public static string GetPlayerIdentifier(Player player)
+        public static string GetPlayerIdentifier(Guid playerID)
         {
-            if (player == null)
+            Player player = GetPlayer(playerID);
+            if (player.PlayerID == Guid.Empty)
             {
-                return "WARNING: identification requested for NULL reference player object";
+                return "WARNING: identification requested for player with Empty playerID";
             }
             if (!player.PlayerID.HasValue)
             {
@@ -34,6 +39,16 @@ namespace Services.Operations
             {
                 return player.PlayerID.ToString();
             }
+        }
+
+        private static Player GetPlayer(Guid playerID)
+        {
+            Player player = _sessionService.GetOnlinePlayer(playerID);
+            if (player == null)
+            {
+                return new Player { PlayerID = Guid.Empty };
+            }
+            return player;
         }
     }
 }

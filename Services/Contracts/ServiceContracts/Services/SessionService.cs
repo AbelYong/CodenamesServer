@@ -56,8 +56,6 @@ namespace Services.Contracts.ServiceContracts.Services
             {
                 if (!_playersOnline.TryAdd(player, currentClientChannel))
                 {
-                    // If player is currently online, kick them from their previous login
-                    // wether they'll be allowed to connect is determined by if the kick was sucessful
                     request.IsSuccess = HandleDuplicateLogin(player, currentClientChannel);
                     if (!request.IsSuccess)
                     {
@@ -80,7 +78,7 @@ namespace Services.Contracts.ServiceContracts.Services
 
             request.IsSuccess = true;
             request.StatusCode = StatusCode.OK;
-            string playerOnlineMessage = string.Format("{0} has connected to SessionService", ServerLogger.GetPlayerIdentifier(player));
+            string playerOnlineMessage = string.Format("{0} has connected to SessionService", ServerLogger.GetPlayerIdentifier(playerID));
             ServerLogger.Log.Info(message:playerOnlineMessage);
             return request;
         }
@@ -166,6 +164,7 @@ namespace Services.Contracts.ServiceContracts.Services
 
             Dictionary<Player, ISessionCallback> playersOnlineSnapshot = new Dictionary<Player, ISessionCallback>();
 
+            string identifier = !player.IsGuest ? playerID.ToString() : player.Username;
             lock (_playersOnline)
             {
                 if (_playersOnline.TryRemove(player, out ISessionCallback _))
@@ -180,7 +179,7 @@ namespace Services.Contracts.ServiceContracts.Services
 
             Dictionary<Player, ISessionCallback> friendCallbacks = GetFriendsOnlineChannels(friends, playersOnlineSnapshot);
             NotifyDisconnectToOnlineFriends(friendCallbacks, playerID);
-            string playerOfflineMessage = string.Format("{0} has disconnected from SessionService", ServerLogger.GetPlayerIdentifier(player));
+            string playerOfflineMessage = string.Format("{0} has disconnected from SessionService", identifier);
             ServerLogger.Log.Info(message: playerOfflineMessage);
         }
 
@@ -278,6 +277,30 @@ namespace Services.Contracts.ServiceContracts.Services
             }
         }
 
+        public void KickPlayer(Guid playerID, KickReason reason)
+        {
+            var onlinePlayer = _playersOnline.FirstOrDefault(p => p.Key.PlayerID == playerID);
+
+            if (onlinePlayer.Key != null)
+            {
+                ISessionCallback callback = onlinePlayer.Value;
+                try
+                {
+                    callback.NotifyKicked(reason);
+                }
+                catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
+                {
+                    RemoveFaultedChannel(onlinePlayer.Key);
+                    ServerLogger.Log.Warn("Exception while sending kick notification:", ex);
+                }
+                catch (Exception ex)
+                {
+                    ServerLogger.Log.Error("Unexpected exception while sending kick notification:", ex);
+                }
+                Disconnect(onlinePlayer.Key);
+            }
+        }
+
         private void RemoveFaultedChannel(Player player)
         {
             if (_playersOnline.TryGetValue(player, out ISessionCallback faultedChannel))
@@ -308,29 +331,11 @@ namespace Services.Contracts.ServiceContracts.Services
                 collection.Remove(failedEntry);
             }
         }
-        
-        public void KickPlayer(Guid playerID, KickReason reason)
+
+        public Player GetOnlinePlayer(Guid playerID)
         {
             var onlinePlayer = _playersOnline.FirstOrDefault(p => p.Key.PlayerID == playerID);
-
-            if (onlinePlayer.Key != null)
-            {
-                ISessionCallback callback = onlinePlayer.Value;
-                try
-                {
-                    callback.NotifyKicked(reason);
-                }
-                catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
-                {
-                    RemoveFaultedChannel(onlinePlayer.Key);
-                    ServerLogger.Log.Warn("Exception while sending kick notification:", ex);
-                }
-                catch (Exception ex)
-                {
-                    ServerLogger.Log.Error("Unexpected exception while sending kick notification:", ex);
-                }
-                Disconnect(onlinePlayer.Key);
-            }
+            return onlinePlayer.Key;
         }
 
         public bool IsPlayerOnline(Guid playerId)

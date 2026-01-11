@@ -16,16 +16,16 @@ namespace Services.Contracts.ServiceContracts.Services
         private readonly ISessionManager _sessionService;
         private readonly IReportDAO _reportDAO;
         private readonly IBanDAO _banDAO;
-        private readonly IPlayerDAO _playerDAO;
+        private readonly IPlayerRepository _playerRepository;
 
-        public ModerationService() : this (SessionService.Instance, new ReportDAO(), new BanDAO(), new PlayerDAO()) { }
+        public ModerationService() : this (SessionService.Instance, new ReportDAO(), new BanDAO(), new PlayerRepository()) { }
 
-        public ModerationService(ISessionManager sessionService, IReportDAO reportDAO, IBanDAO banDAO, IPlayerDAO playerDAO)
+        public ModerationService(ISessionManager sessionService, IReportDAO reportDAO, IBanDAO banDAO, IPlayerRepository playerRepository)
         {
             _sessionService = sessionService;
             _reportDAO = reportDAO;
             _banDAO = banDAO;
-            _playerDAO = playerDAO;
+            _playerRepository = playerRepository;
         }
 
         public CommunicationRequest ReportPlayer(Guid reporterPlayerID, Guid reportedPlayerID, string reason)
@@ -41,8 +41,8 @@ namespace Services.Contracts.ServiceContracts.Services
 
             try
             {
-                var reporterEntity = _playerDAO.GetPlayerById(reporterPlayerID);
-                var reportedEntity = _playerDAO.GetPlayerById(reportedPlayerID);
+                var reporterEntity = _playerRepository.GetPlayerById(reporterPlayerID);
+                var reportedEntity = _playerRepository.GetPlayerById(reportedPlayerID);
 
                 if (reporterEntity == null || reportedEntity == null)
                 {

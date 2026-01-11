@@ -12,8 +12,8 @@ namespace DataAccess.Tests.UserTests
     {
         private Mock<IDbContextFactory> _contextFactory;
         private Mock<ICodenamesContext> _context;
-        private Mock<IPlayerDAO> _playerDAO;
-        private UserDAO _userDAO;
+        private Mock<IPlayerRepository> _playerDAO;
+        private UserRepository _userRepository;
 
         [SetUp]
         public void Setup()
@@ -23,9 +23,9 @@ namespace DataAccess.Tests.UserTests
             _contextFactory = new Mock<IDbContextFactory>();
             _contextFactory.Setup(f => f.Create()).Returns(_context.Object);
 
-            _playerDAO = new Mock<IPlayerDAO>();
+            _playerDAO = new Mock<IPlayerRepository>();
 
-            _userDAO = new UserDAO(_contextFactory.Object, _playerDAO.Object);
+            _userRepository = new UserRepository(_contextFactory.Object, _playerDAO.Object);
         }
 
         [Test]
@@ -45,7 +45,7 @@ namespace DataAccess.Tests.UserTests
             })
             .Returns(0);
 
-            Guid? result = _userDAO.Authenticate(username, password);
+            Guid? result = _userRepository.Authenticate(username, password);
 
             Assert.That(result, Is.EqualTo(expectedUserId));
         }
@@ -66,7 +66,7 @@ namespace DataAccess.Tests.UserTests
             })
             .Returns(0);
 
-            Guid? result = _userDAO.Authenticate(username, password);
+            Guid? result = _userRepository.Authenticate(username, password);
 
             Assert.That(result, Is.Null);
         }
@@ -80,7 +80,7 @@ namespace DataAccess.Tests.UserTests
             _context.Setup(c => c.uspLogin(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<ObjectParameter>()))
                 .Throws(new EntityException("Connection failed"));
 
-            Assert.Throws<EntityException>(() => _userDAO.Authenticate(username, password));
+            Assert.Throws<EntityException>(() => _userRepository.Authenticate(username, password));
         }
     }
 }

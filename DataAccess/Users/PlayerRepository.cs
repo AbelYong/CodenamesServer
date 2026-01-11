@@ -10,12 +10,13 @@ using System.Linq;
 
 namespace DataAccess.Users
 {
-    public class PlayerDAO : IPlayerDAO
+    public class PlayerRepository : IPlayerRepository
     {
         private readonly IDbContextFactory _contextFactory;
-        public PlayerDAO() : this (new DbContextFactory()) { }
 
-        public PlayerDAO(IDbContextFactory contextFactory)
+        public PlayerRepository() : this (new DbContextFactory()) { }
+
+        public PlayerRepository(IDbContextFactory contextFactory)
         {
             _contextFactory = contextFactory;
         }
@@ -81,23 +82,10 @@ namespace DataAccess.Users
         /// <returns>True if no matching email was found; false otherwise.</returns>
         public bool ValidateEmailNotDuplicated(string email)
         {
-            try
+            using (var context = _contextFactory.Create())
             {
-                using (var context = _contextFactory.Create())
-                {
-                    bool emailInUse = context.Users.Any(u => u.email == email);
-                    return !emailInUse;
-                }
-            }
-            catch (Exception ex) when (ex is EntityException || ex is SqlException)
-            {
-                DataAccessLogger.Log.Debug("Exception while verifying email not duplicated", ex);
-                return false;
-            }
-            catch (Exception ex)
-            {
-                DataAccessLogger.Log.Error("Unexpected exception while verifying email not duplicated: ", ex);
-                return false;
+                bool emailInUse = context.Users.Any(u => u.email == email);
+                return !emailInUse;
             }
         }
 
@@ -131,25 +119,14 @@ namespace DataAccess.Users
         /// </summary>
         /// <param name="username">The username to verify.</param>
         /// <returns>True if no matching username was found, otherwise returns false.</returns>
+        /// <exception cref="EntityException"></exception>
+        /// <exception cref="EntitySqlException"></exception>
         public bool ValidateUsernameNotDuplicated(string username)
         {
-            try
+            using (var context = _contextFactory.Create())
             {
-                using (var context = _contextFactory.Create())
-                {
-                    bool usernameInUse = context.Players.Any(p => p.username == username);
-                    return !usernameInUse;
-                }
-            }
-            catch (Exception ex) when (ex is EntityException || ex is SqlException)
-            {
-                DataAccessLogger.Log.Debug("Exception while verifying username not duplicated", ex);
-                return false;
-            }
-            catch (Exception ex)
-            {
-                DataAccessLogger.Log.Error("Unexpected exception while verifying username not duplicated: ", ex);
-                return false;
+                bool usernameInUse = context.Players.Any(p => p.username == username);
+                return !usernameInUse;
             }
         }
 

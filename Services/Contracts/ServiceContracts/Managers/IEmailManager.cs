@@ -21,6 +21,7 @@ namespace Services.Contracts.ServiceContracts.Managers
         /// <para>UNALLOWED if the requested address is already in use, or the use of the address couldn't be verified. (Only applies to EmailType.EMAIL_VERIFICATION)</para>
         /// <para>NOT_FOUND if the requested address doesn't belong to a registered user, or the use of the address couldn't be verified (Only applies to EmailType.PASSWORD_RESET)</para>
         /// <para>SERVER_ERROR if the email couldn't be sent due to a server-side issue</para>
+        /// <para>DATABASE_ERROR if the server couldn't verify if the email is in use</para>
         /// </returns>
         [OperationContract]
         CommunicationRequest SendVerificationCode(string email, EmailType emailType);

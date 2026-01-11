@@ -13,18 +13,18 @@ namespace Services.Contracts.ServiceContracts.Services
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.PerCall)]
     public class EmailService : IEmailManager
     {
-        private readonly IPlayerDAO _playerDAO;
+        private readonly IPlayerRepository _playerRepository;
         private readonly IEmailOperation _emailOperation;
         private static readonly MemoryCache _emailVerificationCache = MemoryCache.Default;
         private static readonly MemoryCache _passwordResetCache = MemoryCache.Default;
         private const int VERICATION_TIMEOUT_MINUTES = 15;
         private const int MAX_ATTEMPTS = 3;
 
-        public EmailService() : this (new PlayerDAO(), new EmailOperation()) { }
+        public EmailService() : this (new PlayerRepository(), new EmailOperation()) { }
 
-        public EmailService(IPlayerDAO playerDAO, IEmailOperation emailOperation)
+        public EmailService(IPlayerRepository playerRepository, IEmailOperation emailOperation)
         {
-            _playerDAO = playerDAO;
+            _playerRepository = playerRepository;
             _emailOperation = emailOperation;
         }
 
@@ -38,17 +38,17 @@ namespace Services.Contracts.ServiceContracts.Services
                 return request;
             }
 
-            DataVerificationRequest result = _playerDAO.VerifyEmailInUse(email);
-            if (result.ErrorType == ErrorType.DB_ERROR)
+            DataVerificationRequest verification = _playerRepository.VerifyEmailInUse(email);
+            if (verification.ErrorType == ErrorType.DB_ERROR)
             {
                 request.IsSuccess = false;
-                request.StatusCode = StatusCode.SERVER_ERROR;
+                request.StatusCode = StatusCode.DATABASE_ERROR;
                 return request;
             }
             switch (emailType)
             {
                 case EmailType.EMAIL_VERIFICATION:
-                    if (!result.IsSuccess)
+                    if (!verification.IsSuccess)
                     {
                         request = SendEmail(email, emailType);
                     }
@@ -59,7 +59,7 @@ namespace Services.Contracts.ServiceContracts.Services
                     }
                     break;
                 case EmailType.PASSWORD_RESET:
-                    if (!result.IsSuccess)
+                    if (!verification.IsSuccess)
                     {
                         request.IsSuccess = false;
                         request.StatusCode = StatusCode.NOT_FOUND;

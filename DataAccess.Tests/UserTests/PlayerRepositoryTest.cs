@@ -10,13 +10,13 @@ using System.Data.Entity.Infrastructure;
 namespace DataAccess.Tests.UserTests
 {
     [TestFixture]
-    public class PlayerDAOTest
+    public class PlayerRepositoryTest
     {
         private Mock<IDbContextFactory> _contextFactory;
         private Mock<ICodenamesContext> _context;
         private Mock<DbSet<Player>> _playerSet;
         private Mock<DbSet<User>> _userSet;
-        private PlayerDAO _playerDAO;
+        private PlayerRepository _playerRepository;
         private List<Player> _playersData;
         private List<User> _usersData;
 
@@ -36,7 +36,7 @@ namespace DataAccess.Tests.UserTests
             _contextFactory = new Mock<IDbContextFactory>();
             _contextFactory.Setup(f => f.Create()).Returns(_context.Object);
 
-            _playerDAO = new PlayerDAO(_contextFactory.Object);
+            _playerRepository = new PlayerRepository(_contextFactory.Object);
         }
 
         [Test]
@@ -46,7 +46,7 @@ namespace DataAccess.Tests.UserTests
             var player = new Player { playerID = Guid.NewGuid(), userID = userId, User = new User { userID = userId } };
             _playersData.Add(player);
 
-            var result = _playerDAO.GetPlayerByUserID(userId);
+            var result = _playerRepository.GetPlayerByUserID(userId);
 
             Assert.That(result.playerID.Equals(player.playerID));
         }
@@ -56,7 +56,7 @@ namespace DataAccess.Tests.UserTests
         {
             Guid userId = Guid.NewGuid();
 
-            var result = _playerDAO.GetPlayerByUserID(userId);
+            var result = _playerRepository.GetPlayerByUserID(userId);
 
             Assert.That(result, Is.Null);
         }
@@ -67,7 +67,7 @@ namespace DataAccess.Tests.UserTests
             Guid userId = Guid.NewGuid();
             _context.Setup(c => c.Players).Throws(new DbUpdateException());
 
-            var result = _playerDAO.GetPlayerByUserID(userId);
+            var result = _playerRepository.GetPlayerByUserID(userId);
 
             Assert.That(result, Is.Null);
         }
@@ -79,7 +79,7 @@ namespace DataAccess.Tests.UserTests
             var player = new Player { playerID = playerId, User = new User() };
             _playersData.Add(player);
 
-            var result = _playerDAO.GetPlayerById(playerId);
+            var result = _playerRepository.GetPlayerById(playerId);
 
             Assert.That(result.playerID.Equals(playerId));
         }
@@ -89,7 +89,7 @@ namespace DataAccess.Tests.UserTests
         {
             Guid playerId = Guid.NewGuid();
 
-            var result = _playerDAO.GetPlayerById(playerId);
+            var result = _playerRepository.GetPlayerById(playerId);
 
             Assert.That(result, Is.Null);
         }
@@ -97,7 +97,7 @@ namespace DataAccess.Tests.UserTests
         [Test]
         public void GetPlayerById_EmptyId_ReturnsNull()
         {
-            var result = _playerDAO.GetPlayerById(Guid.Empty);
+            var result = _playerRepository.GetPlayerById(Guid.Empty);
 
             Assert.That(result, Is.Null);
         }
@@ -110,7 +110,7 @@ namespace DataAccess.Tests.UserTests
             var player = new Player { playerID = playerId, User = new User { email = email } };
             _playersData.Add(player);
 
-            var result = _playerDAO.GetEmailByPlayerID(playerId);
+            var result = _playerRepository.GetEmailByPlayerID(playerId);
 
             Assert.That(result.Equals(email));
         }
@@ -120,7 +120,7 @@ namespace DataAccess.Tests.UserTests
         {
             Guid playerId = Guid.NewGuid();
 
-            var result = _playerDAO.GetEmailByPlayerID(playerId);
+            var result = _playerRepository.GetEmailByPlayerID(playerId);
 
             Assert.That(result.Equals(string.Empty));
         }
@@ -128,7 +128,7 @@ namespace DataAccess.Tests.UserTests
         [Test]
         public void GetEmailByPlayerID_EmptyId_ReturnsEmptyString()
         {
-            var result = _playerDAO.GetEmailByPlayerID(Guid.Empty);
+            var result = _playerRepository.GetEmailByPlayerID(Guid.Empty);
 
             Assert.That(result.Equals(string.Empty));
         }
@@ -138,7 +138,7 @@ namespace DataAccess.Tests.UserTests
         {
             string email = "unique@example.com";
 
-            bool result = _playerDAO.ValidateEmailNotDuplicated(email);
+            bool result = _playerRepository.ValidateEmailNotDuplicated(email);
 
             Assert.That(result, Is.True);
         }
@@ -149,7 +149,7 @@ namespace DataAccess.Tests.UserTests
             string email = "duplicate@example.com";
             _usersData.Add(new User { email = email });
 
-            bool result = _playerDAO.ValidateEmailNotDuplicated(email);
+            bool result = _playerRepository.ValidateEmailNotDuplicated(email);
 
             Assert.That(result, Is.False);
         }
@@ -159,7 +159,7 @@ namespace DataAccess.Tests.UserTests
         {
             _context.Setup(c => c.Users).Throws(new InvalidOperationException());
 
-            bool result = _playerDAO.ValidateEmailNotDuplicated("any@email.com");
+            bool result = _playerRepository.ValidateEmailNotDuplicated("any@email.com");
 
             Assert.That(result, Is.False);
         }
@@ -169,7 +169,7 @@ namespace DataAccess.Tests.UserTests
         {
             string username = "UniqueUser";
 
-            bool result = _playerDAO.ValidateUsernameNotDuplicated(username);
+            bool result = _playerRepository.ValidateUsernameNotDuplicated(username);
 
             Assert.That(result, Is.True);
         }
@@ -180,7 +180,7 @@ namespace DataAccess.Tests.UserTests
             string username = "DuplicateUser";
             _playersData.Add(new Player { username = username });
 
-            bool result = _playerDAO.ValidateUsernameNotDuplicated(username);
+            bool result = _playerRepository.ValidateUsernameNotDuplicated(username);
 
             Assert.That(result, Is.False);
         }
@@ -191,7 +191,7 @@ namespace DataAccess.Tests.UserTests
             Guid playerId = Guid.NewGuid();
             _playersData.Add(new Player { playerID = playerId });
 
-            bool result = _playerDAO.VerifyIsPlayerGuest(playerId);
+            bool result = _playerRepository.VerifyIsPlayerGuest(playerId);
 
             Assert.That(result, Is.False);
         }
@@ -201,7 +201,7 @@ namespace DataAccess.Tests.UserTests
         {
             Guid playerId = Guid.NewGuid();
 
-            bool result = _playerDAO.VerifyIsPlayerGuest(playerId);
+            bool result = _playerRepository.VerifyIsPlayerGuest(playerId);
 
             Assert.That(result, Is.True);
         }

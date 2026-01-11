@@ -1,4 +1,5 @@
-﻿using DataAccess.Scoreboards;
+﻿using DataAccess;
+using DataAccess.Scoreboards;
 using Services.Contracts.Callback;
 using Services.Contracts.ServiceContracts.Managers;
 using Services.DTO.DataContract;
@@ -11,8 +12,7 @@ using System.ServiceModel;
 
 namespace Services.Contracts.ServiceContracts.Services
 {
-    [ServiceBehavior(
-        InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
+    [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
     public class MatchService : IMatchManager
     {
         private readonly ICallbackProvider _callbackProvider;
@@ -48,6 +48,9 @@ namespace Services.Contracts.ServiceContracts.Services
             {
                 request.IsSuccess = true;
                 request.StatusCode = StatusCode.OK;
+
+                string audit = string.Format("{0} has connected to MatchService", ServerLogger.GetPlayerIdentifier(playerID));
+                ServerLogger.Log.Info(audit);
             }
             else
             {
@@ -55,6 +58,9 @@ namespace Services.Contracts.ServiceContracts.Services
                 hasConnected = _connectedPlayers.TryAdd(playerID, currentClientChannel);
                 request.IsSuccess = hasConnected;
                 request.StatusCode = hasConnected ? StatusCode.OK : StatusCode.UNAUTHORIZED;
+
+                string audit = string.Format("Connection request to MatchService by {0} procesed with code {1}", ServerLogger.GetPlayerIdentifier(playerID), request.StatusCode);
+                ServerLogger.Log.Info(audit);
             }
             return request;
         }
@@ -69,6 +75,8 @@ namespace Services.Contracts.ServiceContracts.Services
                 {
                     HandleMatchAbandoned(ongoingMatchID, playerID);
                 }
+                string audit = string.Format("{0} has disconnected from MatchService", ServerLogger.GetPlayerIdentifier(playerID));
+                ServerLogger.Log.Info(audit);
             }
         }
 
@@ -89,6 +97,9 @@ namespace Services.Contracts.ServiceContracts.Services
                     NotifyMatchAbandoned(toNotifyID);
                 }
                 RemoveMatch(ongoingMatch);
+
+                string audit = string.Format("Match {0} has been cancelled since {1} has left", ongoingMatchID, ServerLogger.GetPlayerIdentifier(leavingPlayerID));
+                ServerLogger.Log.Info(audit);
             }
         }
 
@@ -243,6 +254,9 @@ namespace Services.Contracts.ServiceContracts.Services
                     try
                     {
                         sendToChannel.NotifyClueReceived(clue);
+
+                        string audit = string.Format("{0} send clue {1} to {2}", ServerLogger.GetPlayerIdentifier(senderID), clue, ServerLogger.GetPlayerIdentifier(sendToID));
+                        ServerLogger.Log.Info(audit);
                     } 
                     catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
                     {

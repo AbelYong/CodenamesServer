@@ -13,16 +13,16 @@ namespace Services.Tests.ContractTests
     [TestFixture]
     public class EmailServiceTest
     {
-        private Mock<IPlayerDAO> _playerDaoMock;
+        private Mock<IPlayerRepository> _playerRepositoryMock;
         private Mock<IEmailOperation> _emailOperationMock;
         private EmailService _emailService;
 
         [SetUp]
         public void Setup()
         {
-            _playerDaoMock = new Mock<IPlayerDAO>();
+            _playerRepositoryMock = new Mock<IPlayerRepository>();
             _emailOperationMock = new Mock<IEmailOperation>();
-            _emailService = new EmailService(_playerDaoMock.Object, _emailOperationMock.Object);
+            _emailService = new EmailService(_playerRepositoryMock.Object, _emailOperationMock.Object);
         }
 
         [Test]
@@ -35,7 +35,7 @@ namespace Services.Tests.ContractTests
                 .Returns("123456");
             _emailOperationMock.Setup(e => e.SendVerificationEmail(email, "123456", EmailType.EMAIL_VERIFICATION))
                 .Returns(true);
-            _playerDaoMock.Setup(d => d.VerifyEmailInUse(email))
+            _playerRepositoryMock.Setup(d => d.VerifyEmailInUse(email))
                 .Returns(new DataVerificationRequest { IsSuccess = false });
             CommunicationRequest expected = new CommunicationRequest
             {
@@ -72,7 +72,7 @@ namespace Services.Tests.ContractTests
             string email = GetUniqueEmail();
             _emailOperationMock.Setup(e => e.ValidateEmailFormat(email))
                 .Returns(true);
-            _playerDaoMock.Setup(d => d.VerifyEmailInUse(email))
+            _playerRepositoryMock.Setup(d => d.VerifyEmailInUse(email))
                 .Returns(new DataVerificationRequest { IsSuccess = true });
             CommunicationRequest expected = new CommunicationRequest
             {
@@ -91,7 +91,7 @@ namespace Services.Tests.ContractTests
             string email = GetUniqueEmail();
             _emailOperationMock.Setup(e => e.ValidateEmailFormat(email))
                 .Returns(true);
-            _playerDaoMock.Setup(d => d.VerifyEmailInUse(email))
+            _playerRepositoryMock.Setup(d => d.VerifyEmailInUse(email))
                 .Returns(new DataVerificationRequest { IsSuccess = false });
             _emailOperationMock.Setup(e => e.SendVerificationEmail(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<EmailType>()))
                 .Returns(false);
@@ -112,7 +112,7 @@ namespace Services.Tests.ContractTests
             string email = GetUniqueEmail();
             _emailOperationMock.Setup(e => e.ValidateEmailFormat(email))
                 .Returns(true);
-            _playerDaoMock.Setup(d => d.VerifyEmailInUse(email))
+            _playerRepositoryMock.Setup(d => d.VerifyEmailInUse(email))
                 .Returns(new DataVerificationRequest { IsSuccess = false });
             CommunicationRequest expected = new CommunicationRequest
             {
@@ -131,7 +131,7 @@ namespace Services.Tests.ContractTests
             string email = GetUniqueEmail();
             _emailOperationMock.Setup(e => e.ValidateEmailFormat(email))
                 .Returns(true);
-            _playerDaoMock.Setup(d => d.VerifyEmailInUse(email))
+            _playerRepositoryMock.Setup(d => d.VerifyEmailInUse(email))
                 .Returns(new DataVerificationRequest { IsSuccess = false, ErrorType = ErrorType.DB_ERROR });
             CommunicationRequest expected = new CommunicationRequest
             {
@@ -154,7 +154,7 @@ namespace Services.Tests.ContractTests
                 .Returns("654321");
             _emailOperationMock.Setup(e => e.SendVerificationEmail(email, "654321", EmailType.PASSWORD_RESET))
                 .Returns(true);
-            _playerDaoMock.Setup(d => d.VerifyEmailInUse(email))
+            _playerRepositoryMock.Setup(d => d.VerifyEmailInUse(email))
                 .Returns(new DataVerificationRequest { IsSuccess = true });
             CommunicationRequest expected = new CommunicationRequest
             {
@@ -251,12 +251,12 @@ namespace Services.Tests.ContractTests
             _emailOperationMock.Setup(e => e.SendVerificationEmail(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<EmailType>())).Returns(true);
             if (type == EmailType.EMAIL_VERIFICATION)
             {
-                _playerDaoMock.Setup(d => d.VerifyEmailInUse(email))
+                _playerRepositoryMock.Setup(d => d.VerifyEmailInUse(email))
                     .Returns(new DataVerificationRequest { IsSuccess = false });
             }
             else if (type == EmailType.PASSWORD_RESET)
             {
-                _playerDaoMock.Setup(d => d.VerifyEmailInUse(email))
+                _playerRepositoryMock.Setup(d => d.VerifyEmailInUse(email))
                     .Returns(new DataVerificationRequest { IsSuccess = true });
             }
             _emailService.SendVerificationCode(email, type);

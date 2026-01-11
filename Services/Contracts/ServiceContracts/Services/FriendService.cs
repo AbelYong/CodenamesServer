@@ -19,16 +19,16 @@ namespace Services
     {
         private readonly ICallbackProvider _callbackProvider;
         private readonly IFriendDAO _friendDAO;
-        private readonly IPlayerDAO _playerDAO;
+        private readonly IPlayerRepository _playerRepository;
         private Guid _playerId;
 
-        public FriendService() : this (new CallbackProvider(), new FriendDAO(), new PlayerDAO()) { }
+        public FriendService() : this (new CallbackProvider(), new FriendDAO(), new PlayerRepository()) { }
 
-        public FriendService(ICallbackProvider callbackProvider, IFriendDAO friendDAO, IPlayerDAO playerDAO)
+        public FriendService(ICallbackProvider callbackProvider, IFriendDAO friendDAO, IPlayerRepository playerRepository)
         {
             _callbackProvider = callbackProvider;
             _friendDAO = friendDAO;
-            _playerDAO = playerDAO;
+            _playerRepository = playerRepository;
         }
 
         public void Connect(Guid mePlayerId)
@@ -73,7 +73,7 @@ namespace Services
 
             if (result.Success)
             {
-                var fromPlayer = _playerDAO.GetPlayerById(fromPlayerId);
+                var fromPlayer = _playerRepository.GetPlayerById(fromPlayerId);
                 var playerDto = Player.AssembleSvPlayer(fromPlayer);
 
                 FriendCallbackManager.InvokeCallback(toPlayerId,
@@ -98,7 +98,7 @@ namespace Services
 
             if (result.Success)
             {
-                var mePlayer = _playerDAO.GetPlayerById(mePlayerId);
+                var mePlayer = _playerRepository.GetPlayerById(mePlayerId);
                 var playerDto = Player.AssembleSvPlayer(mePlayer);
 
                 FriendCallbackManager.InvokeCallback(requesterPlayerId,
@@ -123,7 +123,7 @@ namespace Services
 
             if (result.Success)
             {
-                var mePlayer = _playerDAO.GetPlayerById(mePlayerId);
+                var mePlayer = _playerRepository.GetPlayerById(mePlayerId);
                 var playerDto = Player.AssembleSvPlayer(mePlayer);
 
                 FriendCallbackManager.InvokeCallback(requesterPlayerId,
@@ -148,7 +148,7 @@ namespace Services
 
             if (result.Success)
             {
-                var mePlayer = _playerDAO.GetPlayerById(mePlayerId);
+                var mePlayer = _playerRepository.GetPlayerById(mePlayerId);
                 var playerDto = Player.AssembleSvPlayer(mePlayer);
 
                 FriendCallbackManager.InvokeCallback(friendPlayerId,

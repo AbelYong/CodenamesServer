@@ -11,29 +11,27 @@ using System.Text;
 
 namespace Services.Contracts.ServiceContracts.Services
 {
-    [ServiceBehavior(
-        InstanceContextMode = InstanceContextMode.Single,
-        ConcurrencyMode = ConcurrencyMode.Multiple)]
+    [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
     public class LobbyService : ILobbyManager
     {
         private readonly ICallbackProvider _callbackProvider;
-        private readonly IPlayerDAO _playerDAO;
+        private readonly IPlayerRepository _playerRepository;
         private readonly IEmailOperation _emailOperation;
         private readonly ConcurrentDictionary<Guid, ILobbyCallback> _connectedPlayers;
         private readonly ConcurrentDictionary<string, Party> _lobbies;
         private readonly ConcurrentDictionary<Guid, string> _playerLobbyMap;
         private static readonly Random _random = new Random();
 
-        public LobbyService() : this (new PlayerDAO(), new CallbackProvider(), new EmailOperation())
+        public LobbyService() : this (new CallbackProvider(), new PlayerRepository(), new EmailOperation())
         {
             _connectedPlayers = new ConcurrentDictionary<Guid, ILobbyCallback>();
             _lobbies = new ConcurrentDictionary<string, Party>();
             _playerLobbyMap = new ConcurrentDictionary<Guid, string>();
         }
 
-        public LobbyService(IPlayerDAO playerDAO, ICallbackProvider callbackProvider, IEmailOperation emailOperation)
+        public LobbyService(ICallbackProvider callbackProvider, IPlayerRepository playerRepository, IEmailOperation emailOperation)
         {
-            _playerDAO = playerDAO;
+            _playerRepository = playerRepository;
             _callbackProvider = callbackProvider;
             _connectedPlayers = new ConcurrentDictionary<Guid, ILobbyCallback>();
             _lobbies = new ConcurrentDictionary<string, Party>();
@@ -50,6 +48,9 @@ namespace Services.Contracts.ServiceContracts.Services
             {
                 request.IsSuccess = true;
                 request.StatusCode = StatusCode.OK;
+
+                string audit = string.Format("{0} has connected to LobbyService", ServerLogger.GetPlayerIdentifier(playerID));
+                ServerLogger.Log.Info(audit);
             }
             else
             {
@@ -57,13 +58,20 @@ namespace Services.Contracts.ServiceContracts.Services
                 hasConnected = _connectedPlayers.TryAdd(playerID, currentClientChannel);
                 request.IsSuccess = hasConnected;
                 request.StatusCode = hasConnected ? StatusCode.OK : StatusCode.UNAUTHORIZED;
+
+                string audit = string.Format("Connection request to LobbyService by {0} procesed with code {1}", ServerLogger.GetPlayerIdentifier(playerID), request.StatusCode);
+                ServerLogger.Log.Info(audit);
             }
             return request;
         }
 
         public void Disconnect(Guid playerID)
         {
-            _connectedPlayers.TryRemove(playerID, out _);
+            if (_connectedPlayers.TryRemove(playerID, out _))
+            {
+                string audit = string.Format("{0} has disconnected from LobbyService", ServerLogger.GetPlayerIdentifier(playerID));
+                ServerLogger.Log.Info(audit);
+            }
             if (_playerLobbyMap.TryRemove(playerID, out string lobbyCode) &&
                 !string.IsNullOrEmpty(lobbyCode) &&
                 _lobbies.TryGetValue(lobbyCode, out Party party))
@@ -82,8 +90,9 @@ namespace Services.Contracts.ServiceContracts.Services
 
                 if (party.PartyGuest != null)
                 {
-                    _playerLobbyMap.TryRemove((Guid)party.PartyGuest.PlayerID, out _);
-                    NotifyPlayerLeft(leavingPlayerID, (Guid)party.PartyGuest.PlayerID);
+                    Guid partyGuestID = (Guid)party.PartyGuest.PlayerID;
+                    _playerLobbyMap.TryRemove(partyGuestID, out _);
+                    NotifyPlayerLeft(leavingPlayerID, partyGuestID);
                 }
             }
             else if (party.PartyGuest != null && party.PartyGuest.PlayerID == leavingPlayerID)
@@ -143,6 +152,9 @@ namespace Services.Contracts.ServiceContracts.Services
                     request.LobbyCode = code;
                     request.IsSuccess = true;
                     request.StatusCode = StatusCode.CREATED;
+
+                    string audit = string.Format("Party created successfully for {0}", ServerLogger.GetPlayerIdentifier(auxID));
+                    ServerLogger.Log.Info(audit);
                 }
                 else
                 {
@@ -181,6 +193,8 @@ namespace Services.Contracts.ServiceContracts.Services
                     request.IsSuccess = false;
                     request.StatusCode = StatusCode.NOT_FOUND;
                 }
+                string audit = string.Format("Email invitation request by {0} processed with code {1}", ServerLogger.GetPlayerIdentifier(partyHostID), request.StatusCode);
+                ServerLogger.Log.Info(audit);
                 return request;
                 
             }
@@ -197,8 +211,8 @@ namespace Services.Contracts.ServiceContracts.Services
             CommunicationRequest request = new CommunicationRequest();
             if (partyHost != null && partyHost.PlayerID.HasValue)
             {
-                Guid hostPlayerID = (Guid)partyHost.PlayerID;
-                request = VerifyPlayerCanInvite(hostPlayerID, lobbyCode);
+                Guid partyHostID = (Guid)partyHost.PlayerID;
+                request = VerifyPlayerCanInvite(partyHostID, lobbyCode);
                 if (!request.IsSuccess)
                 {
                     return request;
@@ -206,11 +220,14 @@ namespace Services.Contracts.ServiceContracts.Services
 
                 bool wasGameInviteSent = SendInGameInvitation(friendToInviteID, partyHost, lobbyCode);
 
-                string friendEmailAddress = _playerDAO.GetEmailByPlayerID(friendToInviteID);
+                string friendEmailAddress = _playerRepository.GetEmailByPlayerID(friendToInviteID);
                 bool wasEmailSent = _emailOperation.SendGameInvitationEmail(partyHost.Username, friendEmailAddress, lobbyCode);
 
                 request.IsSuccess = (wasGameInviteSent || wasEmailSent);
                 request.StatusCode = wasEmailSent ? StatusCode.OK : StatusCode.CLIENT_UNREACHABLE;
+
+                string audit = string.Format("Party invitation request by {0} processed with code {1}", ServerLogger.GetPlayerIdentifier(partyHostID), request.StatusCode);
+                ServerLogger.Log.Info(audit);
             }
             else
             {
@@ -323,6 +340,11 @@ namespace Services.Contracts.ServiceContracts.Services
                 request.IsSuccess = true;
                 request.StatusCode = StatusCode.OK;
                 request.Party = party;
+
+                string guestIdentifier = ServerLogger.GetPlayerIdentifier(joiningPlayerID);
+                string hostIdentifier = ServerLogger.GetPlayerIdentifier(partyHostID);
+                string audit = string.Format("{0} has joined {1}'s lobby", guestIdentifier, hostIdentifier);
+                ServerLogger.Log.Info(audit);
             }
             else
             {

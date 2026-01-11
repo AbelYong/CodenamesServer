@@ -19,7 +19,7 @@ namespace DataAccess.Test.UserTests
         private Mock<ICodenamesContext> _context;
         private Mock<DbSet<Player>> _playerSet;
         private Mock<DbSet<User>> _userSet;
-        private PlayerDAO _playerDAO;
+        private PlayerRepository _playerRepository;
         private List<Player> _playersData;
         private List<User> _usersData;
 
@@ -39,7 +39,7 @@ namespace DataAccess.Test.UserTests
             _contextFactory = new Mock<IDbContextFactory>();
             _contextFactory.Setup(f => f.Create()).Returns(_context.Object);
 
-            _playerDAO = new PlayerDAO(_contextFactory.Object);
+            _playerRepository = new PlayerRepository(_contextFactory.Object);
         }
 
         [Test]
@@ -59,8 +59,8 @@ namespace DataAccess.Test.UserTests
             _playersData.Add(dbPlayer);
             var playerUpdate = CreateValidPlayer(userId, playerId, newUser, newEmail);
 
-            var result = _playerDAO.UpdateProfile(playerUpdate);
-            Player afterUpdate = _playerDAO.GetPlayerByUserID(userId);
+            var result = _playerRepository.UpdateProfile(playerUpdate);
+            Player afterUpdate = _playerRepository.GetPlayerByUserID(userId);
 
             Assert.That(result.Success && VerifyEqualPlayers(playerUpdate, afterUpdate));
             _context.Verify(c => c.SaveChanges(), Times.Once);
@@ -85,7 +85,7 @@ namespace DataAccess.Test.UserTests
                 ErrorType = ErrorType.INVALID_DATA
             };
 
-            var result = _playerDAO.UpdateProfile(player);
+            var result = _playerRepository.UpdateProfile(player);
 
             Assert.That(result.Equals(expected));
         }
@@ -101,7 +101,7 @@ namespace DataAccess.Test.UserTests
                 ErrorType = ErrorType.NOT_FOUND
             };
 
-            var result = _playerDAO.UpdateProfile(player);
+            var result = _playerRepository.UpdateProfile(player);
 
             Assert.That(result.Equals(expected));
         }
@@ -121,7 +121,7 @@ namespace DataAccess.Test.UserTests
                 ErrorType = ErrorType.DUPLICATE
             };
 
-            var result = _playerDAO.UpdateProfile(playerUpdate);
+            var result = _playerRepository.UpdateProfile(playerUpdate);
 
             Assert.That(result.Equals(expected));
         }
@@ -140,7 +140,7 @@ namespace DataAccess.Test.UserTests
                 ErrorType = ErrorType.INVALID_DATA
             };
 
-            var result = _playerDAO.UpdateProfile(playerUpdate);
+            var result = _playerRepository.UpdateProfile(playerUpdate);
 
             Assert.That(result.Equals(expected));
         }
@@ -158,7 +158,7 @@ namespace DataAccess.Test.UserTests
                 ErrorType = ErrorType.NOT_FOUND
             };
 
-            var result = _playerDAO.UpdateProfile(playerUpdate);
+            var result = _playerRepository.UpdateProfile(playerUpdate);
 
             Assert.That(result.Equals(expected));
         }
@@ -180,7 +180,7 @@ namespace DataAccess.Test.UserTests
                 ErrorType = ErrorType.DUPLICATE
             };
 
-            var result = _playerDAO.UpdateProfile(playerUpdate);
+            var result = _playerRepository.UpdateProfile(playerUpdate);
 
             Assert.That(result.Equals(expected));
         }
@@ -197,7 +197,7 @@ namespace DataAccess.Test.UserTests
                 ErrorType = ErrorType.DB_ERROR
             };
 
-            var result = _playerDAO.UpdateProfile(playerUpdate);
+            var result = _playerRepository.UpdateProfile(playerUpdate);
 
             Assert.That(result.Equals(expected));
         }

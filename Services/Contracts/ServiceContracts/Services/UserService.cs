@@ -5,25 +5,26 @@ using Services.Contracts.ServiceContracts.Managers;
 using Services.DTO.DataContract;
 using Services.DTO.Request;
 using System;
+using Services.Operations;
 
 namespace Services.Contracts.ServiceContracts.Services
 {
     public class UserService : IUserManager
     {
-        private readonly IUserDAO _userDAO;
-        private readonly IPlayerDAO _playerDAO;
+        private readonly IUserRepository _userRepository;
+        private readonly IPlayerRepository _playerRepository;
 
-        public UserService() : this (new UserDAO(), new PlayerDAO()) { }
+        public UserService() : this (new UserRepository(), new PlayerRepository()) { }
         
-        public UserService(IUserDAO userDAO, IPlayerDAO playerDAO)
+        public UserService(IUserRepository userDAO, IPlayerRepository playerRepository)
         {
-            _userDAO = userDAO;
-            _playerDAO = playerDAO;
+            _userRepository = userDAO;
+            _playerRepository = playerRepository;
         }
 
         public Player GetPlayerByUserID(Guid userID)
         {
-            DataAccess.Player dbPlayer = _playerDAO.GetPlayerByUserID(userID);
+            DataAccess.Player dbPlayer = _playerRepository.GetPlayerByUserID(userID);
             return Player.AssembleSvPlayer(dbPlayer);
         }
 
@@ -35,7 +36,10 @@ namespace Services.Contracts.ServiceContracts.Services
                 svPlayer.Name = string.IsNullOrWhiteSpace(svPlayer.Name) ? null : svPlayer.Name.Trim();
                 svPlayer.LastName = string.IsNullOrWhiteSpace(svPlayer.LastName) ? null : svPlayer.LastName.Trim();
 
-                return RegisterNewPlayer(svPlayer);
+                request = RegisterNewPlayer(svPlayer);
+
+                string audit = string.Format("Sign-in request procesed with code {0}", request.StatusCode);
+                ServerLogger.Log.Info(audit);
             }
             else
             {
@@ -50,7 +54,7 @@ namespace Services.Contracts.ServiceContracts.Services
             SignInRequest request = new SignInRequest();
             DataAccess.Player dbPlayer = Player.AssembleDbPlayer(svPlayer);
             string password = svPlayer.User.Password;
-            PlayerRegistrationRequest dbRequest = _userDAO.SignIn(dbPlayer, password);
+            PlayerRegistrationRequest dbRequest = _userRepository.SignIn(dbPlayer, password);
             
             request.IsEmailDuplicate = dbRequest.IsEmailDuplicate;
             request.IsEmailValid = dbRequest.IsEmailValid;
@@ -76,6 +80,9 @@ namespace Services.Contracts.ServiceContracts.Services
                     case ErrorType.MISSING_DATA:
                         request.StatusCode = StatusCode.MISSING_DATA;
                         break;
+                    case ErrorType.DB_ERROR:
+                        request.StatusCode = StatusCode.DATABASE_ERROR;
+                        break;
                     default:
                         request.StatusCode = StatusCode.SERVER_ERROR;
                         break;
@@ -87,7 +94,7 @@ namespace Services.Contracts.ServiceContracts.Services
         public CommunicationRequest UpdateProfile(Player updatedPlayer)
         {
             DataAccess.Player dbUpdatedPlayer = Player.AssembleDbPlayer(updatedPlayer);
-            OperationResult operationResult = _playerDAO.UpdateProfile(dbUpdatedPlayer);
+            OperationResult operationResult = _playerRepository.UpdateProfile(dbUpdatedPlayer);
             return AssembleUpdateResult(operationResult);
         }
 
@@ -113,7 +120,7 @@ namespace Services.Contracts.ServiceContracts.Services
                 switch (operationResult.ErrorType)
                 {
                     case ErrorType.DB_ERROR:
-                        request.StatusCode = StatusCode.SERVER_ERROR;
+                        request.StatusCode = StatusCode.DATABASE_ERROR;
                         break;
                     case ErrorType.INVALID_DATA:
                         request.StatusCode = StatusCode.WRONG_DATA;

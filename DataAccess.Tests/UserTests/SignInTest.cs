@@ -14,8 +14,8 @@ namespace DataAccess.Test.UserTests
     {
         private Mock<IDbContextFactory> _contextFactory;
         private Mock<ICodenamesContext> _context;
-        private Mock<IPlayerDAO> _playerDAO;
-        private UserDAO _userDAO;
+        private Mock<IPlayerRepository> _playerDAO;
+        private UserRepository _userRepository;
 
         [SetUp]
         public void Setup()
@@ -25,9 +25,9 @@ namespace DataAccess.Test.UserTests
             _contextFactory = new Mock<IDbContextFactory>();
             _contextFactory.Setup(f => f.Create()).Returns(_context.Object);
 
-            _playerDAO = new Mock<IPlayerDAO>();
+            _playerDAO = new Mock<IPlayerRepository>();
 
-            _userDAO = new UserDAO(_contextFactory.Object, _playerDAO.Object);
+            _userRepository = new UserRepository(_contextFactory.Object, _playerDAO.Object);
         }
 
         [Test]
@@ -62,7 +62,7 @@ namespace DataAccess.Test.UserTests
                 IsPasswordValid = true,
             };
 
-            var result = _userDAO.SignIn(player, password);
+            var result = _userRepository.SignIn(player, password);
 
             Assert.That(result.Equals(expected));
             _context.Verify(c => c.uspSignIn(
@@ -85,7 +85,7 @@ namespace DataAccess.Test.UserTests
                 ErrorType = ErrorType.MISSING_DATA
             };
 
-            var result = _userDAO.SignIn(player, password);
+            var result = _userRepository.SignIn(player, password);
 
             Assert.That(result.Equals(expected));
         }
@@ -104,7 +104,7 @@ namespace DataAccess.Test.UserTests
                 IsEmailDuplicate = true
             };
 
-            var result = _userDAO.SignIn(player, password);
+            var result = _userRepository.SignIn(player, password);
 
             Assert.That(result.Equals(expected));
         }
@@ -123,7 +123,7 @@ namespace DataAccess.Test.UserTests
                 IsUsernameDuplicate = true
             };
 
-            var result = _userDAO.SignIn(player, password);
+            var result = _userRepository.SignIn(player, password);
 
             Assert.That(result.Equals(expected));
         }
@@ -143,7 +143,7 @@ namespace DataAccess.Test.UserTests
                 IsEmailValid = false
             };
 
-            var result = _userDAO.SignIn(player, password);
+            var result = _userRepository.SignIn(player, password);
 
             Assert.That(result.Equals(expected));
         }
@@ -162,7 +162,7 @@ namespace DataAccess.Test.UserTests
                 IsPasswordValid = false
             };
 
-            var result = _userDAO.SignIn(player, password);
+            var result = _userRepository.SignIn(player, password);
 
             Assert.That(result.Equals(expected));
         }
@@ -184,7 +184,7 @@ namespace DataAccess.Test.UserTests
                 IsPasswordValid = true,
             };
 
-            var result = _userDAO.SignIn(player, password);
+            var result = _userRepository.SignIn(player, password);
 
             Assert.That(result.Equals(expected));
         }
@@ -206,7 +206,7 @@ namespace DataAccess.Test.UserTests
                 IsPasswordValid = true,
             };
 
-            var result = _userDAO.SignIn(player, password);
+            var result = _userRepository.SignIn(player, password);
 
             Assert.That(result.Equals(expected));
         }
@@ -228,7 +228,7 @@ namespace DataAccess.Test.UserTests
                 IsPasswordValid = true,
             };
 
-            var result = _userDAO.SignIn(player, password);
+            var result = _userRepository.SignIn(player, password);
 
             Assert.That(result.Equals(expected));
         }

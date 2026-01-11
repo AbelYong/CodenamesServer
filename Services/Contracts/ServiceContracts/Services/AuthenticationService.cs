@@ -13,15 +13,15 @@ namespace Services.Contracts.ServiceContracts.Services
 {
     public class AuthenticationService : IAuthenticationManager
     {
-        private readonly IUserDAO _userDAO;
+        private readonly IUserRepository _userRepository;
         private readonly IBanDAO _banDAO;
         private readonly IEmailManager _emailManager;
 
-        public AuthenticationService() : this(new UserDAO(), new BanDAO(), new EmailService()) { }
+        public AuthenticationService() : this(new UserRepository(), new BanDAO(), new EmailService()) { }
 
-        public AuthenticationService(IUserDAO userDAO, IBanDAO banDAO, IEmailManager emailManager)
+        public AuthenticationService(IUserRepository userDAO, IBanDAO banDAO, IEmailManager emailManager)
         {
-            _userDAO = userDAO;
+            _userRepository = userDAO;
             _banDAO = banDAO;
             _emailManager = emailManager;
         }
@@ -31,7 +31,7 @@ namespace Services.Contracts.ServiceContracts.Services
             AuthenticationRequest request = new AuthenticationRequest();
             try
             {
-                Guid? userID = _userDAO.Authenticate(username, password);
+                Guid? userID = _userRepository.Authenticate(username, password);
 
                 if (userID != null)
                 {
@@ -42,29 +42,37 @@ namespace Services.Contracts.ServiceContracts.Services
                         request.IsSuccess = false;
                         request.StatusCode = StatusCode.ACCOUNT_BANNED;
                         request.BanExpiration = activeBan.timeout;
-                        return request;
+                        
+                    }
+                    else
+                    {
+                        request.IsSuccess = true;
+                        request.StatusCode = StatusCode.OK;
+                        request.UserID = userID;
                     }
 
-                    request.IsSuccess = true;
-                    request.StatusCode = StatusCode.OK;
-                    request.UserID = userID;
+                    string audit = string.Format("Authentication procesed with code {0} for user: {1}", request.StatusCode, userID);
+                    ServerLogger.Log.Info(audit);
+                    return request;
                 }
                 else
                 {
                     request.IsSuccess = false;
                     request.StatusCode = StatusCode.UNAUTHORIZED;
+                    string audit = string.Format("Authentication failed for username: {0}", username);
+                    ServerLogger.Log.Info(audit);
                 }
             }
             catch (Exception ex) when (ex is EntityException || ex is SqlException)
             {
                 request.IsSuccess = false;
-                request.StatusCode = StatusCode.SERVER_ERROR;
+                request.StatusCode = StatusCode.DATABASE_ERROR;
                 ServerLogger.Log.Warn("Exception while tryining to authenticate an user: ", ex);
             }
             catch (Exception ex)
             {
                 request.IsSuccess = false;
-                request.StatusCode = StatusCode.SERVER_ERROR;
+                request.StatusCode = StatusCode.DATABASE_ERROR;
                 ServerLogger.Log.Error("Unexpected exception while trying to authenticate an user: ", ex);
             }
             return request;
@@ -77,16 +85,21 @@ namespace Services.Contracts.ServiceContracts.Services
             ConfirmEmailRequest emailConfirmation = _emailManager.ValidateVerificationCode(email, code, EmailType.PASSWORD_RESET);
             if (emailConfirmation.IsSuccess)
             {
-                UpdateRequest result = _userDAO.ResetPassword(email, newPassword);
+                UpdateRequest result = _userRepository.ResetPassword(email, newPassword);
                 if (result.IsSuccess)
                 {
                     request.IsSuccess = true;
                     request.StatusCode = StatusCode.UPDATED;
+                    string audit = string.Format("Password reset completed for user with email: {0}", email);
+                    ServerLogger.Log.Info(audit);
                     return request;
                 }
                 else
                 {
-                    return ConvertToPasswordReset(result);
+                    request = ConvertToPasswordReset(result);
+                    string audit = string.Format("Password reset failed with code {0} for email {1}", request.StatusCode, email);
+                    ServerLogger.Log.Info(audit);
+                    return request;
                 }
             }
             else
@@ -94,6 +107,8 @@ namespace Services.Contracts.ServiceContracts.Services
                 request.IsSuccess = false;
                 request.StatusCode = emailConfirmation.StatusCode;
                 request.RemainingAttempts = emailConfirmation.RemainingAttempts;
+                string audit = string.Format("Password reset rejected due to email confirmation failure with code {0} for email {1}", request.StatusCode, email);
+                ServerLogger.Log.Info(audit);
                 return request;
             }
         }
@@ -101,16 +116,21 @@ namespace Services.Contracts.ServiceContracts.Services
         public CommunicationRequest UpdatePassword(string username, string currentPassword, string newPassword)
         {
             CommunicationRequest request = new CommunicationRequest();
-            UpdateRequest result = _userDAO.UpdatePassword(username, currentPassword, newPassword);
+            UpdateRequest result = _userRepository.UpdatePassword(username, currentPassword, newPassword);
             if (result.IsSuccess)
             {
                 request.IsSuccess = true;
                 request.StatusCode = StatusCode.UPDATED;
+                string audit = string.Format("Password updated for username: {0}", username);
+                ServerLogger.Log.Info(audit);
                 return request;
             }
             else
             {
-                return ConvertToCommunicationRequest(result);
+                request = ConvertToCommunicationRequest(result);
+                string audit = string.Format("Password update failed with code: {0} for username: {1}", request.StatusCode, username);
+                ServerLogger.Log.Info(audit);
+                return request;
             }
         }
 
@@ -153,7 +173,7 @@ namespace Services.Contracts.ServiceContracts.Services
                 case ErrorType.UNALLOWED:
                     return StatusCode.UNAUTHORIZED;
                 case ErrorType.DB_ERROR:
-                    return StatusCode.SERVER_ERROR;
+                    return StatusCode.DATABASE_ERROR;
                 default:
                     return StatusCode.SERVER_ERROR;
             }
