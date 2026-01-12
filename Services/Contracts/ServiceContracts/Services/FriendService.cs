@@ -200,7 +200,7 @@ namespace Services
                 response.StatusCode = StatusCode.OK;
 
                 response.FriendsList = result.Players
-                    .Select(global::Services.DTO.DataContract.Player.AssembleSvPlayer)
+                    .Select(Player.AssembleSvPlayer)
                     .Where(p => p != null)
                     .ToList();
             }

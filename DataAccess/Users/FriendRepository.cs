@@ -100,7 +100,6 @@ namespace DataAccess.Users
                 DataAccessLogger.Log.Error("Error retrieving friends: ", ex);
                 result.IsSuccess = false;
                 result.ErrorType = ErrorType.DB_ERROR;
-                result.Players = new List<Player>();
             }
             catch (Exception ex)
             {
