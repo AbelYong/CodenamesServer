@@ -155,9 +155,14 @@ namespace DataAccess.Users
             {
                 using (var context = _contextFactory.Create())
                 {
-                    var requests = context.Friendships.Include("Player1")
+                    var targetIds = context.Friendships
                         .Where(f => f.playerID == playerId && !f.requestStatus)
-                        .Select(f => f.Player1)
+                        .Select(f => f.friendID);
+
+                    var requests = context.Players
+                        .Include(p => p.User)
+                        .Where(p => targetIds.Contains(p.playerID))
+                        .AsNoTracking()
                         .ToList();
 
                     result.Players = requests;
