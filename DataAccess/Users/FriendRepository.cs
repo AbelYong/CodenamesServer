@@ -132,7 +132,7 @@ namespace DataAccess.Users
             return result;
         }
 
-        public PlayerListRequest GetSentRequests(Guid playerID)
+        public PlayerListRequest GetSentRequests(Guid playerId)
         {
             PlayerListRequest result = new PlayerListRequest();
             try
@@ -140,7 +140,7 @@ namespace DataAccess.Users
                 using (var context = _contextFactory.Create())
                 {
                     var requests = context.Friendships.Include("Player1")
-                        .Where(f => f.playerID == playerID && !f.requestStatus)
+                        .Where(f => f.playerID == playerId && !f.requestStatus)
                         .Select(f => f.Player1)
                         .ToList();
 

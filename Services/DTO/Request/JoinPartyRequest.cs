@@ -23,28 +23,7 @@ namespace Services.DTO.Request
 
         private bool EqualityHelper(JoinPartyRequest other)
         {
-            bool equalNullParties = Party == null && other.Party == null;
-            bool equalNullHosts = false;
-            bool equalNullGuests = false;
-            if (equalNullParties)
-            {
-                return
-                    IsSuccess.Equals(other.IsSuccess) &&
-                    StatusCode.Equals(other.StatusCode);
-            }
-            if (other.Party.PartyHost == null)
-            {
-                equalNullHosts = Party.PartyHost == null && other.Party.PartyHost == null;
-            }
-            if (other.Party.PartyGuest == null)
-            {
-                equalNullGuests = Party.PartyGuest == null && other.Party.PartyGuest == null;
-            }
-            if (!equalNullHosts && (Party.PartyHost == null || other.Party.PartyHost == null))
-            {
-                return false;
-            }
-            if (!equalNullGuests && (Party.PartyGuest == null || other.Party.PartyGuest == null))
+            if (!EvaluateNullEqualiy(other))
             {
                 return false;
             }
@@ -55,6 +34,33 @@ namespace Services.DTO.Request
                 Party.PartyHost.Equals(other.Party.PartyHost) &&
                 Party.PartyGuest.Equals(other.Party.PartyGuest) &&
                 Party.LobbyCode.Equals(other.Party.LobbyCode);
+        }
+
+        private bool EvaluateNullEqualiy(JoinPartyRequest other)
+        {
+            bool equalNullParties = Party == null && other.Party == null;
+            if (equalNullParties)
+            {
+                return
+                    IsSuccess.Equals(other.IsSuccess) &&
+                    StatusCode.Equals(other.StatusCode);
+            }
+            if (Party != null && other.Party != null)
+            {
+                if (Party.PartyHost != null || other.Party.PartyHost != null)
+                {
+                    return false;
+                }
+                if (Party.PartyGuest != null || other.Party.PartyGuest != null)
+                {
+                    return false;
+                }
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         public override int GetHashCode()

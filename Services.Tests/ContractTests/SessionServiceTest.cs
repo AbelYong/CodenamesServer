@@ -1,4 +1,5 @@
-﻿using Moq;
+﻿using DataAccess.DataRequests;
+using Moq;
 using NUnit.Framework;
 using Services.Contracts;
 using Services.Contracts.Callback;
@@ -52,7 +53,7 @@ namespace Services.Tests.ContractTests
         {
             var player = CreateTestPlayer();
             _friendManagerMock.Setup(f => f.GetFriends(It.IsAny<Guid>()))
-                .Returns(new List<Player>());
+                .Returns(new FriendListRequest());
             _callbackQueue.Enqueue(new Mock<ISessionCallback>().Object);
             CommunicationRequest expected = new CommunicationRequest
             {
@@ -70,10 +71,20 @@ namespace Services.Tests.ContractTests
         {
             var incomingPlayer = CreateTestPlayer();
             var friendPlayer = CreateTestPlayer();
+            FriendListRequest friendList = new FriendListRequest
+            {
+                IsSuccess = true,
+                FriendsList = new List<Player> { friendPlayer }
+            };
+            FriendListRequest incomingList = new FriendListRequest
+            {
+                IsSuccess = true,
+                FriendsList = new List<Player> { incomingPlayer }
+            };
             _friendManagerMock.Setup(f => f.GetFriends(incomingPlayer.PlayerID.Value))
-                .Returns(new List<Player> { friendPlayer });
+                .Returns(friendList);
             _friendManagerMock.Setup(f => f.GetFriends(friendPlayer.PlayerID.Value))
-                .Returns(new List<Player> { incomingPlayer });
+                .Returns(incomingList);
             var incomingCallback = new Mock<ISessionCallback>();
             var friendCallback = new Mock<ISessionCallback>();
             _callbackProviderMock.Setup(cp => cp.GetCallback<ISessionCallback>())
@@ -93,10 +104,20 @@ namespace Services.Tests.ContractTests
         {
             var incomingPlayer = CreateTestPlayer();
             var friendPlayer = CreateTestPlayer();
+            FriendListRequest friendList = new FriendListRequest
+            {
+                IsSuccess = true,
+                FriendsList = new List<Player> { friendPlayer }
+            };
+            FriendListRequest incomingList = new FriendListRequest
+            {
+                IsSuccess = true,
+                FriendsList = new List<Player> { incomingPlayer }
+            };
             _friendManagerMock.Setup(f => f.GetFriends(incomingPlayer.PlayerID.Value))
-                .Returns(new List<Player> { friendPlayer });
+                .Returns(friendList);
             _friendManagerMock.Setup(f => f.GetFriends(friendPlayer.PlayerID.Value))
-                .Returns(new List<Player> { incomingPlayer });
+                .Returns(incomingList);
             var friendCallbackMock = new Mock<ISessionCallback>();
             friendCallbackMock.Setup(c => c.NotifyFriendOnline(It.IsAny<Player>()))
                 .Throws(new CommunicationException("Connection lost"));
@@ -115,10 +136,20 @@ namespace Services.Tests.ContractTests
         {
             var incomingPlayer = CreateTestPlayer();
             var friend = CreateTestPlayer();
+            FriendListRequest friendList = new FriendListRequest
+            {
+                IsSuccess = true,
+                FriendsList = new List<Player> { friend }
+            };
+            FriendListRequest incomingList = new FriendListRequest
+            {
+                IsSuccess = true,
+                FriendsList = new List<Player> { incomingPlayer }
+            };
             _friendManagerMock.Setup(f => f.GetFriends(incomingPlayer.PlayerID.Value))
-                .Returns(new List<Player> { friend });
+                .Returns(friendList);
             _friendManagerMock.Setup(f => f.GetFriends(friend.PlayerID.Value))
-                .Returns(new List<Player> { incomingPlayer });
+                .Returns(incomingList);
             var friendCallback = new Mock<ISessionCallback>();
             _callbackQueue.Enqueue(friendCallback.Object);
             _sessionService.Connect(friend);
@@ -142,10 +173,20 @@ namespace Services.Tests.ContractTests
             ConnectPlayer(playerToDisconnect, playerToDisconnectCallback);
             ConnectPlayer(friendOnline, friendCallback);
             _callbackQueue.Enqueue(friendCallback.Object);
+            FriendListRequest friendList = new FriendListRequest
+            {
+                IsSuccess = true,
+                FriendsList = new List<Player> { friendOnline }
+            };
+            FriendListRequest leavingList = new FriendListRequest
+            {
+                IsSuccess = true,
+                FriendsList = new List<Player> { playerToDisconnect }
+            };
             _friendManagerMock.Setup(f => f.GetFriends(playerToDisconnect.PlayerID.Value))
-                .Returns(new List<Player> { friendOnline });
+                .Returns(friendList);
             _friendManagerMock.Setup(f => f.GetFriends(friendOnline.PlayerID.Value))
-               .Returns(new List<Player> { playerToDisconnect });
+               .Returns(leavingList);
 
             _sessionService.Disconnect(playerToDisconnect);
 
@@ -161,7 +202,7 @@ namespace Services.Tests.ContractTests
             var callbackA = new Mock<ISessionCallback>();
             var callbackB = new Mock<ISessionCallback>();
             _friendManagerMock.Setup(f => f.GetFriends(It.IsAny<Guid>()))
-                .Returns(new List<Player>());
+                .Returns(new FriendListRequest());
             _callbackProviderMock.Setup(cp => cp.GetCallback<ISessionCallback>())
                 .Returns(callbackA.Object);
             _sessionService.Connect(playerA);
@@ -183,7 +224,7 @@ namespace Services.Tests.ContractTests
             var callbackA = new Mock<ISessionCallback>();
             var callbackB = new Mock<ISessionCallback>();
             _friendManagerMock.Setup(f => f.GetFriends(It.IsAny<Guid>()))
-                .Returns(new List<Player>());
+                .Returns(new FriendListRequest());
             _callbackProviderMock.Setup(cp => cp.GetCallback<ISessionCallback>())
                 .Returns(callbackA.Object);
             _sessionService.Connect(playerA);
@@ -206,7 +247,7 @@ namespace Services.Tests.ContractTests
             _callbackProviderMock.Setup(cp => cp.GetCallback<ISessionCallback>())
                 .Returns(callbackA.Object);
             _friendManagerMock.Setup(f => f.GetFriends(It.IsAny<Guid>()))
-                .Returns(new List<Player>());
+                .Returns(new FriendListRequest());
             _callbackProviderMock.Setup(cp => cp.GetCallback<ISessionCallback>())
                 .Returns(callbackB.Object);
             _sessionService.Connect(playerB);
@@ -303,14 +344,12 @@ namespace Services.Tests.ContractTests
         public void KickUser_PlayerOnline_KicksPlayerAndDisconnects()
         {
             var player = CreateTestPlayer();
-            var callback = new Mock<ISessionCallback>();
-            _friendManagerMock.Setup(f => f.GetFriends(It.IsAny<Guid>()))
-                .Returns(new List<Player>());
-            ConnectPlayer(player, callback);
+            var callbackMock = new Mock<ISessionCallback>();
+            ConnectPlayer(player, callbackMock);
 
             _sessionService.KickPlayer(player.PlayerID.Value, KickReason.PERMANTENT_BAN);
 
-            callback.Verify(c => c.NotifyKicked(KickReason.PERMANTENT_BAN), Times.Once);
+            callbackMock.Verify(c => c.NotifyKicked(KickReason.PERMANTENT_BAN), Times.Once);
             Assert.That(_sessionService.IsPlayerOnline(player.PlayerID.Value), Is.False);
         }
 
@@ -318,13 +357,10 @@ namespace Services.Tests.ContractTests
         public void KickUser_NotificationThrowsException_RemovesPlayer()
         {
             var player = CreateTestPlayer();
-            _friendManagerMock.Setup(f => f.GetFriends(It.IsAny<Guid>()))
-                .Returns(new List<Player>());
             var callbackMock = new Mock<ISessionCallback>();
+            ConnectPlayer(player, callbackMock);
             callbackMock.Setup(c => c.NotifyKicked(It.IsAny<KickReason>()))
                 .Throws(new CommunicationException("Simulated comm error"));
-            _callbackQueue.Enqueue(callbackMock.Object);
-            _sessionService.Connect(player);
 
             _sessionService.KickPlayer(player.PlayerID.Value, KickReason.TEMPORARY_BAN);
 
@@ -333,7 +369,7 @@ namespace Services.Tests.ContractTests
 
         private void ConnectPlayer(Player player, Mock<ISessionCallback> mockCallback)
         {
-            _friendManagerMock.Setup(f => f.GetFriends(player.PlayerID.Value)).Returns(new List<Player>());
+            _friendManagerMock.Setup(f => f.GetFriends(player.PlayerID.Value)).Returns(new FriendListRequest());
             _callbackQueue.Enqueue(mockCallback.Object);
             _sessionService.Connect(player);
         }
