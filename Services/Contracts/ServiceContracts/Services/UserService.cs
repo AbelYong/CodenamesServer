@@ -13,13 +13,15 @@ namespace Services.Contracts.ServiceContracts.Services
     {
         private readonly IUserRepository _userRepository;
         private readonly IPlayerRepository _playerRepository;
+        private readonly IEmailManager _emailManager;
 
-        public UserService() : this (new UserRepository(), new PlayerRepository()) { }
+        public UserService() : this (new UserRepository(), new PlayerRepository(), new EmailService()) { }
         
-        public UserService(IUserRepository userDAO, IPlayerRepository playerRepository)
+        public UserService(IUserRepository userDAO, IPlayerRepository playerRepository, IEmailManager emailManager)
         {
             _userRepository = userDAO;
             _playerRepository = playerRepository;
+            _emailManager = emailManager;
         }
 
         public Player GetPlayerByUserID(Guid userID)
@@ -63,6 +65,7 @@ namespace Services.Contracts.ServiceContracts.Services
 
             if (dbRequest.IsSuccess)
             {
+                _emailManager.DeleteVerificationCode(svPlayer.User.Email, EmailType.EMAIL_VERIFICATION);
                 request.IsSuccess = true;
             }
             else

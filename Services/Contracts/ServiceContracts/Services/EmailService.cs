@@ -3,6 +3,7 @@ using System.Runtime.Caching;
 using Services.Operations;
 using System;
 using DataAccess.Users;
+using Services.Operations;
 using Services.Contracts.ServiceContracts.Managers;
 using Services.DTO.Request;
 using Services.DTO.DataContract;
@@ -127,7 +128,6 @@ namespace Services.Contracts.ServiceContracts.Services
             {
                 if (info.Code == code)
                 {
-                    RemoveVerificationInfo(email, emailType);
                     request.IsSuccess = true;
                     request.StatusCode = StatusCode.OK;
                 }
@@ -139,6 +139,7 @@ namespace Services.Contracts.ServiceContracts.Services
                     request.RemainingAttempts = info.RemainingAttempts;
                     if (info.RemainingAttempts == 0)
                     {
+                        ServerLogger.Log.WarnFormat("Too many attempts for the email: {0}, Type: {1}", email, emailType);
                         RemoveVerificationInfo(email, emailType);
                     }
                 }
@@ -199,6 +200,10 @@ namespace Services.Contracts.ServiceContracts.Services
             }
         }
 
+        public void DeleteVerificationCode(string email, EmailType emailType)
+        {
+            RemoveVerificationInfo(email, emailType);
+        }
         private sealed class VerificationInfo
         {
             public string Code { get; set; }

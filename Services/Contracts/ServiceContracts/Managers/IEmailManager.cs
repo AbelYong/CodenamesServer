@@ -40,5 +40,8 @@ namespace Services.Contracts.ServiceContracts.Managers
         /// </returns>
         [OperationContract]
         ConfirmEmailRequest ValidateVerificationCode(string email, string code, EmailType emailType);
+
+        [OperationContract]
+        void DeleteVerificationCode(string email, EmailType emailType);
     }
 }

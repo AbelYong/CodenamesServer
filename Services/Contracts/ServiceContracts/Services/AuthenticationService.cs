@@ -88,6 +88,7 @@ namespace Services.Contracts.ServiceContracts.Services
                 UpdateRequest result = _userRepository.ResetPassword(email, newPassword);
                 if (result.IsSuccess)
                 {
+                    _emailManager.DeleteVerificationCode(email, EmailType.PASSWORD_RESET);
                     request.IsSuccess = true;
                     request.StatusCode = StatusCode.UPDATED;
                     string audit = string.Format("Password reset completed for user with email: {0}", email);
