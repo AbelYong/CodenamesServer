@@ -164,9 +164,6 @@ namespace DataAccess.Users
             return result;
         }
 
-        /// <summary>
-        /// Sends a friend request from one player to another.
-        /// </summary>
         public OperationResult SendFriendRequest(Guid fromPlayerId, Guid toPlayerId)
         {
             var result = new OperationResult { Success = false };
@@ -236,9 +233,6 @@ namespace DataAccess.Users
             }
         }
 
-        /// <summary>
-        /// Accepts a pending friend request.
-        /// </summary>
         public OperationResult AcceptFriendRequest(Guid playerId, Guid requesterPlayerId)
         {
             var result = new OperationResult { Success = false };
@@ -299,9 +293,6 @@ namespace DataAccess.Users
             }
         }
 
-        /// <summary>
-        /// Rejects a pending friend request.
-        /// </summary>
         public OperationResult RejectFriendRequest(Guid playerId, Guid requesterPlayerId)
         {
             var result = new OperationResult { Success = false };
@@ -348,9 +339,6 @@ namespace DataAccess.Users
             }
         }
 
-        /// <summary>
-        /// Removes an existing friendship between two players.
-        /// </summary>
         public OperationResult RemoveFriend(Guid playerId, Guid friendId)
         {
             var result = new OperationResult { Success = false };
