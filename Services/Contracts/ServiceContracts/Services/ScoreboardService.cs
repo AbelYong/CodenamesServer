@@ -43,6 +43,8 @@ namespace Services.Contracts.ServiceContracts.Services
                     var currentTop = GetTopPlayers();
                     callback.NotifyLeaderboardUpdate(currentTop);
                 }
+                string audit = string.Format("{0} has suscribed to Scoreboard Service", ServerLogger.GetPlayerIdentifier(playerID));
+                ServerLogger.Log.Info(audit);
             }
             catch (Exception ex) when (ex is CommunicationException || ex is TimeoutException || ex is ObjectDisposedException)
             {
@@ -60,6 +62,9 @@ namespace Services.Contracts.ServiceContracts.Services
             if (playerDisconnect && callback is ICommunicationObject communicationObject)
             {
                 communicationObject.Close();
+
+                string audit = string.Format("{0} has unsuscribed from Scoreboard Service", ServerLogger.GetPlayerIdentifier(playerID));
+                ServerLogger.Log.Info(audit);
             }
         }
 

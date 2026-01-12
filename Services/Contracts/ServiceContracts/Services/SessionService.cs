@@ -209,6 +209,11 @@ namespace Services.Contracts.ServiceContracts.Services
             RemoveFaultedChannels(faultedChannels);
         }
 
+        public bool Ping()
+        {
+            return true;
+        }
+
         public void NotifyNewFriendship(Player friendA, Player friendB)
         {
             bool isAOnline = _playersOnline.TryGetValue(friendA, out ISessionCallback channelA);

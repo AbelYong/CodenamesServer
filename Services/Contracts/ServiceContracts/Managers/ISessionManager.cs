@@ -37,6 +37,9 @@ namespace Services.Contracts.ServiceContracts.Managers
         [OperationContract(IsOneWay = true)]
         void Disconnect(Player player);
 
+        [OperationContract(IsOneWay = false)]
+        bool Ping();
+
         /// <summary>
         /// Allows the client to appear as online after adding a new friend.
         /// Should be called upon the acceptance of a friendship request
