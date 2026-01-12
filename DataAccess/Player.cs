@@ -35,7 +35,7 @@ namespace DataAccess
         public virtual ICollection<Friendship> Friendships { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Friendship> Friendships1 { get; set; }
-        public virtual User User { get; set; }
+        public User User { get; set; }
         public virtual Scoreboard Scoreboard { get; set; }
     }
 }

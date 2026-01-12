@@ -27,7 +27,7 @@ namespace DataAccess.Users
             {
                 using (var context = _contextFactory.Create())
                 {
-                    var query = from p in context.Players.Include(p => p.User)
+                    var query = from p in context.Players.Include(p => p.User).AsNoTracking()
                                 where p.userID == userID
                                 select p;
                     return query.FirstOrDefault();

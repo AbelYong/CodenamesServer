@@ -67,7 +67,7 @@ namespace DataAccess.Tests.UserTests
         {
             var result = _friendRepository.SearchPlayers(query, Guid.NewGuid());
 
-            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.Players.Count.Equals(0));
         }
 
         [Test]
