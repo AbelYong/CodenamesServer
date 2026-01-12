@@ -149,8 +149,9 @@ namespace DataAccess.Tests.UserTests
         {
             Guid meId = Guid.NewGuid();
             Guid requesterId = Guid.NewGuid();
-            _friendshipsData.Add(new Friendship { playerID = requesterId, friendID = meId, requestStatus = false });
-            _playersData.Add(new Player { playerID = requesterId, User = new User() });
+            var requesterPlayer = new Player { playerID = requesterId, User = new User() };
+            _playersData.Add(requesterPlayer);
+            _friendshipsData.Add(new Friendship { playerID = requesterId, friendID = meId, requestStatus = false, Player = requesterPlayer });
 
             var result = _friendRepository.GetIncomingRequests(meId);
 
@@ -180,8 +181,9 @@ namespace DataAccess.Tests.UserTests
         {
             Guid meId = Guid.NewGuid();
             Guid targetId = Guid.NewGuid();
-            _friendshipsData.Add(new Friendship { playerID = meId, friendID = targetId, requestStatus = false });
-            _playersData.Add(new Player { playerID = targetId, User = new User() });
+            var targetPlayer = new Player { playerID = targetId, User = new User() };
+            _playersData.Add(targetPlayer);
+            _friendshipsData.Add(new Friendship { playerID = meId, friendID = targetId, requestStatus = false, Player1 = targetPlayer });
 
             var result = _friendRepository.GetSentRequests(meId);
 
