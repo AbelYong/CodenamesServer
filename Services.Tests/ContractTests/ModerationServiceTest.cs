@@ -147,6 +147,7 @@ namespace Services.Tests.ContractTests
             Guid reporterUserId = Guid.NewGuid();
             Guid reportedUserId = Guid.NewGuid();
             SetupPlayers(reporterPlayerId, reporterUserId, reportedPlayerId, reportedUserId);
+            _reportDaoMock.Setup(r => r.HasPlayerReportedTarget(reporterUserId, reportedUserId)).Returns(false);
             _reportDaoMock.Setup(r => r.CountUniqueReports(reportedUserId)).Returns(3);
             CommunicationRequest expected = new CommunicationRequest
             {
@@ -173,6 +174,7 @@ namespace Services.Tests.ContractTests
             Guid reporterUserId = Guid.NewGuid();
             Guid reportedUserId = Guid.NewGuid();
             SetupPlayers(reporterPlayerId, reporterUserId, reportedPlayerId, reportedUserId);
+            _reportDaoMock.Setup(r => r.HasPlayerReportedTarget(reporterUserId, reportedUserId)).Returns(false);
             _reportDaoMock.Setup(r => r.CountUniqueReports(reportedUserId)).Returns(10);
             CommunicationRequest expected = new CommunicationRequest
             {

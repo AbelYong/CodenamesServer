@@ -136,7 +136,7 @@ namespace Services.Tests.ContractTests
             CommunicationRequest expected = new CommunicationRequest
             {
                 IsSuccess = false,
-                StatusCode = StatusCode.SERVER_ERROR
+                StatusCode = StatusCode.DATABASE_ERROR
             };
 
             var result = _emailService.SendVerificationCode(email, EmailType.PASSWORD_RESET);

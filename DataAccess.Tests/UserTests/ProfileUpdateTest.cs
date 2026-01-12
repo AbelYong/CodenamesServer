@@ -169,9 +169,10 @@ namespace DataAccess.Test.UserTests
             Guid userId = Guid.NewGuid();
             Guid playerId = Guid.NewGuid();
             string email = "test@test.com";
+            string oldName = "OldName";
             string newUsername = "TakenName";
             _usersData.Add(new User { userID = userId, email = email });
-            _playersData.Add(new Player { playerID = playerId, userID = userId, username = "OldName" });
+            _playersData.Add(new Player { playerID = playerId, userID = userId, username = oldName });
             _playersData.Add(new Player { playerID = Guid.NewGuid(), username = newUsername });
             var playerUpdate = CreateValidPlayer(userId, playerId, newUsername, email);
             OperationResult expected = new OperationResult

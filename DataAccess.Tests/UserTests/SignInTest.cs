@@ -14,7 +14,7 @@ namespace DataAccess.Test.UserTests
     {
         private Mock<IDbContextFactory> _contextFactory;
         private Mock<ICodenamesContext> _context;
-        private Mock<IPlayerRepository> _playerDAO;
+        private Mock<IPlayerRepository> _playerRepository;
         private UserRepository _userRepository;
 
         [SetUp]
@@ -25,9 +25,9 @@ namespace DataAccess.Test.UserTests
             _contextFactory = new Mock<IDbContextFactory>();
             _contextFactory.Setup(f => f.Create()).Returns(_context.Object);
 
-            _playerDAO = new Mock<IPlayerRepository>();
+            _playerRepository = new Mock<IPlayerRepository>();
 
-            _userRepository = new UserRepository(_contextFactory.Object, _playerDAO.Object);
+            _userRepository = new UserRepository(_contextFactory.Object, _playerRepository.Object);
         }
 
         [Test]
@@ -37,8 +37,8 @@ namespace DataAccess.Test.UserTests
             string password = "ValidPassword1!";
             Guid expectedNewId = Guid.NewGuid();
 
-            _playerDAO.Setup(p => p.ValidateEmailNotDuplicated(It.IsAny<string>())).Returns(true);
-            _playerDAO.Setup(p => p.ValidateUsernameNotDuplicated(It.IsAny<string>())).Returns(true);
+            _playerRepository.Setup(p => p.ValidateEmailNotDuplicated(It.IsAny<string>())).Returns(true);
+            _playerRepository.Setup(p => p.ValidateUsernameNotDuplicated(It.IsAny<string>())).Returns(true);
 
             _context.Setup(c => c.uspSignIn(
                 It.IsAny<string>(),
@@ -95,8 +95,8 @@ namespace DataAccess.Test.UserTests
         {
             var player = CreateValidPlayer();
             string password = "ValidPassword1!";
-            _playerDAO.Setup(p => p.ValidateEmailNotDuplicated(player.User.email)).Returns(false);
-            _playerDAO.Setup(p => p.ValidateUsernameNotDuplicated(It.IsAny<string>())).Returns(true);
+            _playerRepository.Setup(p => p.ValidateEmailNotDuplicated(player.User.email)).Returns(false);
+            _playerRepository.Setup(p => p.ValidateUsernameNotDuplicated(It.IsAny<string>())).Returns(true);
             PlayerRegistrationRequest expected = new PlayerRegistrationRequest
             {
                 IsSuccess = false,
@@ -114,8 +114,8 @@ namespace DataAccess.Test.UserTests
         {
             var player = CreateValidPlayer();
             string password = "ValidPassword1!";
-            _playerDAO.Setup(p => p.ValidateEmailNotDuplicated(It.IsAny<string>())).Returns(true);
-            _playerDAO.Setup(p => p.ValidateUsernameNotDuplicated(player.username)).Returns(false);
+            _playerRepository.Setup(p => p.ValidateEmailNotDuplicated(It.IsAny<string>())).Returns(true);
+            _playerRepository.Setup(p => p.ValidateUsernameNotDuplicated(player.username)).Returns(false);
             PlayerRegistrationRequest expected = new PlayerRegistrationRequest
             {
                 IsSuccess = false,
@@ -134,8 +134,8 @@ namespace DataAccess.Test.UserTests
             var player = CreateValidPlayer();
             player.User.email = "invalid-email";
             string password = "ValidPassword1!";
-            _playerDAO.Setup(p => p.ValidateEmailNotDuplicated(It.IsAny<string>())).Returns(true);
-            _playerDAO.Setup(p => p.ValidateUsernameNotDuplicated(It.IsAny<string>())).Returns(true);
+            _playerRepository.Setup(p => p.ValidateEmailNotDuplicated(It.IsAny<string>())).Returns(true);
+            _playerRepository.Setup(p => p.ValidateUsernameNotDuplicated(It.IsAny<string>())).Returns(true);
             PlayerRegistrationRequest expected = new PlayerRegistrationRequest
             {
                 IsSuccess = false,
@@ -153,8 +153,8 @@ namespace DataAccess.Test.UserTests
         {
             var player = CreateValidPlayer();
             string password = "123";
-            _playerDAO.Setup(p => p.ValidateEmailNotDuplicated(It.IsAny<string>())).Returns(true);
-            _playerDAO.Setup(p => p.ValidateUsernameNotDuplicated(It.IsAny<string>())).Returns(true);
+            _playerRepository.Setup(p => p.ValidateEmailNotDuplicated(It.IsAny<string>())).Returns(true);
+            _playerRepository.Setup(p => p.ValidateUsernameNotDuplicated(It.IsAny<string>())).Returns(true);
             PlayerRegistrationRequest expected = new PlayerRegistrationRequest
             {
                 IsSuccess = false,
@@ -172,8 +172,8 @@ namespace DataAccess.Test.UserTests
         {
             var player = CreateValidPlayer();
             string password = "ValidPassword1!";
-            _playerDAO.Setup(p => p.ValidateEmailNotDuplicated(It.IsAny<string>())).Returns(true);
-            _playerDAO.Setup(p => p.ValidateUsernameNotDuplicated(It.IsAny<string>())).Returns(true);
+            _playerRepository.Setup(p => p.ValidateEmailNotDuplicated(It.IsAny<string>())).Returns(true);
+            _playerRepository.Setup(p => p.ValidateUsernameNotDuplicated(It.IsAny<string>())).Returns(true);
             _context.Setup(c => c.uspSignIn(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<ObjectParameter>()))
                 .Throws(new DbUpdateException("Simulated DB Error"));
             PlayerRegistrationRequest expected = new PlayerRegistrationRequest
@@ -194,8 +194,8 @@ namespace DataAccess.Test.UserTests
         {
             var player = CreateValidPlayer();
             string password = "ValidPassword1!";
-            _playerDAO.Setup(p => p.ValidateEmailNotDuplicated(It.IsAny<string>())).Returns(true);
-            _playerDAO.Setup(p => p.ValidateUsernameNotDuplicated(It.IsAny<string>())).Returns(true);
+            _playerRepository.Setup(p => p.ValidateEmailNotDuplicated(It.IsAny<string>())).Returns(true);
+            _playerRepository.Setup(p => p.ValidateUsernameNotDuplicated(It.IsAny<string>())).Returns(true);
             _context.Setup(c => c.uspSignIn(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<ObjectParameter>()))
                 .Throws(new EntityException("Simulated Entity Error"));
             PlayerRegistrationRequest expected = new PlayerRegistrationRequest
@@ -216,8 +216,8 @@ namespace DataAccess.Test.UserTests
         {
             var player = CreateValidPlayer();
             string password = "ValidPassword1!";
-            _playerDAO.Setup(p => p.ValidateEmailNotDuplicated(It.IsAny<string>())).Returns(true);
-            _playerDAO.Setup(p => p.ValidateUsernameNotDuplicated(It.IsAny<string>())).Returns(true);
+            _playerRepository.Setup(p => p.ValidateEmailNotDuplicated(It.IsAny<string>())).Returns(true);
+            _playerRepository.Setup(p => p.ValidateUsernameNotDuplicated(It.IsAny<string>())).Returns(true);
             _context.Setup(c => c.uspSignIn(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<ObjectParameter>()))
                 .Throws(new InvalidCastException("Simulated Cast Error"));
             PlayerRegistrationRequest expected = new PlayerRegistrationRequest

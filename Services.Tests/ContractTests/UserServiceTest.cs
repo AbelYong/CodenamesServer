@@ -53,35 +53,6 @@ namespace Services.Tests.ContractTests
         }
 
         [Test]
-        public void SignIn_NullPlayer_ReturnsMissingData()
-        {
-            SignInRequest expected = new SignInRequest
-            {
-                IsSuccess = false,
-                StatusCode = StatusCode.MISSING_DATA
-            };
-
-            var result = _userService.SignIn(null);
-
-            Assert.That(result.Equals(expected));
-        }
-
-        [Test]
-        public void SignIn_NullUser_ReturnsMissingData()
-        {
-            var player = new Player { User = null };
-            SignInRequest expected = new SignInRequest
-            {
-                IsSuccess = false,
-                StatusCode = StatusCode.MISSING_DATA
-            };
-
-            var result = _userService.SignIn(player);
-
-            Assert.That(result.Equals(expected));
-        }
-
-        [Test]
         public void SignIn_Success_ReturnsSuccess()
         {
             var player = CreateTestPlayer();
@@ -103,6 +74,35 @@ namespace Services.Tests.ContractTests
                 IsUsernameDuplicate = false,
                 IsEmailValid = true,
                 IsPasswordValid = true
+            };
+
+            var result = _userService.SignIn(player);
+
+            Assert.That(result.Equals(expected));
+        }
+
+        [Test]
+        public void SignIn_NullPlayer_ReturnsMissingData()
+        {
+            SignInRequest expected = new SignInRequest
+            {
+                IsSuccess = false,
+                StatusCode = StatusCode.MISSING_DATA
+            };
+
+            var result = _userService.SignIn(null);
+
+            Assert.That(result.Equals(expected));
+        }
+
+        [Test]
+        public void SignIn_NullUser_ReturnsMissingData()
+        {
+            var player = new Player { User = null };
+            SignInRequest expected = new SignInRequest
+            {
+                IsSuccess = false,
+                StatusCode = StatusCode.MISSING_DATA
             };
 
             var result = _userService.SignIn(player);
@@ -190,7 +190,7 @@ namespace Services.Tests.ContractTests
             SignInRequest expected = new SignInRequest
             {
                 IsSuccess = false,
-                StatusCode = StatusCode.SERVER_ERROR
+                StatusCode = StatusCode.DATABASE_ERROR
             };
 
             var result = _userService.SignIn(player);
@@ -224,7 +224,7 @@ namespace Services.Tests.ContractTests
             CommunicationRequest expected = new CommunicationRequest
             {
                 IsSuccess = false,
-                StatusCode = StatusCode.SERVER_ERROR
+                StatusCode = StatusCode.DATABASE_ERROR
             };
 
             var result = _userService.UpdateProfile(player);

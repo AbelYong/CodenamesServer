@@ -111,7 +111,7 @@ namespace Services.Tests.ContractTests
             AuthenticationRequest expected = new AuthenticationRequest
             {
                 IsSuccess = false,
-                StatusCode = StatusCode.SERVER_ERROR,
+                StatusCode = StatusCode.DATABASE_ERROR,
             };
 
             var result = _authService.Authenticate(username, password);
@@ -127,7 +127,7 @@ namespace Services.Tests.ContractTests
             AuthenticationRequest expected = new AuthenticationRequest
             {
                 IsSuccess = false,
-                StatusCode = StatusCode.SERVER_ERROR,
+                StatusCode = StatusCode.DATABASE_ERROR,
             };
 
             var result = _authService.Authenticate("user", "pass");
@@ -169,7 +169,7 @@ namespace Services.Tests.ContractTests
             PasswordResetRequest expected = new PasswordResetRequest
             {
                 IsSuccess = false,
-                StatusCode = StatusCode.SERVER_ERROR,
+                StatusCode = StatusCode.DATABASE_ERROR,
             };
 
             var result = _authService.CompletePasswordReset(email, code, newPass);
