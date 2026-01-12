@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using DataAccess.Util;
+using DataAccess.DataRequests;
 
 namespace DataAccess.Users
 {
-    public interface IFriendDAO
+    public interface IFriendRepository
     {
-        IEnumerable<Player> SearchPlayers(string query, Guid excludePlayerId, int limit = 20);
-        IEnumerable<Player> GetFriends(Guid playerId);
-        IEnumerable<Player> GetIncomingRequests(Guid playerId);
-        IEnumerable<Player> GetSentRequests(Guid playerId);
+        PlayerListRequest SearchPlayers(string query, Guid excludePlayerId, int limit = 20);
+        PlayerListRequest GetFriends(Guid playerId);
+        PlayerListRequest GetIncomingRequests(Guid playerId);
+        PlayerListRequest GetSentRequests(Guid playerId);
         OperationResult SendFriendRequest(Guid fromPlayerId, Guid toPlayerId);
         OperationResult AcceptFriendRequest(Guid playerId, Guid requesterPlayerId);
         OperationResult RejectFriendRequest(Guid playerId, Guid requesterPlayerId);

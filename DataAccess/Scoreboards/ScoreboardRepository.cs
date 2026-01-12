@@ -1,4 +1,5 @@
-﻿using DataAccess.Users;
+﻿using DataAccess.DataRequests;
+using DataAccess.Users;
 using DataAccess.Util;
 using System;
 using System.Collections.Generic;
@@ -9,14 +10,14 @@ using System.Linq;
 
 namespace DataAccess.Scoreboards
 {
-    public class ScoreboardDAO : IScoreboardDAO
+    public class ScoreboardRepository : IScoreboardRepository
     {
         private readonly IDbContextFactory _contextFactory;
         private readonly IPlayerRepository _playerRepository;
 
-        public ScoreboardDAO() : this(new DbContextFactory(), new PlayerRepository()) { }
+        public ScoreboardRepository() : this(new DbContextFactory(), new PlayerRepository()) { }
 
-        public ScoreboardDAO(IDbContextFactory contextFactory, IPlayerRepository playerRepository)
+        public ScoreboardRepository(IDbContextFactory contextFactory, IPlayerRepository playerRepository)
         {
             _contextFactory = contextFactory;
             _playerRepository = playerRepository;
@@ -192,28 +193,37 @@ namespace DataAccess.Scoreboards
             }
         }
 
-        public List<Scoreboard> GetTopPlayersByWins(int topCount)
+        public ScoreboardListRequest GetTopPlayersByWins(int topCount)
         {
+            ScoreboardListRequest result = new ScoreboardListRequest();
             try
             {
                 using (var context = _contextFactory.Create())
                 {
-                    return context.Scoreboards.Include("Player")
+                    var list = context.Scoreboards.Include("Player")
                                   .OrderByDescending(s => s.mostGamesWon)
                                   .Take(topCount)
                                   .ToList();
+
+                    result.Scoreboards = list;
+                    result.IsSuccess = true;
                 }
             }
             catch (Exception ex) when (ex is EntityException || ex is SqlException)
             {
                 DataAccessLogger.Log.Debug("Exception while retrieving top players", ex);
-                return new List<Scoreboard>();
+                result.IsSuccess = false;
+                result.ErrorType = ErrorType.DB_ERROR;
+                result.Scoreboards = new List<Scoreboard>();
             }
             catch (Exception ex)
             {
                 DataAccessLogger.Log.Error("Unexpected exception while retrieving top players: ", ex);
-                return new List<Scoreboard>();
+                result.IsSuccess = false;
+                result.ErrorType = ErrorType.DB_ERROR;
+                result.Scoreboards = new List<Scoreboard>();
             }
+            return result;
         }
     }
 }

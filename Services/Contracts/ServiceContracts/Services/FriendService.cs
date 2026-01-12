@@ -18,13 +18,13 @@ namespace Services
     public class FriendService : IFriendManager
     {
         private readonly ICallbackProvider _callbackProvider;
-        private readonly IFriendDAO _friendDAO;
+        private readonly IFriendRepository _friendDAO;
         private readonly IPlayerRepository _playerRepository;
         private Guid _playerId;
 
-        public FriendService() : this (new CallbackProvider(), new FriendDAO(), new PlayerRepository()) { }
+        public FriendService() : this (new CallbackProvider(), new FriendRepository(), new PlayerRepository()) { }
 
-        public FriendService(ICallbackProvider callbackProvider, IFriendDAO friendDAO, IPlayerRepository playerRepository)
+        public FriendService(ICallbackProvider callbackProvider, IFriendRepository friendDAO, IPlayerRepository playerRepository)
         {
             _callbackProvider = callbackProvider;
             _friendDAO = friendDAO;
@@ -166,56 +166,115 @@ namespace Services
             return response;
         }
 
-        public List<Player> SearchPlayers(string query, Guid mePlayerId, int limit)
+        public FriendListRequest SearchPlayers(string query, Guid mePlayerId, int limit)
         {
-            var items = _friendDAO.SearchPlayers(query, mePlayerId, limit <= 0 ? 20 : limit);
+            FriendListRequest response = new FriendListRequest();
 
-            if (items == null)
+            var result = _friendDAO.SearchPlayers(query, mePlayerId, limit <= 0 ? 20 : limit);
+
+            if (result.IsSuccess)
             {
-                return new List<Player>();
+                response.IsSuccess = true;
+                response.StatusCode = StatusCode.OK;
+
+                response.FriendsList = result.Players
+                    .Where(p => p.playerID != mePlayerId)
+                    .Select(global::Services.DTO.DataContract.Player.AssembleSvPlayer)
+                    .Where(p => p != null)
+                    .ToList();
+            }
+            else
+            {
+                response.IsSuccess = false;
+                response.StatusCode = GetStatusCodeFromDbError(result.ErrorType);
+                response.FriendsList = new List<Player>();
             }
 
-            return items
-                .Where(p => p.playerID != mePlayerId)
-                .Select(Player.AssembleSvPlayer)
-                .Where(p => p != null)
-                .ToList();
+            return response;
         }
 
-        public List<Player> GetFriends(Guid mePlayerId)
+        public FriendListRequest GetFriends(Guid mePlayerId)
         {
-            var items = _friendDAO.GetFriends(mePlayerId);
+            FriendListRequest response = new FriendListRequest();
+            var result = _friendDAO.GetFriends(mePlayerId);
 
-            if (items == null)
+            if (result.IsSuccess)
             {
-                return new List<Player>();
+                response.IsSuccess = true;
+                response.StatusCode = StatusCode.OK;
+
+                response.FriendsList = result.Players
+                    .Select(global::Services.DTO.DataContract.Player.AssembleSvPlayer)
+                    .Where(p => p != null)
+                    .ToList();
+            }
+            else
+            {
+                response.IsSuccess = false;
+                response.StatusCode = GetStatusCodeFromDbError(result.ErrorType);
+                response.FriendsList = new List<Player>();
             }
 
-            return items.Select(Player.AssembleSvPlayer).Where(p => p != null).ToList();
+            return response;
         }
 
-        public List<Player> GetIncomingRequests(Guid mePlayerId)
+        public FriendListRequest GetIncomingRequests(Guid mePlayerId)
         {
-            var items = _friendDAO.GetIncomingRequests(mePlayerId);
+            FriendListRequest response = new FriendListRequest();
+            var result = _friendDAO.GetIncomingRequests(mePlayerId);
 
-            if (items == null)
+            if (result.IsSuccess)
             {
-                return new List<Player>();
+                response.IsSuccess = true;
+                response.StatusCode = StatusCode.OK;
+
+                response.FriendsList = result.Players
+                    .Select(Player.AssembleSvPlayer)
+                    .Where(p => p != null)
+                    .ToList();
+            }
+            else
+            {
+                response.IsSuccess = false;
+                response.StatusCode = GetStatusCodeFromDbError(result.ErrorType);
+                response.FriendsList = new List<Player>();
             }
 
-            return items.Select(Player.AssembleSvPlayer).Where(p => p != null).ToList();
+            return response;
         }
 
-        public List<Player> GetSentRequests(Guid mePlayerId)
+        public FriendListRequest GetSentRequests(Guid mePlayerId)
         {
-            var items = _friendDAO.GetSentRequests(mePlayerId);
+            FriendListRequest response = new FriendListRequest();
+            var result = _friendDAO.GetSentRequests(mePlayerId);
 
-            if (items == null)
+            if (result.IsSuccess)
             {
-                return new List<Player>();
+                response.IsSuccess = true;
+                response.StatusCode = StatusCode.OK;
+
+                response.FriendsList = result.Players
+                    .Select(global::Services.DTO.DataContract.Player.AssembleSvPlayer)
+                    .Where(p => p != null)
+                    .ToList();
+            }
+            else
+            {
+                response.IsSuccess = false;
+                response.StatusCode = GetStatusCodeFromDbError(result.ErrorType);
+                response.FriendsList = new List<global::Services.DTO.DataContract.Player>();
             }
 
-            return items.Select(Player.AssembleSvPlayer).Where(p => p != null).ToList();
+            return response;
+        }
+
+        private StatusCode GetStatusCodeFromDbError(DataAccess.DataRequests.ErrorType errorType)
+        {
+            if (errorType == DataAccess.DataRequests.ErrorType.DB_ERROR)
+            {
+                return StatusCode.DATABASE_ERROR;
+            }
+            return StatusCode.SERVER_ERROR;
         }
     }
 }

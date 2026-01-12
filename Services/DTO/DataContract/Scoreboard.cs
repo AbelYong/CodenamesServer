@@ -20,5 +20,22 @@ namespace Services.DTO.DataContract
 
         [DataMember]
         public int AssassinsRevealed { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is Scoreboard other)
+            {
+                return Username == other.Username &&
+                       GamesWon == other.GamesWon &&
+                       FastestMatch == other.FastestMatch &&
+                       AssassinsRevealed == other.AssassinsRevealed;
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return new { Username, GamesWon, FastestMatch, AssassinsRevealed }.GetHashCode();
+        }
     }
 }

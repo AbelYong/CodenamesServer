@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using DataAccess.DataRequests;
 
 namespace DataAccess.Scoreboards
 {
-    public interface IScoreboardDAO
+    public interface IScoreboardRepository
     {
         bool UpdateMatchesWon(Guid playerID);
 
@@ -11,6 +12,6 @@ namespace DataAccess.Scoreboards
         
         bool UpdateAssassinsPicked(Guid playerID);
         Scoreboard GetPlayerScoreboard(Guid playerID);
-        List<Scoreboard> GetTopPlayersByWins(int topCount);
+        ScoreboardListRequest GetTopPlayersByWins(int topCount);
     }
 }

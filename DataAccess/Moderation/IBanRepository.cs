@@ -2,7 +2,7 @@
 
 namespace DataAccess.Moderation
 {
-    public interface IBanDAO
+    public interface IBanRepository
     {
         Ban GetActiveBan(Guid userID);
         void ApplyBan(Ban ban);

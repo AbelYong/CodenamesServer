@@ -2,7 +2,7 @@
 
 namespace DataAccess.Moderation
 {
-    public interface IReportDAO
+    public interface IReportRepository
     {
         bool HasPlayerReportedTarget(Guid reporterUserID, Guid reportedUserID);
         void AddReport(Report report);

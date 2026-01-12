@@ -17,7 +17,7 @@ namespace Services.Tests.ContractTests
     public class AuthenticationServiceTest
     {
         private Mock<IUserRepository> _userRepositoryMock;
-        private Mock<IBanDAO> _banDaoMock;
+        private Mock<IBanRepository> _banDaoMock;
         private Mock<IEmailManager> _emailManagerMock;
         private AuthenticationService _authService;
 
@@ -25,7 +25,7 @@ namespace Services.Tests.ContractTests
         public void Setup()
         {
             _userRepositoryMock = new Mock<IUserRepository>();
-            _banDaoMock = new Mock<IBanDAO>();
+            _banDaoMock = new Mock<IBanRepository>();
             _emailManagerMock = new Mock<IEmailManager>();
 
             _authService = new AuthenticationService(

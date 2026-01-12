@@ -17,19 +17,19 @@ namespace Services.Contracts.ServiceContracts.Services
     {
         private readonly ICallbackProvider _callbackProvider;
         private readonly IScoreboardManager _scoreboardService;
-        private readonly IScoreboardDAO _scoreboardDAO;
+        private readonly IScoreboardRepository _scoreboardDAO;
         private readonly ConcurrentDictionary<Guid, IMatchCallback> _connectedPlayers;
         private readonly ConcurrentDictionary<Guid, OngoingMatch> _matches;
         private readonly ConcurrentDictionary<Guid, Guid> _playersOngoingMatchesMap;
 
-        public MatchService() : this(new CallbackProvider(), new ScoreboardService(), new ScoreboardDAO())
+        public MatchService() : this(new CallbackProvider(), new ScoreboardService(), new ScoreboardRepository())
         {
             _connectedPlayers = new ConcurrentDictionary<Guid, IMatchCallback>();
             _matches = new ConcurrentDictionary<Guid, OngoingMatch>();
             _playersOngoingMatchesMap = new ConcurrentDictionary<Guid, Guid>();
         }
 
-        public MatchService(ICallbackProvider callbackProvider, IScoreboardManager scoreboardService, IScoreboardDAO scoreboardDAO)
+        public MatchService(ICallbackProvider callbackProvider, IScoreboardManager scoreboardService, IScoreboardRepository scoreboardDAO)
         {
             _callbackProvider = callbackProvider;
             _scoreboardService = scoreboardService;

@@ -14,13 +14,13 @@ namespace Services.Contracts.ServiceContracts.Services
     public class ModerationService : IModerationManager
     {
         private readonly ISessionManager _sessionService;
-        private readonly IReportDAO _reportDAO;
-        private readonly IBanDAO _banDAO;
+        private readonly IReportRepository _reportDAO;
+        private readonly IBanRepository _banDAO;
         private readonly IPlayerRepository _playerRepository;
 
-        public ModerationService() : this (SessionService.Instance, new ReportDAO(), new BanDAO(), new PlayerRepository()) { }
+        public ModerationService() : this (SessionService.Instance, new ReportRepository(), new BanRepository(), new PlayerRepository()) { }
 
-        public ModerationService(ISessionManager sessionService, IReportDAO reportDAO, IBanDAO banDAO, IPlayerRepository playerRepository)
+        public ModerationService(ISessionManager sessionService, IReportRepository reportDAO, IBanRepository banDAO, IPlayerRepository playerRepository)
         {
             _sessionService = sessionService;
             _reportDAO = reportDAO;

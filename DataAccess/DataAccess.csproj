@@ -78,7 +78,9 @@
       <DependentUpon>codenames.edmx</DependentUpon>
     </Compile>
     <Compile Include="DataRequests\DataVerificationRequest.cs" />
+    <Compile Include="DataRequests\PlayerListRequest.cs" />
     <Compile Include="DataRequests\PlayerRegistrationRequest.cs" />
+    <Compile Include="DataRequests\ScoreboardListRequest.cs" />
     <Compile Include="DataRequests\UpdateRequest.cs" />
     <Compile Include="DbContextFactory.cs" />
     <Compile Include="Friendship.cs">
@@ -94,14 +96,14 @@
     <Compile Include="Report.cs">
       <DependentUpon>codenames.tt</DependentUpon>
     </Compile>
-    <Compile Include="Scoreboards\IScoreboardDAO.cs" />
-    <Compile Include="Scoreboards\ScoreboardDAO.cs" />
-    <Compile Include="Moderation\BanDAO.cs" />
-    <Compile Include="Users\FriendDAO.cs" />
-    <Compile Include="Moderation\IBanDAO.cs" />
-    <Compile Include="Users\IFriendDAO.cs" />
+    <Compile Include="Scoreboards\IScoreboardRepository.cs" />
+    <Compile Include="Scoreboards\ScoreboardRepository.cs" />
+    <Compile Include="Moderation\BanRepository.cs" />
+    <Compile Include="Users\FriendRepository.cs" />
+    <Compile Include="Moderation\IBanRepository.cs" />
+    <Compile Include="Users\IFriendRepository.cs" />
     <Compile Include="Users\IPlayerRepository.cs" />
-    <Compile Include="Moderation\IReportDAO.cs" />
+    <Compile Include="Moderation\IReportRepository.cs" />
     <Compile Include="Users\IUserRepository.cs" />
     <Compile Include="Player.cs">
       <DependentUpon>codenames.tt</DependentUpon>
@@ -113,7 +115,7 @@
     <Compile Include="User.cs">
       <DependentUpon>codenames.tt</DependentUpon>
     </Compile>
-    <Compile Include="Moderation\ReportDAO.cs" />
+    <Compile Include="Moderation\ReportRepository.cs" />
     <Compile Include="Util\DataAccessLogger.cs" />
     <Compile Include="DataRequests\DataRequest.cs" />
     <Compile Include="DataRequests\ErrorType.cs" />

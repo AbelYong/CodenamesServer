@@ -2,6 +2,7 @@
 using Services.Contracts.Callback;
 using Services.Contracts.ServiceContracts.Managers;
 using Services.DTO.DataContract;
+using Services.DTO.Request;
 using Services.Operations;
 using System;
 using System.Collections.Concurrent;
@@ -14,14 +15,14 @@ namespace Services.Contracts.ServiceContracts.Services
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
     public class ScoreboardService : IScoreboardManager
     {
-        private readonly IScoreboardDAO _scoreboard;
+        private readonly IScoreboardRepository _scoreboard;
         private readonly ICallbackProvider _callbackProvider;
         private static readonly ConcurrentDictionary<Guid, IScoreboardCallback> _connectedClients = 
             new ConcurrentDictionary<Guid, IScoreboardCallback>();
 
-        public ScoreboardService() : this (new ScoreboardDAO(), new CallbackProvider()) { }
+        public ScoreboardService() : this (new ScoreboardRepository(), new CallbackProvider()) { }
 
-        public ScoreboardService(IScoreboardDAO scoreboardDAO, ICallbackProvider callbackProvider)
+        public ScoreboardService(IScoreboardRepository scoreboardDAO, ICallbackProvider callbackProvider)
         {
             _callbackProvider = callbackProvider;
             _scoreboard = scoreboardDAO;
@@ -29,8 +30,15 @@ namespace Services.Contracts.ServiceContracts.Services
 
         public void NotifyMatchConcluded()
         {
-            var topPlayers = GetTopPlayers();
-            NotifyAllClients(topPlayers);
+            var response = GetTopPlayers();
+            if (response.IsSuccess)
+            {
+                NotifyAllClients(response.ScoreboardList);
+            }
+            else
+            {
+                ServerLogger.Log.Warn("Could not notify match conclusion due to DB error fetching top players.");
+            }
         }
 
         public void SubscribeToScoreboardUpdates(Guid playerID)
@@ -40,8 +48,16 @@ namespace Services.Contracts.ServiceContracts.Services
                 IScoreboardCallback callback = _callbackProvider.GetCallback<IScoreboardCallback>();
                 if (_connectedClients.TryAdd(playerID, callback))
                 {
-                    var currentTop = GetTopPlayers();
-                    callback.NotifyLeaderboardUpdate(currentTop);
+                    var response = GetTopPlayers();
+
+                    if (response.IsSuccess)
+                    {
+                        callback.NotifyLeaderboardUpdate(response.ScoreboardList);
+                    }
+                    else
+                    {
+                        ServerLogger.Log.Warn($"Could not send initial scoreboard to player {playerID} due to DB error.");
+                    }
                 }
                 string audit = string.Format("{0} has suscribed to Scoreboard Service", ServerLogger.GetPlayerIdentifier(playerID));
                 ServerLogger.Log.Info(audit);
@@ -85,16 +101,36 @@ namespace Services.Contracts.ServiceContracts.Services
             };
         }
 
-        private List<Scoreboard> GetTopPlayers()
+        public ScoreboardRequest GetTopPlayers()
         {
-            var scoreboards = _scoreboard.GetTopPlayersByWins(10);
-            return scoreboards.Select(s => new Scoreboard
+            ScoreboardRequest response = new ScoreboardRequest();
+            var daoResult = _scoreboard.GetTopPlayersByWins(10);
+
+            if (daoResult.IsSuccess)
             {
-                Username = s.Player != null ? s.Player.username : "Unknown",
-                GamesWon = s.mostGamesWon ?? 0,
-                FastestMatch = s.fastestGame.HasValue ? s.fastestGame.Value.ToString(@"mm\:ss") : "--:--",
-                AssassinsRevealed = s.assassinsRevealed ?? 0
-            }).ToList();
+                response.IsSuccess = true;
+                response.StatusCode = StatusCode.OK;
+
+                List<Scoreboard> list = new List<Scoreboard>();
+                foreach (var item in daoResult.Scoreboards)
+                {
+                    Scoreboard dto = new Scoreboard();
+                    dto.Username = item.Player != null ? item.Player.username : "Unknown";
+                    dto.GamesWon = item.mostGamesWon ?? 0;
+                    dto.AssassinsRevealed = item.assassinsRevealed ?? 0;
+                    dto.FastestMatch = item.fastestGame.HasValue ? item.fastestGame.Value.ToString(@"hh\:mm\:ss") : "N/A";
+                    list.Add(dto);
+                }
+                response.ScoreboardList = list;
+            }
+            else
+            {
+                response.IsSuccess = false;
+                response.StatusCode = GetStatusCodeFromDbError(daoResult.ErrorType);
+                response.ScoreboardList = new List<Scoreboard>();
+            }
+
+            return response;
         }
 
         private static void NotifyAllClients(List<Scoreboard> data)
@@ -136,6 +172,15 @@ namespace Services.Contracts.ServiceContracts.Services
             {
                 communicationObject.Abort();
             }
+        }
+
+        private StatusCode GetStatusCodeFromDbError(DataAccess.DataRequests.ErrorType errorType)
+        {
+            if (errorType == DataAccess.DataRequests.ErrorType.DB_ERROR)
+            {
+                return StatusCode.DATABASE_ERROR;
+            }
+            return StatusCode.SERVER_ERROR;
         }
     }
 }

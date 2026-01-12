@@ -21,7 +21,7 @@ namespace DataAccess.Tests.UserTests
         private Mock<ICodenamesContext> _context;
         private Mock<DbSet<Friendship>> _friendshipSet;
         private Mock<DbSet<Player>> _playerSet;
-        private FriendDAO _friendDAO;
+        private FriendRepository _friendDAO;
         private List<Friendship> _friendshipsData;
         private List<Player> _playersData;
 
@@ -41,7 +41,7 @@ namespace DataAccess.Tests.UserTests
             _contextFactory = new Mock<IDbContextFactory>();
             _contextFactory.Setup(f => f.Create()).Returns(_context.Object);
 
-            _friendDAO = new FriendDAO(_contextFactory.Object);
+            _friendDAO = new FriendRepository(_contextFactory.Object);
         }
 
         [Test]

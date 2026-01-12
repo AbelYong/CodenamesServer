@@ -7,13 +7,13 @@ using System.Linq;
 
 namespace DataAccess.Moderation
 {
-    public class ReportDAO : IReportDAO
+    public class ReportRepository : IReportRepository
     {
         private readonly IDbContextFactory _contextFactory;
 
-        public ReportDAO() : this(new DbContextFactory()) { }
+        public ReportRepository() : this(new DbContextFactory()) { }
 
-        public ReportDAO(IDbContextFactory contextFactory)
+        public ReportRepository(IDbContextFactory contextFactory)
         {
             _contextFactory = contextFactory;
         }

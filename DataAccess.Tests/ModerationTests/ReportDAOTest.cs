@@ -17,7 +17,7 @@ namespace DataAccess.Tests.ModerationTests
         private Mock<IDbContextFactory> _contextFactory;
         private Mock<ICodenamesContext> _context;
         private Mock<DbSet<Report>> _reportSet;
-        private ReportDAO _reportDAO;
+        private ReportRepository _reportDAO;
         private List<Report> _reportsData;
 
         [SetUp]
@@ -32,7 +32,7 @@ namespace DataAccess.Tests.ModerationTests
             _contextFactory = new Mock<IDbContextFactory>();
             _contextFactory.Setup(f => f.Create()).Returns(_context.Object);
 
-            _reportDAO = new ReportDAO(_contextFactory.Object);
+            _reportDAO = new ReportRepository(_contextFactory.Object);
         }
 
         [Test]
