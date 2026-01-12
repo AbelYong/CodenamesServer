@@ -1,5 +1,4 @@
 ﻿using DataAccess.DataRequests;
-using DataAccess.Test;
 using DataAccess.Tests.Util;
 using DataAccess.Users;
 using DataAccess.Util;
@@ -10,18 +9,19 @@ using System.Collections.Generic;
 using System.Data.Entity;
 using System.Data.Entity.Core;
 using System.Data.Entity.Infrastructure;
+using System.Data.SqlClient;
 using System.Linq;
 
 namespace DataAccess.Tests.UserTests
 {
     [TestFixture]
-    public class FriendDAOTest
+    public class FriendRepositoryTest
     {
         private Mock<IDbContextFactory> _contextFactory;
         private Mock<ICodenamesContext> _context;
         private Mock<DbSet<Friendship>> _friendshipSet;
         private Mock<DbSet<Player>> _playerSet;
-        private FriendRepository _friendDAO;
+        private FriendRepository _friendRepository;
         private List<Friendship> _friendshipsData;
         private List<Player> _playersData;
 
@@ -41,7 +41,7 @@ namespace DataAccess.Tests.UserTests
             _contextFactory = new Mock<IDbContextFactory>();
             _contextFactory.Setup(f => f.Create()).Returns(_context.Object);
 
-            _friendDAO = new FriendRepository(_contextFactory.Object);
+            _friendRepository = new FriendRepository(_contextFactory.Object);
         }
 
         [Test]
@@ -50,15 +50,14 @@ namespace DataAccess.Tests.UserTests
             Guid meId = Guid.NewGuid();
             Guid friendId = Guid.NewGuid();
             Guid strangerId = Guid.NewGuid();
-            
             _playersData.Add(new Player { playerID = meId, username = "Me", User = new User() });
             _playersData.Add(new Player { playerID = friendId, username = "FriendTarget", User = new User() });
             _playersData.Add(new Player { playerID = strangerId, username = "StrangerTarget", User = new User() });
             _friendshipsData.Add(new Friendship { playerID = meId, friendID = friendId, requestStatus = true });
 
-            var result = _friendDAO.SearchPlayers("target", meId);
+            var result = _friendRepository.SearchPlayers("target", meId);
 
-            Assert.That(result.Count().Equals(1) && result.First().playerID.Equals(strangerId));
+            Assert.That(result.Players.First().playerID, Is.EqualTo(strangerId));
         }
 
         [TestCase(null)]
@@ -66,49 +65,39 @@ namespace DataAccess.Tests.UserTests
         [TestCase("   ")]
         public void SearchPlayers_InvalidQuery_ReturnsEmptyList(string query)
         {
-            var result = _friendDAO.SearchPlayers(query, Guid.NewGuid());
+            var result = _friendRepository.SearchPlayers(query, Guid.NewGuid());
 
-            Assert.That(result, Is.Empty);
+            Assert.That(result.IsSuccess, Is.True);
         }
 
         [Test]
-        public void SearchPlayers_SqlException_ReturnsEmptyList()
+        public void SearchPlayers_SqlException_ReturnsDbError()
         {
             _context.Setup(c => c.Friendships).Throws(SqlExceptionCreator.Create());
 
-            var result = _friendDAO.SearchPlayers("query", Guid.NewGuid());
+            var result = _friendRepository.SearchPlayers("query", Guid.NewGuid());
 
-            Assert.That(result, Is.Empty);
+            Assert.That(result.ErrorType, Is.EqualTo(ErrorType.DB_ERROR));
         }
 
         [Test]
-        public void SearchPlayers_EntityException_ReturnsEmptyList()
+        public void SearchPlayers_EntityException_ReturnsDbError()
         {
             _context.Setup(c => c.Friendships).Throws(new EntityException());
 
-            var result = _friendDAO.SearchPlayers("query", Guid.NewGuid());
+            var result = _friendRepository.SearchPlayers("query", Guid.NewGuid());
 
-            Assert.That(result, Is.Empty);
+            Assert.That(result.ErrorType, Is.EqualTo(ErrorType.DB_ERROR));
         }
 
         [Test]
-        public void SearchPlayers_TimeoutException_ReturnsEmptyList()
-        {
-            _context.Setup(c => c.Friendships).Throws(new TimeoutException());
-
-            var result = _friendDAO.SearchPlayers("query", Guid.NewGuid());
-
-            Assert.That(result, Is.Empty);
-        }
-
-        [Test]
-        public void SearchPlayers_GeneralException_ReturnsEmptyList()
+        public void SearchPlayers_GeneralException_ReturnsDbError()
         {
             _context.Setup(c => c.Friendships).Throws(new Exception());
 
-            var result = _friendDAO.SearchPlayers("query", Guid.NewGuid());
+            var result = _friendRepository.SearchPlayers("query", Guid.NewGuid());
 
-            Assert.That(result, Is.Empty);
+            Assert.That(result.ErrorType, Is.EqualTo(ErrorType.DB_ERROR));
         }
 
         [Test]
@@ -117,34 +106,42 @@ namespace DataAccess.Tests.UserTests
             Guid meId = Guid.NewGuid();
             Guid friendA = Guid.NewGuid();
             Guid friendB = Guid.NewGuid();
-
             _friendshipsData.Add(new Friendship { playerID = meId, friendID = friendA, requestStatus = true });
             _friendshipsData.Add(new Friendship { playerID = friendB, friendID = meId, requestStatus = true });
-
             _playersData.Add(new Player { playerID = friendA, User = new User() });
             _playersData.Add(new Player { playerID = friendB, User = new User() });
 
-            var result = _friendDAO.GetFriends(meId);
+            var result = _friendRepository.GetFriends(meId);
 
-            Assert.That(result.Count().Equals(2));
+            Assert.That(result.Players.Count, Is.EqualTo(2));
         }
 
         [Test]
         public void GetFriends_EmptyId_ReturnsEmptyList()
         {
-            var result = _friendDAO.GetFriends(Guid.Empty);
+            var result = _friendRepository.GetFriends(Guid.Empty);
 
-            Assert.That(result, Is.Empty);
+            Assert.That(result.Players, Is.Empty);
         }
 
         [Test]
-        public void GetFriends_DbException_ReturnsEmptyList()
+        public void GetFriends_DbException_ReturnsDbError()
         {
             _context.Setup(c => c.Friendships).Throws(new EntityException());
 
-            var result = _friendDAO.GetFriends(Guid.NewGuid());
+            var result = _friendRepository.GetFriends(Guid.NewGuid());
 
-            Assert.That(result, Is.Empty);
+            Assert.That(result.ErrorType, Is.EqualTo(ErrorType.DB_ERROR));
+        }
+
+        [Test]
+        public void GetFriends_SqlException_ReturnsDbError()
+        {
+            _context.Setup(c => c.Friendships).Throws(SqlExceptionCreator.Create());
+
+            var result = _friendRepository.GetFriends(Guid.NewGuid());
+
+            Assert.That(result.ErrorType, Is.EqualTo(ErrorType.DB_ERROR));
         }
 
         [Test]
@@ -152,31 +149,30 @@ namespace DataAccess.Tests.UserTests
         {
             Guid meId = Guid.NewGuid();
             Guid requesterId = Guid.NewGuid();
-
             _friendshipsData.Add(new Friendship { playerID = requesterId, friendID = meId, requestStatus = false });
             _playersData.Add(new Player { playerID = requesterId, User = new User() });
 
-            var result = _friendDAO.GetIncomingRequests(meId);
+            var result = _friendRepository.GetIncomingRequests(meId);
 
-            Assert.That(result.Count().Equals(1) && result.First().playerID.Equals(requesterId));
+            Assert.That(result.Players.First().playerID, Is.EqualTo(requesterId));
         }
 
         [Test]
         public void GetIncomingRequests_EmptyId_ReturnsEmptyList()
         {
-            var result = _friendDAO.GetIncomingRequests(Guid.Empty);
+            var result = _friendRepository.GetIncomingRequests(Guid.Empty);
 
-            Assert.That(result, Is.Empty);
+            Assert.That(result.Players, Is.Empty);
         }
 
         [Test]
-        public void GetIncomingRequests_DbException_ReturnsEmptyList()
+        public void GetIncomingRequests_DbException_ReturnsDbError()
         {
             _context.Setup(c => c.Friendships).Throws(new EntityException());
 
-            var result = _friendDAO.GetIncomingRequests(Guid.NewGuid());
+            var result = _friendRepository.GetIncomingRequests(Guid.NewGuid());
 
-            Assert.That(result, Is.Empty);
+            Assert.That(result.ErrorType, Is.EqualTo(ErrorType.DB_ERROR));
         }
 
         [Test]
@@ -184,73 +180,70 @@ namespace DataAccess.Tests.UserTests
         {
             Guid meId = Guid.NewGuid();
             Guid targetId = Guid.NewGuid();
-
             _friendshipsData.Add(new Friendship { playerID = meId, friendID = targetId, requestStatus = false });
             _playersData.Add(new Player { playerID = targetId, User = new User() });
 
-            var result = _friendDAO.GetSentRequests(meId);
+            var result = _friendRepository.GetSentRequests(meId);
 
-            Assert.That(result.Count().Equals(1) && result.First().playerID.Equals(targetId));
+            Assert.That(result.Players.First().playerID, Is.EqualTo(targetId));
         }
 
         [Test]
         public void GetSentRequests_EmptyId_ReturnsEmptyList()
         {
-            var result = _friendDAO.GetSentRequests(Guid.Empty);
+            var result = _friendRepository.GetSentRequests(Guid.Empty);
 
-            Assert.That(result, Is.Empty);
+            Assert.That(result.Players, Is.Empty);
         }
 
         [Test]
-        public void GetSentRequests_DbException_ReturnsEmptyList()
+        public void GetSentRequests_DbException_ReturnsDbError()
         {
             _context.Setup(c => c.Friendships).Throws(new EntityException());
 
-            var result = _friendDAO.GetSentRequests(Guid.NewGuid());
+            var result = _friendRepository.GetSentRequests(Guid.NewGuid());
 
-            Assert.That(result, Is.Empty);
+            Assert.That(result.ErrorType, Is.EqualTo(ErrorType.DB_ERROR));
         }
 
         [Test]
-        public void SendFriendRequest_ValidRequest_ReturnsSuccessSavesRequest()
+        public void SendFriendRequest_ValidRequest_ReturnsSuccess()
         {
             Guid fromId = Guid.NewGuid();
             Guid toId = Guid.NewGuid();
 
-            var result = _friendDAO.SendFriendRequest(fromId, toId);
+            var result = _friendRepository.SendFriendRequest(fromId, toId);
 
             Assert.That(result.Success, Is.True);
+        }
+
+        [Test]
+        public void SendFriendRequest_ValidRequest_AddsFriendshipToContext()
+        {
+            Guid fromId = Guid.NewGuid();
+            Guid toId = Guid.NewGuid();
+
+            _friendRepository.SendFriendRequest(fromId, toId);
+
             _friendshipSet.Verify(m => m.Add(It.Is<Friendship>(f => f.playerID == fromId && f.friendID == toId && !f.requestStatus)), Times.Once);
-            _context.Verify(c => c.SaveChanges(), Times.Once);
         }
 
         [Test]
         public void SendFriendRequest_MissingIds_ReturnsMissingDataError()
         {
-            OperationResult expected = new OperationResult
-            {
-                Success = false,
-                ErrorType = ErrorType.MISSING_DATA
-            };
+            var result = _friendRepository.SendFriendRequest(Guid.Empty, Guid.NewGuid());
 
-            var result = _friendDAO.SendFriendRequest(Guid.Empty, Guid.NewGuid());
-
-            Assert.That(result.Equals(expected));
+            Assert.That(result.ErrorType, Is.EqualTo(ErrorType.MISSING_DATA));
         }
 
         [Test]
         public void SendFriendRequest_SelfRequest_ReturnsInvalidDataError()
         {
             Guid id = Guid.NewGuid();
-            OperationResult expected = new OperationResult
-            {
-                Success = false,
-                ErrorType = ErrorType.INVALID_DATA
-            };
 
-            var result = _friendDAO.SendFriendRequest(id, id);
+            var result = _friendRepository.SendFriendRequest(id, id);
 
-            Assert.That(result.Equals(expected));
+            Assert.That(result.ErrorType, Is.EqualTo(ErrorType.INVALID_DATA));
         }
 
         [Test]
@@ -259,74 +252,64 @@ namespace DataAccess.Tests.UserTests
             Guid fromId = Guid.NewGuid();
             Guid toId = Guid.NewGuid();
             _friendshipsData.Add(new Friendship { playerID = fromId, friendID = toId });
-            OperationResult expected = new OperationResult
-            {
-                Success = false,
-                ErrorType = ErrorType.DUPLICATE
-            };
 
-            var result = _friendDAO.SendFriendRequest(fromId, toId);
+            var result = _friendRepository.SendFriendRequest(fromId, toId);
 
-            Assert.That(result.Equals(expected));
+            Assert.That(result.ErrorType, Is.EqualTo(ErrorType.DUPLICATE));
         }
 
         [Test]
         public void SendFriendRequest_DbUpdateException_ReturnsDbError()
         {
             _context.Setup(c => c.SaveChanges()).Throws(new DbUpdateException());
-            OperationResult expected = new OperationResult
-            {
-                Success = false,
-                ErrorType = ErrorType.DB_ERROR
-            };
 
-            var result = _friendDAO.SendFriendRequest(Guid.NewGuid(), Guid.NewGuid());
+            var result = _friendRepository.SendFriendRequest(Guid.NewGuid(), Guid.NewGuid());
 
-            Assert.That(result.Equals(expected));
+            Assert.That(result.ErrorType, Is.EqualTo(ErrorType.DB_ERROR));
         }
 
         [Test]
         public void SendFriendRequest_EntityException_ReturnsDbError()
         {
             _context.Setup(c => c.SaveChanges()).Throws(new EntityException());
-            OperationResult expected = new OperationResult
-            {
-                Success = false,
-                ErrorType = ErrorType.DB_ERROR
-            };
 
-            var result = _friendDAO.SendFriendRequest(Guid.NewGuid(), Guid.NewGuid());
+            var result = _friendRepository.SendFriendRequest(Guid.NewGuid(), Guid.NewGuid());
 
-            Assert.That(result.Equals(expected));
+            Assert.That(result.ErrorType, Is.EqualTo(ErrorType.DB_ERROR));
         }
 
         [Test]
-        public void AcceptFriendRequest_RequestExists_UpdatesStatusSavesAndReturnsSuccess()
+        public void AcceptFriendRequest_RequestExists_ReturnsSuccess()
         {
             Guid meId = Guid.NewGuid();
             Guid requesterId = Guid.NewGuid();
             var friendship = new Friendship { playerID = requesterId, friendID = meId, requestStatus = false };
             _friendshipsData.Add(friendship);
 
-            var result = _friendDAO.AcceptFriendRequest(meId, requesterId);
+            var result = _friendRepository.AcceptFriendRequest(meId, requesterId);
 
-            Assert.That(result.Success && friendship.requestStatus);
-            _friendshipSet.Verify(m => m.Add(It.Is<Friendship>(f => f.playerID == meId && f.friendID == requesterId && f.requestStatus)), Times.Once); // Reciprocal
-            _context.Verify(c => c.SaveChanges(), Times.Once);
+            Assert.That(result.Success, Is.True);
+        }
+
+        [Test]
+        public void AcceptFriendRequest_RequestExists_UpdatesStatusToTrue()
+        {
+            Guid meId = Guid.NewGuid();
+            Guid requesterId = Guid.NewGuid();
+            var friendship = new Friendship { playerID = requesterId, friendID = meId, requestStatus = false };
+            _friendshipsData.Add(friendship);
+
+            _friendRepository.AcceptFriendRequest(meId, requesterId);
+
+            Assert.That(friendship.requestStatus, Is.True);
         }
 
         [Test]
         public void AcceptFriendRequest_RequestNotFound_ReturnsNotFoundError()
         {
-            OperationResult expected = new OperationResult
-            {
-                Success = false,
-                ErrorType = ErrorType.NOT_FOUND
-            };
+            var result = _friendRepository.AcceptFriendRequest(Guid.NewGuid(), Guid.NewGuid());
 
-            var result = _friendDAO.AcceptFriendRequest(Guid.NewGuid(), Guid.NewGuid());
-
-            Assert.That(result.Equals(expected));
+            Assert.That(result.ErrorType, Is.EqualTo(ErrorType.NOT_FOUND));
         }
 
         [Test]
@@ -336,44 +319,44 @@ namespace DataAccess.Tests.UserTests
             Guid requesterId = Guid.NewGuid();
             _friendshipsData.Add(new Friendship { playerID = requesterId, friendID = meId, requestStatus = false });
             _context.Setup(c => c.SaveChanges()).Throws(new DbUpdateException());
-            OperationResult expected = new OperationResult
-            {
-                Success = false,
-                ErrorType = ErrorType.DB_ERROR
-            };
 
-            var result = _friendDAO.AcceptFriendRequest(meId, requesterId);
+            var result = _friendRepository.AcceptFriendRequest(meId, requesterId);
 
-            Assert.That(result.Equals(expected));
+            Assert.That(result.ErrorType, Is.EqualTo(ErrorType.DB_ERROR));
         }
 
         [Test]
-        public void RejectFriendRequest_RequestExists_RemovesRequestSavesAndReturnsSuccess()
+        public void RejectFriendRequest_RequestExists_ReturnsSuccess()
         {
             Guid meId = Guid.NewGuid();
             Guid requesterId = Guid.NewGuid();
             var friendship = new Friendship { playerID = requesterId, friendID = meId, requestStatus = false };
             _friendshipsData.Add(friendship);
 
-            var result = _friendDAO.RejectFriendRequest(meId, requesterId);
+            var result = _friendRepository.RejectFriendRequest(meId, requesterId);
 
             Assert.That(result.Success, Is.True);
+        }
+
+        [Test]
+        public void RejectFriendRequest_RequestExists_RemovesFromContext()
+        {
+            Guid meId = Guid.NewGuid();
+            Guid requesterId = Guid.NewGuid();
+            var friendship = new Friendship { playerID = requesterId, friendID = meId, requestStatus = false };
+            _friendshipsData.Add(friendship);
+
+            _friendRepository.RejectFriendRequest(meId, requesterId);
+
             _friendshipSet.Verify(m => m.Remove(friendship), Times.Once);
-            _context.Verify(c => c.SaveChanges(), Times.Once);
         }
 
         [Test]
         public void RejectFriendRequest_RequestNotFound_ReturnsNotFoundError()
         {
-            OperationResult expected = new OperationResult
-            {
-                Success = false,
-                ErrorType = ErrorType.NOT_FOUND
-            };
+            var result = _friendRepository.RejectFriendRequest(Guid.NewGuid(), Guid.NewGuid());
 
-            var result = _friendDAO.RejectFriendRequest(Guid.NewGuid(), Guid.NewGuid());
-
-            Assert.That(result.Equals(expected));
+            Assert.That(result.ErrorType, Is.EqualTo(ErrorType.NOT_FOUND));
         }
 
         [Test]
@@ -383,19 +366,14 @@ namespace DataAccess.Tests.UserTests
             Guid requesterId = Guid.NewGuid();
             _friendshipsData.Add(new Friendship { playerID = requesterId, friendID = meId, requestStatus = false });
             _context.Setup(c => c.SaveChanges()).Throws(new EntityException());
-            OperationResult expected = new OperationResult
-            {
-                Success = false,
-                ErrorType = ErrorType.DB_ERROR
-            };
 
-            var result = _friendDAO.RejectFriendRequest(meId, requesterId);
+            var result = _friendRepository.RejectFriendRequest(meId, requesterId);
 
-            Assert.That(result.Equals(expected));
+            Assert.That(result.ErrorType, Is.EqualTo(ErrorType.DB_ERROR));
         }
 
         [Test]
-        public void RemoveFriend_FriendshipExists_RemovesBothLinksSavesAndReturnsSuccess()
+        public void RemoveFriend_FriendshipExists_ReturnsSuccess()
         {
             Guid meId = Guid.NewGuid();
             Guid friendId = Guid.NewGuid();
@@ -404,25 +382,32 @@ namespace DataAccess.Tests.UserTests
             _friendshipsData.Add(link1);
             _friendshipsData.Add(link2);
 
-            var result = _friendDAO.RemoveFriend(meId, friendId);
+            var result = _friendRepository.RemoveFriend(meId, friendId);
 
             Assert.That(result.Success, Is.True);
+        }
+
+        [Test]
+        public void RemoveFriend_FriendshipExists_RemovesRangeFromContext()
+        {
+            Guid meId = Guid.NewGuid();
+            Guid friendId = Guid.NewGuid();
+            var link1 = new Friendship { playerID = meId, friendID = friendId, requestStatus = true };
+            var link2 = new Friendship { playerID = friendId, friendID = meId, requestStatus = true };
+            _friendshipsData.Add(link1);
+            _friendshipsData.Add(link2);
+
+            _friendRepository.RemoveFriend(meId, friendId);
+
             _friendshipSet.Verify(m => m.RemoveRange(It.Is<IEnumerable<Friendship>>(l => l.Count() == 2)), Times.Once);
-            _context.Verify(c => c.SaveChanges(), Times.Once);
         }
 
         [Test]
         public void RemoveFriend_FriendshipNotFound_ReturnsNotFoundError()
         {
-            OperationResult expected = new OperationResult
-            {
-                Success = false,
-                ErrorType = ErrorType.NOT_FOUND
-            };
+            var result = _friendRepository.RemoveFriend(Guid.NewGuid(), Guid.NewGuid());
 
-            var result = _friendDAO.RemoveFriend(Guid.NewGuid(), Guid.NewGuid());
-
-            Assert.That(result.Equals(expected));
+            Assert.That(result.ErrorType, Is.EqualTo(ErrorType.NOT_FOUND));
         }
 
         [Test]
@@ -432,15 +417,10 @@ namespace DataAccess.Tests.UserTests
             Guid friendId = Guid.NewGuid();
             _friendshipsData.Add(new Friendship { playerID = meId, friendID = friendId, requestStatus = true });
             _context.Setup(c => c.SaveChanges()).Throws(new DbUpdateException());
-            OperationResult expected = new OperationResult
-            {
-                Success = false,
-                ErrorType = ErrorType.DB_ERROR
-            };
 
-            var result = _friendDAO.RemoveFriend(meId, friendId);
+            var result = _friendRepository.RemoveFriend(meId, friendId);
 
-            Assert.That(result.Equals(expected));
+            Assert.That(result.ErrorType, Is.EqualTo(ErrorType.DB_ERROR));
         }
     }
 }

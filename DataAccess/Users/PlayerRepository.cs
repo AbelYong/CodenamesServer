@@ -80,6 +80,8 @@ namespace DataAccess.Users
         /// </summary>
         /// <param name="username">The email to verify.</param>
         /// <returns>True if no matching email was found; false otherwise.</returns>
+        /// <exception cref="EntityException"></exception>
+        /// <exception cref="EntitySqlException"></exception>
         public bool ValidateEmailNotDuplicated(string email)
         {
             using (var context = _contextFactory.Create())

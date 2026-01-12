@@ -12,7 +12,6 @@ using System.ServiceModel;
 
 namespace Services.Tests.ContractTests
 {
-
     [TestFixture]
     public class SessionServiceTests
     {
@@ -201,6 +200,7 @@ namespace Services.Tests.ContractTests
             var playerB = CreateTestPlayer();
             var callbackA = new Mock<ISessionCallback>();
             var callbackB = new Mock<ISessionCallback>();
+
             _friendManagerMock.Setup(f => f.GetFriends(It.IsAny<Guid>()))
                 .Returns(new FriendListRequest());
             _callbackProviderMock.Setup(cp => cp.GetCallback<ISessionCallback>())
@@ -223,6 +223,7 @@ namespace Services.Tests.ContractTests
             var playerB = CreateTestPlayer();
             var callbackA = new Mock<ISessionCallback>();
             var callbackB = new Mock<ISessionCallback>();
+
             _friendManagerMock.Setup(f => f.GetFriends(It.IsAny<Guid>()))
                 .Returns(new FriendListRequest());
             _callbackProviderMock.Setup(cp => cp.GetCallback<ISessionCallback>())
@@ -244,6 +245,7 @@ namespace Services.Tests.ContractTests
             var playerB = CreateTestPlayer();
             var callbackA = new Mock<ISessionCallback>();
             var callbackB = new Mock<ISessionCallback>();
+
             _callbackProviderMock.Setup(cp => cp.GetCallback<ISessionCallback>())
                 .Returns(callbackA.Object);
             _friendManagerMock.Setup(f => f.GetFriends(It.IsAny<Guid>()))

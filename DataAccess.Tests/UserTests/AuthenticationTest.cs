@@ -12,7 +12,7 @@ namespace DataAccess.Tests.UserTests
     {
         private Mock<IDbContextFactory> _contextFactory;
         private Mock<ICodenamesContext> _context;
-        private Mock<IPlayerRepository> _playerDAO;
+        private Mock<IPlayerRepository> _playerRepository;
         private UserRepository _userRepository;
 
         [SetUp]
@@ -23,9 +23,9 @@ namespace DataAccess.Tests.UserTests
             _contextFactory = new Mock<IDbContextFactory>();
             _contextFactory.Setup(f => f.Create()).Returns(_context.Object);
 
-            _playerDAO = new Mock<IPlayerRepository>();
+            _playerRepository = new Mock<IPlayerRepository>();
 
-            _userRepository = new UserRepository(_contextFactory.Object, _playerDAO.Object);
+            _userRepository = new UserRepository(_contextFactory.Object, _playerRepository.Object);
         }
 
         [Test]

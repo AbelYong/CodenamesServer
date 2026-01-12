@@ -17,7 +17,7 @@ namespace Services.Tests.ContractTests
     public class AuthenticationServiceTest
     {
         private Mock<IUserRepository> _userRepositoryMock;
-        private Mock<IBanRepository> _banDaoMock;
+        private Mock<IBanRepository> _banRepositoryMock;
         private Mock<IEmailManager> _emailManagerMock;
         private AuthenticationService _authService;
 
@@ -25,12 +25,12 @@ namespace Services.Tests.ContractTests
         public void Setup()
         {
             _userRepositoryMock = new Mock<IUserRepository>();
-            _banDaoMock = new Mock<IBanRepository>();
+            _banRepositoryMock = new Mock<IBanRepository>();
             _emailManagerMock = new Mock<IEmailManager>();
 
             _authService = new AuthenticationService(
                 _userRepositoryMock.Object,
-                _banDaoMock.Object,
+                _banRepositoryMock.Object,
                 _emailManagerMock.Object
             );
         }
@@ -43,7 +43,7 @@ namespace Services.Tests.ContractTests
             Guid userId = Guid.NewGuid();
             _userRepositoryMock.Setup(u => u.Authenticate(username, password))
                 .Returns(userId);
-            _banDaoMock.Setup(b => b.GetActiveBan(userId))
+            _banRepositoryMock.Setup(b => b.GetActiveBan(userId))
                 .Returns((Ban)null);
             AuthenticationRequest expected = new AuthenticationRequest
             {
@@ -67,7 +67,7 @@ namespace Services.Tests.ContractTests
             var activeBan = new Ban { timeout = timeout };
             _userRepositoryMock.Setup(u => u.Authenticate(username, password))
                 .Returns(userId);
-            _banDaoMock.Setup(b => b.GetActiveBan(userId))
+            _banRepositoryMock.Setup(b => b.GetActiveBan(userId))
                 .Returns(activeBan);
             AuthenticationRequest expected = new AuthenticationRequest
             {
@@ -265,14 +265,14 @@ namespace Services.Tests.ContractTests
         }
 
         [Test]
-        public void UpdatePassword_DbError_ReturnsServerError()
+        public void UpdatePassword_DbError_ReturnsDatabaseError()
         {
             _userRepositoryMock.Setup(u => u.UpdatePassword(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
                 .Returns(new UpdateRequest { IsSuccess = false, ErrorType = ErrorType.DB_ERROR });
             CommunicationRequest expected = new CommunicationRequest
             {
                 IsSuccess = false,
-                StatusCode = StatusCode.SERVER_ERROR
+                StatusCode = StatusCode.DATABASE_ERROR
             };
 
             var result = _authService.UpdatePassword("user", "old", "new");

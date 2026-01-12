@@ -17,8 +17,8 @@ namespace Services.Tests.ContractTests
     public class ModerationServiceTest
     {
         private Mock<ISessionManager> _sessionManagerMock;
-        private Mock<IReportRepository> _reportDaoMock;
-        private Mock<IBanRepository> _banDaoMock;
+        private Mock<IReportRepository> _reportRepositoryMock;
+        private Mock<IBanRepository> _banRepositoryMock;
         private Mock<IPlayerRepository> _playerRepositoryMock;
         private ModerationService _moderationService;
 
@@ -26,14 +26,14 @@ namespace Services.Tests.ContractTests
         public void Setup()
         {
             _sessionManagerMock = new Mock<ISessionManager>();
-            _reportDaoMock = new Mock<IReportRepository>();
-            _banDaoMock = new Mock<IBanRepository>();
+            _reportRepositoryMock = new Mock<IReportRepository>();
+            _banRepositoryMock = new Mock<IBanRepository>();
             _playerRepositoryMock = new Mock<IPlayerRepository>();
 
             _moderationService = new ModerationService(
                 _sessionManagerMock.Object,
-                _reportDaoMock.Object,
-                _banDaoMock.Object,
+                _reportRepositoryMock.Object,
+                _banRepositoryMock.Object,
                 _playerRepositoryMock.Object
             );
         }
@@ -101,7 +101,7 @@ namespace Services.Tests.ContractTests
             Guid reporterUserId = Guid.NewGuid();
             Guid reportedUserId = Guid.NewGuid();
             SetupPlayers(reporterPlayerId, reporterUserId, reportedPlayerId, reportedUserId);
-            _reportDaoMock.Setup(r => r.HasPlayerReportedTarget(reporterUserId, reportedUserId))
+            _reportRepositoryMock.Setup(r => r.HasPlayerReportedTarget(reporterUserId, reportedUserId))
                 .Returns(true);
             CommunicationRequest expected = new CommunicationRequest
             {
@@ -112,7 +112,7 @@ namespace Services.Tests.ContractTests
             var result = _moderationService.ReportPlayer(reporterPlayerId, reportedPlayerId, "Reason");
 
             Assert.That(result.Equals(expected));
-            _reportDaoMock.Verify(r => r.AddReport(It.IsAny<Report>()), Times.Never);
+            _reportRepositoryMock.Verify(r => r.AddReport(It.IsAny<Report>()), Times.Never);
         }
 
         [Test]
@@ -123,8 +123,8 @@ namespace Services.Tests.ContractTests
             Guid reporterUserId = Guid.NewGuid();
             Guid reportedUserId = Guid.NewGuid();
             SetupPlayers(reporterPlayerId, reporterUserId, reportedPlayerId, reportedUserId);
-            _reportDaoMock.Setup(r => r.HasPlayerReportedTarget(reporterUserId, reportedUserId)).Returns(false);
-            _reportDaoMock.Setup(r => r.CountUniqueReports(reportedUserId)).Returns(1);
+            _reportRepositoryMock.Setup(r => r.HasPlayerReportedTarget(reporterUserId, reportedUserId)).Returns(false);
+            _reportRepositoryMock.Setup(r => r.CountUniqueReports(reportedUserId)).Returns(1);
             CommunicationRequest expected = new CommunicationRequest
             {
                 IsSuccess = true,
@@ -134,8 +134,8 @@ namespace Services.Tests.ContractTests
             var result = _moderationService.ReportPlayer(reporterPlayerId, reportedPlayerId, "Reason");
 
             Assert.That(result.Equals(expected));
-            _reportDaoMock.Verify(r => r.AddReport(It.IsAny<Report>()), Times.Once);
-            _banDaoMock.Verify(b => b.ApplyBan(It.IsAny<Ban>()), Times.Never);
+            _reportRepositoryMock.Verify(r => r.AddReport(It.IsAny<Report>()), Times.Once);
+            _banRepositoryMock.Verify(b => b.ApplyBan(It.IsAny<Ban>()), Times.Never);
             _sessionManagerMock.Verify(s => s.KickPlayer(It.IsAny<Guid>(), It.IsAny<KickReason>()), Times.Never);
         }
 
@@ -147,8 +147,8 @@ namespace Services.Tests.ContractTests
             Guid reporterUserId = Guid.NewGuid();
             Guid reportedUserId = Guid.NewGuid();
             SetupPlayers(reporterPlayerId, reporterUserId, reportedPlayerId, reportedUserId);
-            _reportDaoMock.Setup(r => r.HasPlayerReportedTarget(reporterUserId, reportedUserId)).Returns(false);
-            _reportDaoMock.Setup(r => r.CountUniqueReports(reportedUserId)).Returns(3);
+            _reportRepositoryMock.Setup(r => r.HasPlayerReportedTarget(reporterUserId, reportedUserId)).Returns(false);
+            _reportRepositoryMock.Setup(r => r.CountUniqueReports(reportedUserId)).Returns(3);
             CommunicationRequest expected = new CommunicationRequest
             {
                 IsSuccess = true,
@@ -158,7 +158,7 @@ namespace Services.Tests.ContractTests
             var result = _moderationService.ReportPlayer(reporterPlayerId, reportedPlayerId, "Spam");
 
             Assert.That(result.Equals(expected));
-            _banDaoMock.Verify(b => b.ApplyBan(It.Is<Ban>(ban =>
+            _banRepositoryMock.Verify(b => b.ApplyBan(It.Is<Ban>(ban =>
                 ban.userID == reportedUserId &&
                 ban.timeout > DateTimeOffset.Now.AddMinutes(50) &&
                 ban.timeout < DateTimeOffset.Now.AddMinutes(70)
@@ -174,8 +174,8 @@ namespace Services.Tests.ContractTests
             Guid reporterUserId = Guid.NewGuid();
             Guid reportedUserId = Guid.NewGuid();
             SetupPlayers(reporterPlayerId, reporterUserId, reportedPlayerId, reportedUserId);
-            _reportDaoMock.Setup(r => r.HasPlayerReportedTarget(reporterUserId, reportedUserId)).Returns(false);
-            _reportDaoMock.Setup(r => r.CountUniqueReports(reportedUserId)).Returns(10);
+            _reportRepositoryMock.Setup(r => r.HasPlayerReportedTarget(reporterUserId, reportedUserId)).Returns(false);
+            _reportRepositoryMock.Setup(r => r.CountUniqueReports(reportedUserId)).Returns(10);
             CommunicationRequest expected = new CommunicationRequest
             {
                 IsSuccess = true,
@@ -185,7 +185,7 @@ namespace Services.Tests.ContractTests
             var result = _moderationService.ReportPlayer(reporterPlayerId, reportedPlayerId, "Severe insults");
 
             Assert.That(result.Equals(expected));
-            _banDaoMock.Verify(b => b.ApplyBan(It.Is<Ban>(ban =>
+            _banRepositoryMock.Verify(b => b.ApplyBan(It.Is<Ban>(ban =>
                 ban.userID == reportedUserId &&
                 ban.timeout == DateTimeOffset.MaxValue
             )), Times.Once);
@@ -198,7 +198,7 @@ namespace Services.Tests.ContractTests
             Guid reporterPlayerId = Guid.NewGuid();
             Guid reportedPlayerId = Guid.NewGuid();
             SetupPlayers(reporterPlayerId, Guid.NewGuid(), reportedPlayerId, Guid.NewGuid());
-            _reportDaoMock.Setup(r => r.AddReport(It.IsAny<Report>()))
+            _reportRepositoryMock.Setup(r => r.AddReport(It.IsAny<Report>()))
                 .Throws(new DbUpdateException());
             CommunicationRequest expected = new CommunicationRequest
             {
@@ -217,7 +217,7 @@ namespace Services.Tests.ContractTests
             Guid reporterPlayerId = Guid.NewGuid();
             Guid reportedPlayerId = Guid.NewGuid();
             SetupPlayers(reporterPlayerId, Guid.NewGuid(), reportedPlayerId, Guid.NewGuid());
-            _reportDaoMock.Setup(r => r.AddReport(It.IsAny<Report>()))
+            _reportRepositoryMock.Setup(r => r.AddReport(It.IsAny<Report>()))
                 .Throws(new Exception("Database connection lost"));
             CommunicationRequest expected = new CommunicationRequest
             {

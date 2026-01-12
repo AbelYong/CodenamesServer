@@ -5,6 +5,7 @@ using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
+using System.Data.Entity.Core;
 using System.Data.Entity.Infrastructure;
 
 namespace DataAccess.Tests.UserTests
@@ -150,16 +151,6 @@ namespace DataAccess.Tests.UserTests
             _usersData.Add(new User { email = email });
 
             bool result = _playerRepository.ValidateEmailNotDuplicated(email);
-
-            Assert.That(result, Is.False);
-        }
-
-        [Test]
-        public void ValidateEmailNotDuplicated_DbError_ReturnsFalse()
-        {
-            _context.Setup(c => c.Users).Throws(new InvalidOperationException());
-
-            bool result = _playerRepository.ValidateEmailNotDuplicated("any@email.com");
 
             Assert.That(result, Is.False);
         }

@@ -28,6 +28,13 @@ namespace Services.DTO.Request
                 return false;
             }
 
+            if (Party == null || other.Party == null)
+            {
+                return
+                    IsSuccess.Equals(other.IsSuccess) &&
+                    StatusCode.Equals(other.StatusCode);
+            }
+
             return
                 IsSuccess.Equals(other.IsSuccess) &&
                 StatusCode.Equals(other.StatusCode) &&
@@ -47,15 +54,7 @@ namespace Services.DTO.Request
             }
             if (Party != null && other.Party != null)
             {
-                if (Party.PartyHost != null || other.Party.PartyHost != null)
-                {
-                    return false;
-                }
-                if (Party.PartyGuest != null || other.Party.PartyGuest != null)
-                {
-                    return false;
-                }
-                return true;
+                return Party.Equals(other.Party);
             }
             else
             {

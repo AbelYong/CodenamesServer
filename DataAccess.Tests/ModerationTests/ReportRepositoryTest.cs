@@ -12,12 +12,12 @@ using DataAccess.Tests.Util;
 namespace DataAccess.Tests.ModerationTests
 {
     [TestFixture]
-    public class ReportDAOTest
+    public class ReportRepositoryTest
     {
         private Mock<IDbContextFactory> _contextFactory;
         private Mock<ICodenamesContext> _context;
         private Mock<DbSet<Report>> _reportSet;
-        private ReportRepository _reportDAO;
+        private ReportRepository _reportRepository;
         private List<Report> _reportsData;
 
         [SetUp]
@@ -32,7 +32,7 @@ namespace DataAccess.Tests.ModerationTests
             _contextFactory = new Mock<IDbContextFactory>();
             _contextFactory.Setup(f => f.Create()).Returns(_context.Object);
 
-            _reportDAO = new ReportRepository(_contextFactory.Object);
+            _reportRepository = new ReportRepository(_contextFactory.Object);
         }
 
         [Test]
@@ -42,7 +42,7 @@ namespace DataAccess.Tests.ModerationTests
             Guid reportedId = Guid.NewGuid();
             _reportsData.Add(new Report { reporterUserID = reporterId, reportedUserID = reportedId });
 
-            bool result = _reportDAO.HasPlayerReportedTarget(reporterId, reportedId);
+            bool result = _reportRepository.HasPlayerReportedTarget(reporterId, reportedId);
 
             Assert.That(result, Is.True);
         }
@@ -54,7 +54,7 @@ namespace DataAccess.Tests.ModerationTests
             Guid reportedId = Guid.NewGuid();
             _reportsData.Add(new Report { reporterUserID = reporterId, reportedUserID = Guid.NewGuid() });
 
-            bool result = _reportDAO.HasPlayerReportedTarget(reporterId, reportedId);
+            bool result = _reportRepository.HasPlayerReportedTarget(reporterId, reportedId);
 
             Assert.That(result, Is.False);
         }
@@ -64,7 +64,7 @@ namespace DataAccess.Tests.ModerationTests
         {
             _context.Setup(c => c.Reports).Throws(SqlExceptionCreator.Create());
 
-            bool result = _reportDAO.HasPlayerReportedTarget(Guid.NewGuid(), Guid.NewGuid());
+            bool result = _reportRepository.HasPlayerReportedTarget(Guid.NewGuid(), Guid.NewGuid());
 
             Assert.That(result, Is.False);
         }
@@ -74,7 +74,7 @@ namespace DataAccess.Tests.ModerationTests
         {
             _context.Setup(c => c.Reports).Throws(new EntityException());
 
-            bool result = _reportDAO.HasPlayerReportedTarget(Guid.NewGuid(), Guid.NewGuid());
+            bool result = _reportRepository.HasPlayerReportedTarget(Guid.NewGuid(), Guid.NewGuid());
 
             Assert.That(result, Is.False);
         }
@@ -84,7 +84,7 @@ namespace DataAccess.Tests.ModerationTests
         {
             _context.Setup(c => c.Reports).Throws(new TimeoutException());
 
-            bool result = _reportDAO.HasPlayerReportedTarget(Guid.NewGuid(), Guid.NewGuid());
+            bool result = _reportRepository.HasPlayerReportedTarget(Guid.NewGuid(), Guid.NewGuid());
 
             Assert.That(result, Is.False);
         }
@@ -94,7 +94,7 @@ namespace DataAccess.Tests.ModerationTests
         {
             _context.Setup(c => c.Reports).Throws(new Exception());
 
-            bool result = _reportDAO.HasPlayerReportedTarget(Guid.NewGuid(), Guid.NewGuid());
+            bool result = _reportRepository.HasPlayerReportedTarget(Guid.NewGuid(), Guid.NewGuid());
 
             Assert.That(result, Is.False);
         }
@@ -104,7 +104,7 @@ namespace DataAccess.Tests.ModerationTests
         {
             var report = new Report { reportID = Guid.NewGuid() };
 
-            _reportDAO.AddReport(report);
+            _reportRepository.AddReport(report);
 
             _reportSet.Verify(m => m.Add(report), Times.Once);
             _context.Verify(c => c.SaveChanges(), Times.Once);
@@ -115,7 +115,7 @@ namespace DataAccess.Tests.ModerationTests
         {
             _context.Setup(c => c.SaveChanges()).Throws(new DbUpdateException());
 
-            Assert.Throws<DbUpdateException>(() => _reportDAO.AddReport(new Report()));
+            Assert.Throws<DbUpdateException>(() => _reportRepository.AddReport(new Report()));
         }
 
         [Test]
@@ -123,7 +123,7 @@ namespace DataAccess.Tests.ModerationTests
         {
             _context.Setup(c => c.SaveChanges()).Throws(SqlExceptionCreator.Create());
 
-            Assert.Throws<SqlException>(() => _reportDAO.AddReport(new Report()));
+            Assert.Throws<SqlException>(() => _reportRepository.AddReport(new Report()));
         }
 
         [Test]
@@ -131,7 +131,7 @@ namespace DataAccess.Tests.ModerationTests
         {
             _context.Setup(c => c.SaveChanges()).Throws(new EntityException());
 
-            Assert.Throws<EntityException>(() => _reportDAO.AddReport(new Report()));
+            Assert.Throws<EntityException>(() => _reportRepository.AddReport(new Report()));
         }
 
         [Test]
@@ -139,7 +139,7 @@ namespace DataAccess.Tests.ModerationTests
         {
             _context.Setup(c => c.SaveChanges()).Throws(new TimeoutException());
 
-            Assert.Throws<TimeoutException>(() => _reportDAO.AddReport(new Report()));
+            Assert.Throws<TimeoutException>(() => _reportRepository.AddReport(new Report()));
         }
 
         [Test]
@@ -147,7 +147,7 @@ namespace DataAccess.Tests.ModerationTests
         {
             _context.Setup(c => c.SaveChanges()).Throws(new Exception());
 
-            Assert.Throws<Exception>(() => _reportDAO.AddReport(new Report()));
+            Assert.Throws<Exception>(() => _reportRepository.AddReport(new Report()));
         }
 
         [Test]
@@ -161,7 +161,7 @@ namespace DataAccess.Tests.ModerationTests
             _reportsData.Add(new Report { reporterUserID = reporterA, reportedUserID = targetUser });
             _reportsData.Add(new Report { reporterUserID = reporterB, reportedUserID = targetUser });
 
-            int count = _reportDAO.CountUniqueReports(targetUser);
+            int count = _reportRepository.CountUniqueReports(targetUser);
 
             Assert.That(count, Is.EqualTo(2));
         }
@@ -171,7 +171,7 @@ namespace DataAccess.Tests.ModerationTests
         {
             Guid targetUser = Guid.NewGuid();
 
-            int count = _reportDAO.CountUniqueReports(targetUser);
+            int count = _reportRepository.CountUniqueReports(targetUser);
 
             Assert.That(count, Is.EqualTo(0));
         }
@@ -181,7 +181,7 @@ namespace DataAccess.Tests.ModerationTests
         {
             _context.Setup(c => c.Reports).Throws(SqlExceptionCreator.Create());
 
-            int count = _reportDAO.CountUniqueReports(Guid.NewGuid());
+            int count = _reportRepository.CountUniqueReports(Guid.NewGuid());
 
             Assert.That(count, Is.EqualTo(0));
         }
@@ -191,7 +191,7 @@ namespace DataAccess.Tests.ModerationTests
         {
             _context.Setup(c => c.Reports).Throws(new EntityException());
 
-            int count = _reportDAO.CountUniqueReports(Guid.NewGuid());
+            int count = _reportRepository.CountUniqueReports(Guid.NewGuid());
 
             Assert.That(count, Is.EqualTo(0));
         }
@@ -201,7 +201,7 @@ namespace DataAccess.Tests.ModerationTests
         {
             _context.Setup(c => c.Reports).Throws(new TimeoutException());
 
-            int count = _reportDAO.CountUniqueReports(Guid.NewGuid());
+            int count = _reportRepository.CountUniqueReports(Guid.NewGuid());
 
             Assert.That(count, Is.EqualTo(0));
         }
@@ -211,7 +211,7 @@ namespace DataAccess.Tests.ModerationTests
         {
             _context.Setup(c => c.Reports).Throws(new Exception());
 
-            int count = _reportDAO.CountUniqueReports(Guid.NewGuid());
+            int count = _reportRepository.CountUniqueReports(Guid.NewGuid());
 
             Assert.That(count, Is.EqualTo(0));
         }

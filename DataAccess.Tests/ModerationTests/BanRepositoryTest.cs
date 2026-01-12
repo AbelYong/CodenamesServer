@@ -12,12 +12,12 @@ using System.Data.SqlClient;
 namespace DataAccess.Tests.ModerationTests
 {
     [TestFixture]
-    public class BanDAOTest
+    public class BanRepositoryTest
     {
         private Mock<IDbContextFactory> _contextFactory;
         private Mock<ICodenamesContext> _context;
         private Mock<DbSet<Ban>> _banSet;
-        private BanRepository _banDAO;
+        private BanRepository _banRepository;
         private List<Ban> _bansData;
 
         [SetUp]
@@ -32,7 +32,7 @@ namespace DataAccess.Tests.ModerationTests
             _contextFactory = new Mock<IDbContextFactory>();
             _contextFactory.Setup(f => f.Create()).Returns(_context.Object);
 
-            _banDAO = new BanRepository(_contextFactory.Object);
+            _banRepository = new BanRepository(_contextFactory.Object);
         }
 
         [Test]
@@ -46,7 +46,7 @@ namespace DataAccess.Tests.ModerationTests
             };
             _bansData.Add(activeBan);
 
-            var result = _banDAO.GetActiveBan(userId);
+            var result = _banRepository.GetActiveBan(userId);
 
             Assert.That(result, Is.EqualTo(activeBan));
         }
@@ -62,7 +62,7 @@ namespace DataAccess.Tests.ModerationTests
             };
             _bansData.Add(expiredBan);
 
-            var result = _banDAO.GetActiveBan(userId);
+            var result = _banRepository.GetActiveBan(userId);
 
             Assert.That(result, Is.Null);
         }
@@ -87,7 +87,7 @@ namespace DataAccess.Tests.ModerationTests
             _bansData.Add(shortBan);
             _bansData.Add(longBan);
 
-            var result = _banDAO.GetActiveBan(userId);
+            var result = _banRepository.GetActiveBan(userId);
 
             Assert.That(result.banID, Is.EqualTo(longBan.banID));
         }
@@ -95,7 +95,7 @@ namespace DataAccess.Tests.ModerationTests
         [Test]
         public void GetActiveBan_UserHasNoBans_ReturnsNull()
         {
-            var result = _banDAO.GetActiveBan(Guid.NewGuid());
+            var result = _banRepository.GetActiveBan(Guid.NewGuid());
 
             Assert.That(result, Is.Null);
         }
@@ -105,7 +105,7 @@ namespace DataAccess.Tests.ModerationTests
         {
             _context.Setup(c => c.Bans).Throws(SqlExceptionCreator.Create());
 
-            var result = _banDAO.GetActiveBan(Guid.NewGuid());
+            var result = _banRepository.GetActiveBan(Guid.NewGuid());
 
             Assert.That(result, Is.Null);
         }
@@ -115,7 +115,7 @@ namespace DataAccess.Tests.ModerationTests
         {
             _context.Setup(c => c.Bans).Throws(new EntityException());
 
-            var result = _banDAO.GetActiveBan(Guid.NewGuid());
+            var result = _banRepository.GetActiveBan(Guid.NewGuid());
 
             Assert.That(result, Is.Null);
         }
@@ -125,7 +125,7 @@ namespace DataAccess.Tests.ModerationTests
         {
             _context.Setup(c => c.Bans).Throws(new TimeoutException());
 
-            var result = _banDAO.GetActiveBan(Guid.NewGuid());
+            var result = _banRepository.GetActiveBan(Guid.NewGuid());
 
             Assert.That(result, Is.Null);
         }
@@ -135,7 +135,7 @@ namespace DataAccess.Tests.ModerationTests
         {
             _context.Setup(c => c.Bans).Throws(new Exception());
 
-            var result = _banDAO.GetActiveBan(Guid.NewGuid());
+            var result = _banRepository.GetActiveBan(Guid.NewGuid());
 
             Assert.That(result, Is.Null);
         }
@@ -145,7 +145,7 @@ namespace DataAccess.Tests.ModerationTests
         {
             var ban = new Ban { banID = Guid.NewGuid() };
 
-            _banDAO.ApplyBan(ban);
+            _banRepository.ApplyBan(ban);
 
             _banSet.Verify(m => m.Add(ban), Times.Once);
             _context.Verify(c => c.SaveChanges(), Times.Once);
@@ -156,7 +156,7 @@ namespace DataAccess.Tests.ModerationTests
         {
             _context.Setup(c => c.SaveChanges()).Throws(new DbUpdateException());
 
-            Assert.Throws<DbUpdateException>(() => _banDAO.ApplyBan(new Ban()));
+            Assert.Throws<DbUpdateException>(() => _banRepository.ApplyBan(new Ban()));
         }
 
         [Test]
@@ -164,7 +164,7 @@ namespace DataAccess.Tests.ModerationTests
         {
             _context.Setup(c => c.SaveChanges()).Throws(SqlExceptionCreator.Create());
 
-            Assert.Throws<SqlException>(() => _banDAO.ApplyBan(new Ban()));
+            Assert.Throws<SqlException>(() => _banRepository.ApplyBan(new Ban()));
         }
 
         [Test]
@@ -172,7 +172,7 @@ namespace DataAccess.Tests.ModerationTests
         {
             _context.Setup(c => c.SaveChanges()).Throws(new EntityException());
 
-            Assert.Throws<EntityException>(() => _banDAO.ApplyBan(new Ban()));
+            Assert.Throws<EntityException>(() => _banRepository.ApplyBan(new Ban()));
         }
 
         [Test]
@@ -180,7 +180,7 @@ namespace DataAccess.Tests.ModerationTests
         {
             _context.Setup(c => c.SaveChanges()).Throws(new TimeoutException());
 
-            Assert.Throws<TimeoutException>(() => _banDAO.ApplyBan(new Ban()));
+            Assert.Throws<TimeoutException>(() => _banRepository.ApplyBan(new Ban()));
         }
 
         [Test]
@@ -188,7 +188,7 @@ namespace DataAccess.Tests.ModerationTests
         {
             _context.Setup(c => c.SaveChanges()).Throws(new Exception());
 
-            Assert.Throws<Exception>(() => _banDAO.ApplyBan(new Ban()));
+            Assert.Throws<Exception>(() => _banRepository.ApplyBan(new Ban()));
         }
     }
 }
