@@ -56,7 +56,8 @@ namespace Services.Contracts.ServiceContracts.Services
                     }
                     else
                     {
-                        ServerLogger.Log.Warn($"Could not send initial scoreboard to player {playerID} due to DB error.");
+                        string message = string.Format("Could not send initial scoreboard to player {0} due to DB error.", playerID);
+                        ServerLogger.Log.Warn(message);
                     }
                 }
                 string audit = string.Format("{0} has suscribed to Scoreboard Service", ServerLogger.GetPlayerIdentifier(playerID));
@@ -174,7 +175,7 @@ namespace Services.Contracts.ServiceContracts.Services
             }
         }
 
-        private StatusCode GetStatusCodeFromDbError(DataAccess.DataRequests.ErrorType errorType)
+        private static StatusCode GetStatusCodeFromDbError(DataAccess.DataRequests.ErrorType errorType)
         {
             if (errorType == DataAccess.DataRequests.ErrorType.DB_ERROR)
             {

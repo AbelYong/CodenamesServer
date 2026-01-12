@@ -10,10 +10,6 @@ using System.ServiceModel;
 
 namespace Services
 {
-    /// <summary>
-    /// Implementation of the friends service.
-    /// Configured as PerSession so that each client has its own instance.
-    /// </summary>
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.PerSession)]
     public class FriendService : IFriendManager
     {
@@ -268,7 +264,7 @@ namespace Services
             return response;
         }
 
-        private StatusCode GetStatusCodeFromDbError(DataAccess.DataRequests.ErrorType errorType)
+        private static StatusCode GetStatusCodeFromDbError(DataAccess.DataRequests.ErrorType errorType)
         {
             if (errorType == DataAccess.DataRequests.ErrorType.DB_ERROR)
             {

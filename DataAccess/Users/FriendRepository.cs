@@ -68,7 +68,7 @@ namespace DataAccess.Users
             return result;
         }
 
-        public PlayerListRequest GetFriends(Guid mePlayerId)
+        public PlayerListRequest GetFriends(Guid playerId)
         {
             PlayerListRequest result = new PlayerListRequest();
             try
@@ -76,8 +76,8 @@ namespace DataAccess.Users
                 using (var context = _contextFactory.Create())
                 {
                     var friends = context.Friendships.Include("Player").Include("Player1")
-                        .Where(f => (f.playerID == mePlayerId || f.friendID == mePlayerId) && f.requestStatus)
-                        .Select(f => f.playerID == mePlayerId ? f.Player1 : f.Player)
+                        .Where(f => (f.playerID == playerId || f.friendID == playerId) && f.requestStatus)
+                        .Select(f => f.playerID == playerId ? f.Player1 : f.Player)
                         .ToList();
 
                     result.Players = friends;
@@ -100,7 +100,7 @@ namespace DataAccess.Users
             return result;
         }
 
-        public PlayerListRequest GetIncomingRequests(Guid mePlayerId)
+        public PlayerListRequest GetIncomingRequests(Guid playerId)
         {
             PlayerListRequest result = new PlayerListRequest();
             try
@@ -108,7 +108,7 @@ namespace DataAccess.Users
                 using (var context = _contextFactory.Create())
                 {
                     var requests = context.Friendships.Include("Player")
-                        .Where(f => f.friendID == mePlayerId && !f.requestStatus)
+                        .Where(f => f.friendID == playerId && !f.requestStatus)
                         .Select(f => f.Player)
                         .ToList();
 
@@ -132,7 +132,7 @@ namespace DataAccess.Users
             return result;
         }
 
-        public PlayerListRequest GetSentRequests(Guid mePlayerId)
+        public PlayerListRequest GetSentRequests(Guid playerID)
         {
             PlayerListRequest result = new PlayerListRequest();
             try
@@ -140,7 +140,7 @@ namespace DataAccess.Users
                 using (var context = _contextFactory.Create())
                 {
                     var requests = context.Friendships.Include("Player1")
-                        .Where(f => f.playerID == mePlayerId && !f.requestStatus)
+                        .Where(f => f.playerID == playerID && !f.requestStatus)
                         .Select(f => f.Player1)
                         .ToList();
 
