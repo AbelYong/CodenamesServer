@@ -16,7 +16,7 @@ namespace Services.Contracts.ServiceContracts.Managers
         void UnsubscribeFromScoreboardUpdates(Guid playerID);
 
         [OperationContract]
-        Scoreboard GetMyScore(Guid playerID);
+        ScoreboardRequest GetMyScore(Guid playerID);
 
         [OperationContract]
         ScoreboardRequest GetTopPlayers();

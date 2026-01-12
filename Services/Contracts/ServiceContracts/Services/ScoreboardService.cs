@@ -85,21 +85,47 @@ namespace Services.Contracts.ServiceContracts.Services
             }
         }
 
-        public Scoreboard GetMyScore(Guid playerID)
+        public ScoreboardRequest GetMyScore(Guid playerID)
         {
-            var myScore = _scoreboard.GetPlayerScoreboard(playerID);
-            if (myScore == null)
+            ScoreboardRequest response = new ScoreboardRequest();
+            var daoResult = _scoreboard.GetPlayerScoreboard(playerID);
+
+            if (daoResult.IsSuccess)
             {
-                return null;
+                var myScoreEntity = daoResult.Scoreboards.FirstOrDefault();
+
+                if (myScoreEntity != null)
+                {
+                    response.IsSuccess = true;
+                    response.StatusCode = StatusCode.OK;
+
+                    Scoreboard dto = new Scoreboard
+                    {
+                        Username = myScoreEntity.Player != null ? myScoreEntity.Player.username : "Unknown",
+                        GamesWon = myScoreEntity.mostGamesWon ?? 0,
+                        FastestMatch = myScoreEntity.fastestGame.HasValue ? myScoreEntity.fastestGame.Value.ToString(@"mm\:ss") : "--:--",
+                        AssassinsRevealed = myScoreEntity.assassinsRevealed ?? 0
+                    };
+
+                    response.ScoreboardList = new List<Scoreboard> { dto };
+                }
+                else
+                {
+                    response.IsSuccess = false;
+                    response.StatusCode = StatusCode.NOT_FOUND;
+                    response.ScoreboardList = new List<Scoreboard>();
+                }
+            }
+            else
+            {
+                response.IsSuccess = false;
+                response.ScoreboardList = new List<Scoreboard>();
+                response.StatusCode = GetStatusCodeFromDbError(daoResult.ErrorType);
+
+                ServerLogger.Log.Warn($"Failed to get score for player {playerID}. ErrorType: {daoResult.ErrorType}");
             }
 
-            return new Scoreboard
-            {
-                Username = myScore.Player != null ? myScore.Player.username : "Unknown",
-                GamesWon = myScore.mostGamesWon ?? 0,
-                FastestMatch = myScore.fastestGame.HasValue ? myScore.fastestGame.Value.ToString(@"mm\:ss") : "--:--",
-                AssassinsRevealed = myScore.assassinsRevealed ?? 0
-            };
+            return response;
         }
 
         public ScoreboardRequest GetTopPlayers()
