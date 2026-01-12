@@ -171,26 +171,43 @@ namespace DataAccess.Scoreboards
             }
         }
 
-        public Scoreboard GetPlayerScoreboard(Guid playerID)
+        public ScoreboardListRequest GetPlayerScoreboard(Guid playerID)
         {
+            ScoreboardListRequest result = new ScoreboardListRequest();
+            result.Scoreboards = new List<Scoreboard>();
+
             try
             {
                 using (var context = _contextFactory.Create())
                 {
-                    return context.Scoreboards.Include("Player")
-                                  .FirstOrDefault(s => s.playerID == playerID);
+                    var scoreboard = context.Scoreboards.Include("Player")
+                                            .FirstOrDefault(s => s.playerID == playerID);
+
+                    if (scoreboard != null)
+                    {
+                        result.Scoreboards.Add(scoreboard);
+                        result.IsSuccess = true;
+                    }
+                    else
+                    {
+                        result.IsSuccess = true;
+                    }
                 }
             }
             catch (Exception ex) when (ex is EntityException || ex is SqlException)
             {
-                DataAccessLogger.Log.Debug("Failed to retrieve player scoreboard", ex);
-                return null;
+                DataAccessLogger.Log.Error($"DB Error retrieving scoreboard for player {playerID}", ex);
+                result.IsSuccess = false;
+                result.ErrorType = ErrorType.DB_ERROR;
             }
             catch (Exception ex)
             {
-                DataAccessLogger.Log.Error("Unexpected exception retrieving player scoreboard: ", ex);
-                return null;
+                DataAccessLogger.Log.Error($"Unexpected error retrieving scoreboard for player {playerID}", ex);
+                result.IsSuccess = false;
+                result.ErrorType = ErrorType.DB_ERROR;
             }
+
+            return result;
         }
 
         public ScoreboardListRequest GetTopPlayersByWins(int topCount)

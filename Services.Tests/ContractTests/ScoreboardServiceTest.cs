@@ -9,6 +9,7 @@ using Services.DTO.DataContract;
 using Services.DTO.Request;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.ServiceModel;
 
 namespace Services.Tests.ContractTests
@@ -43,11 +44,16 @@ namespace Services.Tests.ContractTests
                 fastestGame = TimeSpan.FromMinutes(2),
                 assassinsRevealed = 5
             };
-            _scoreboardRepositoryMock.Setup(d => d.GetPlayerScoreboard(playerId)).Returns(dbScoreboard);
+            var daoResponse = new ScoreboardListRequest
+            {
+                IsSuccess = true,
+                Scoreboards = new List<DataAccess.Scoreboard> { dbScoreboard }
+            };
+            _scoreboardRepositoryMock.Setup(d => d.GetPlayerScoreboard(playerId)).Returns(daoResponse);
 
             var result = _scoreboardService.GetMyScore(playerId);
 
-            Assert.That(result.Username, Is.EqualTo("TestUser"));
+            Assert.That(result.ScoreboardList.First().Username, Is.EqualTo("TestUser"));
         }
 
         [Test]
@@ -59,22 +65,32 @@ namespace Services.Tests.ContractTests
                 Player = new DataAccess.Player { username = "TestUser" },
                 mostGamesWon = 10
             };
-            _scoreboardRepositoryMock.Setup(d => d.GetPlayerScoreboard(playerId)).Returns(dbScoreboard);
+            var daoResponse = new ScoreboardListRequest
+            {
+                IsSuccess = true,
+                Scoreboards = new List<DataAccess.Scoreboard> { dbScoreboard }
+            };
+            _scoreboardRepositoryMock.Setup(d => d.GetPlayerScoreboard(playerId)).Returns(daoResponse);
 
             var result = _scoreboardService.GetMyScore(playerId);
 
-            Assert.That(result.GamesWon, Is.EqualTo(10));
+            Assert.That(result.ScoreboardList.First().GamesWon, Is.EqualTo(10));
         }
 
         [Test]
-        public void GetMyScore_PlayerNotFound_ReturnsNull()
+        public void GetMyScore_PlayerNotFound_ReturnsNotFoundStatus()
         {
             Guid playerId = Guid.NewGuid();
-            _scoreboardRepositoryMock.Setup(d => d.GetPlayerScoreboard(playerId)).Returns((DataAccess.Scoreboard)null);
+            var daoResponse = new ScoreboardListRequest
+            {
+                IsSuccess = true,
+                Scoreboards = new List<DataAccess.Scoreboard>()
+            };
+            _scoreboardRepositoryMock.Setup(d => d.GetPlayerScoreboard(playerId)).Returns(daoResponse);
 
             var result = _scoreboardService.GetMyScore(playerId);
 
-            Assert.That(result, Is.Null);
+            Assert.That(result.StatusCode, Is.EqualTo(StatusCode.NOT_FOUND));
         }
 
         [Test]
@@ -82,11 +98,16 @@ namespace Services.Tests.ContractTests
         {
             Guid playerId = Guid.NewGuid();
             var dbScoreboard = new DataAccess.Scoreboard { Player = null };
-            _scoreboardRepositoryMock.Setup(d => d.GetPlayerScoreboard(playerId)).Returns(dbScoreboard);
+            var daoResponse = new ScoreboardListRequest
+            {
+                IsSuccess = true,
+                Scoreboards = new List<DataAccess.Scoreboard> { dbScoreboard }
+            };
+            _scoreboardRepositoryMock.Setup(d => d.GetPlayerScoreboard(playerId)).Returns(daoResponse);
 
             var result = _scoreboardService.GetMyScore(playerId);
 
-            Assert.That(result.Username, Is.EqualTo("Unknown"));
+            Assert.That(result.ScoreboardList.First().Username, Is.EqualTo("Unknown"));
         }
 
         [Test]
