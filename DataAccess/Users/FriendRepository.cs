@@ -75,9 +75,20 @@ namespace DataAccess.Users
             {
                 using (var context = _contextFactory.Create())
                 {
-                    var friends = context.Friendships.Include("Player").Include("Player1")
-                        .Where(f => (f.playerID == playerId || f.friendID == playerId) && f.requestStatus)
-                        .Select(f => f.playerID == playerId ? f.Player1 : f.Player)
+                    var friendsA = context.Friendships
+                        .Where(f => f.playerID == playerId && f.requestStatus)
+                        .Select(f => f.friendID);
+
+                    var friendsB = context.Friendships
+                        .Where(f => f.friendID == playerId && f.requestStatus)
+                        .Select(f => f.playerID);
+
+                    var ids = friendsA.Union(friendsB);
+
+                    var friends = context.Players
+                        .Include(p => p.User)
+                        .Where(p => ids.Contains(p.playerID))
+                        .AsNoTracking()
                         .ToList();
 
                     result.Players = friends;
