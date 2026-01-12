@@ -92,12 +92,12 @@ namespace Services.Tests.ContractTests
         [Test]
         public void GetTopPlayers_Success_ReturnsPopulatedList()
         {
-            var daoResponse = new ScoreboardListRequest
+            var repositoryResponse = new ScoreboardListRequest
             {
                 IsSuccess = true,
                 Scoreboards = new List<DataAccess.Scoreboard> { new DataAccess.Scoreboard { Player = new DataAccess.Player() } }
             };
-            _scoreboardRepositoryMock.Setup(d => d.GetTopPlayersByWins(10)).Returns(daoResponse);
+            _scoreboardRepositoryMock.Setup(d => d.GetTopPlayersByWins(10)).Returns(repositoryResponse);
 
             var result = _scoreboardService.GetTopPlayers();
 
@@ -107,12 +107,12 @@ namespace Services.Tests.ContractTests
         [Test]
         public void GetTopPlayers_DbError_ReturnsDatabaseError()
         {
-            var daoResponse = new ScoreboardListRequest
+            var repositoryResponse = new ScoreboardListRequest
             {
                 IsSuccess = false,
                 ErrorType = ErrorType.DB_ERROR
             };
-            _scoreboardRepositoryMock.Setup(d => d.GetTopPlayersByWins(10)).Returns(daoResponse);
+            _scoreboardRepositoryMock.Setup(d => d.GetTopPlayersByWins(10)).Returns(repositoryResponse);
 
             var result = _scoreboardService.GetTopPlayers();
 
@@ -124,9 +124,9 @@ namespace Services.Tests.ContractTests
         {
             Guid playerId = Guid.NewGuid();
             var callbackMock = CreateMockCallback(CommunicationState.Opened);
-            var daoResponse = new ScoreboardListRequest { IsSuccess = true, Scoreboards = new List<DataAccess.Scoreboard>() };
+            var repositoryResponse = new ScoreboardListRequest { IsSuccess = true, Scoreboards = new List<DataAccess.Scoreboard>() };
             _callbackProviderMock.Setup(cp => cp.GetCallback<IScoreboardCallback>()).Returns(callbackMock.Object);
-            _scoreboardRepositoryMock.Setup(d => d.GetTopPlayersByWins(10)).Returns(daoResponse);
+            _scoreboardRepositoryMock.Setup(d => d.GetTopPlayersByWins(10)).Returns(repositoryResponse);
 
             _scoreboardService.SubscribeToScoreboardUpdates(playerId);
 
@@ -138,9 +138,9 @@ namespace Services.Tests.ContractTests
         {
             Guid playerId = Guid.NewGuid();
             var callbackMock = CreateMockCallback(CommunicationState.Opened);
-            var daoResponse = new ScoreboardListRequest { IsSuccess = true, Scoreboards = new List<DataAccess.Scoreboard>() };
+            var repositoryResponse = new ScoreboardListRequest { IsSuccess = true, Scoreboards = new List<DataAccess.Scoreboard>() };
             _callbackProviderMock.Setup(cp => cp.GetCallback<IScoreboardCallback>()).Returns(callbackMock.Object);
-            _scoreboardRepositoryMock.Setup(d => d.GetTopPlayersByWins(10)).Returns(daoResponse);
+            _scoreboardRepositoryMock.Setup(d => d.GetTopPlayersByWins(10)).Returns(repositoryResponse);
             callbackMock.Setup(cb => cb.NotifyLeaderboardUpdate(It.IsAny<List<Scoreboard>>())).Throws(new CommunicationException());
 
             Assert.DoesNotThrow(() => _scoreboardService.SubscribeToScoreboardUpdates(playerId));
@@ -160,9 +160,9 @@ namespace Services.Tests.ContractTests
         {
             Guid playerId = Guid.NewGuid();
             var callbackMock = CreateMockCallback(CommunicationState.Opened);
-            var daoResponse = new ScoreboardListRequest { IsSuccess = true, Scoreboards = new List<DataAccess.Scoreboard>() };
+            var repositoryResponse = new ScoreboardListRequest { IsSuccess = true, Scoreboards = new List<DataAccess.Scoreboard>() };
             _callbackProviderMock.Setup(cp => cp.GetCallback<IScoreboardCallback>()).Returns(callbackMock.Object);
-            _scoreboardRepositoryMock.Setup(d => d.GetTopPlayersByWins(10)).Returns(daoResponse);
+            _scoreboardRepositoryMock.Setup(d => d.GetTopPlayersByWins(10)).Returns(repositoryResponse);
             _scoreboardService.SubscribeToScoreboardUpdates(playerId);
 
             _scoreboardService.UnsubscribeFromScoreboardUpdates(playerId);
@@ -185,8 +185,8 @@ namespace Services.Tests.ContractTests
             Guid player2 = Guid.NewGuid();
             var callback1 = CreateMockCallback(CommunicationState.Opened);
             var callback2 = CreateMockCallback(CommunicationState.Opened);
-            var daoResponse = new ScoreboardListRequest { IsSuccess = true, Scoreboards = new List<DataAccess.Scoreboard>() };
-            _scoreboardRepositoryMock.Setup(d => d.GetTopPlayersByWins(10)).Returns(daoResponse);
+            var repositoryResponse = new ScoreboardListRequest { IsSuccess = true, Scoreboards = new List<DataAccess.Scoreboard>() };
+            _scoreboardRepositoryMock.Setup(d => d.GetTopPlayersByWins(10)).Returns(repositoryResponse);
             _callbackProviderMock.SetupSequence(cp => cp.GetCallback<IScoreboardCallback>())
                 .Returns(callback1.Object)
                 .Returns(callback2.Object);
@@ -204,8 +204,8 @@ namespace Services.Tests.ContractTests
         {
             Guid player1 = Guid.NewGuid();
             var callback1 = CreateMockCallback(CommunicationState.Opened);
-            var daoResponse = new ScoreboardListRequest { IsSuccess = true, Scoreboards = new List<DataAccess.Scoreboard>() };
-            _scoreboardRepositoryMock.Setup(d => d.GetTopPlayersByWins(10)).Returns(daoResponse);
+            var repositoryResponse = new ScoreboardListRequest { IsSuccess = true, Scoreboards = new List<DataAccess.Scoreboard>() };
+            _scoreboardRepositoryMock.Setup(d => d.GetTopPlayersByWins(10)).Returns(repositoryResponse);
             _callbackProviderMock.Setup(cp => cp.GetCallback<IScoreboardCallback>()).Returns(callback1.Object);
             _scoreboardService.SubscribeToScoreboardUpdates(player1);
             callback1.Setup(cb => cb.NotifyLeaderboardUpdate(It.IsAny<List<Scoreboard>>())).Throws(new CommunicationException());
