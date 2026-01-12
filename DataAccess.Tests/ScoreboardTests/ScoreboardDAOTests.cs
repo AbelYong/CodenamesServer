@@ -17,7 +17,7 @@ namespace DataAccess.Test.ScoreboardTests
         private Mock<ICodenamesContext> _context;
         private Mock<IPlayerRepository> _playerDAO;
         private Mock<DbSet<Scoreboard>> _scoreboardSet;
-        private ScoreboardDAO _scoreboardDAO;
+        private ScoreboardRepository _scoreboardDAO;
         private List<Scoreboard> _data;
 
         [SetUp]
@@ -34,7 +34,7 @@ namespace DataAccess.Test.ScoreboardTests
 
             _playerDAO = new Mock<IPlayerRepository>();
 
-            _scoreboardDAO = new ScoreboardDAO(_contextFactory.Object, _playerDAO.Object);
+            _scoreboardDAO = new ScoreboardRepository(_contextFactory.Object, _playerDAO.Object);
         }
 
         [Test]

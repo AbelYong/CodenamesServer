@@ -10,26 +10,25 @@ using System.Linq;
 
 namespace DataAccess.Users
 {
-    public class FriendDAO : IFriendDAO
+    public class FriendRepository : IFriendRepository
     {
         private readonly IDbContextFactory _contextFactory;
 
-        public FriendDAO() : this(new DbContextFactory()) { }
+        public FriendRepository() : this(new DbContextFactory()) { }
 
-        public FriendDAO(IDbContextFactory contextFactory)
+        public FriendRepository(IDbContextFactory contextFactory)
         {
             _contextFactory = contextFactory;
         }
 
-        /// <summary>
-        /// Searches for players matching a query string, excluding a specific player ID.
-        /// </summary>
-        public IEnumerable<Player> SearchPlayers(string query, Guid excludePlayerId, int limit = 20)
+        public PlayerListRequest SearchPlayers(string query, Guid excludePlayerId, int limit = 20)
         {
+            PlayerListRequest result = new PlayerListRequest();
             query = (query ?? "").Trim();
             if (string.IsNullOrEmpty(query))
             {
-                return Enumerable.Empty<Player>();
+                result.IsSuccess = true;
+                return result;
             }
 
             try
@@ -39,175 +38,130 @@ namespace DataAccess.Users
                     var q = query.ToLower();
                     var existingContacts = context.Friendships
                         .Where(f => (f.playerID == excludePlayerId || f.friendID == excludePlayerId) && f.requestStatus)
-                        .Select(f => f.playerID == excludePlayerId ? f.friendID : f.playerID);
+                        .Select(f => f.playerID == excludePlayerId ? f.friendID : f.playerID)
+                        .ToList();
 
-                    return context.Players
-                        .Include(p => p.User)
-                        .Where(p => p.playerID != excludePlayerId &&
-                                    !existingContacts.Contains(p.playerID) &&
-                                    (p.username.ToLower().Contains(q) ||
-                                     (p.name != null && p.name.ToLower().Contains(q)) ||
-                                     (p.lastName != null && p.lastName.ToLower().Contains(q))))
-                        .OrderBy(p => p.username)
+                    var searchResult = context.Players.Include("User")
+                        .Where(p => p.username.ToLower().Contains(q) &&
+                                    p.playerID != excludePlayerId &&
+                                    !existingContacts.Contains(p.playerID))
                         .Take(limit)
-                        .AsNoTracking()
                         .ToList();
+
+                    result.Players = searchResult;
+                    result.IsSuccess = true;
                 }
             }
-            catch (SqlException ex)
+            catch (Exception ex) when (ex is SqlException || ex is EntityException) 
             {
-                DataAccessLogger.Log.Error("Database connection error searching players.", ex);
-                return Enumerable.Empty<Player>();
-            }
-            catch (EntityException ex)
-            {
-                DataAccessLogger.Log.Error("Entity error searching players.", ex);
-                return Enumerable.Empty<Player>();
-            }
-            catch (TimeoutException ex)
-            {
-                DataAccessLogger.Log.Error("Timeout searching players.", ex);
-                return Enumerable.Empty<Player>();
+                DataAccessLogger.Log.Error("Error searching players: ", ex);
+                result.IsSuccess = false;
+                result.ErrorType = ErrorType.DB_ERROR;
+                result.Players = new List<Player>();
             }
             catch (Exception ex)
             {
-                DataAccessLogger.Log.Error("Unexpected error searching players.", ex);
-                return Enumerable.Empty<Player>();
+                DataAccessLogger.Log.Error("Unexpected error searching players: ", ex);
+                result.IsSuccess = false;
+                result.ErrorType = ErrorType.DB_ERROR;
             }
+            return result;
         }
 
-        /// <summary>
-        /// Retrieves the list of friends for a given player.
-        /// </summary>
-        public IEnumerable<Player> GetFriends(Guid playerId)
+        public PlayerListRequest GetFriends(Guid mePlayerId)
         {
-            if (playerId == Guid.Empty)
-            {
-                return Enumerable.Empty<Player>();
-            }
-
+            PlayerListRequest result = new PlayerListRequest();
             try
             {
                 using (var context = _contextFactory.Create())
                 {
-                    var friendsA = context.Friendships
-                                     .Where(f => f.playerID == playerId && f.requestStatus)
-                                     .Select(f => f.friendID);
-
-                    var friendsB = context.Friendships
-                                     .Where(f => f.friendID == playerId && f.requestStatus)
-                                     .Select(f => f.playerID);
-
-                    var ids = friendsA.Union(friendsB);
-
-                    return context.Players
-                             .Include(p => p.User)
-                             .Where(p => ids.Contains(p.playerID))
-                             .AsNoTracking()
-                             .ToList();
-                }
-            }
-            catch (SqlException ex)
-            {
-                DataAccessLogger.Log.Debug("Database connection error retrieving friends.", ex);
-                return Enumerable.Empty<Player>();
-            }
-            catch (EntityException ex)
-            {
-                DataAccessLogger.Log.Debug("Entity error retrieving friends.", ex);
-                return Enumerable.Empty<Player>();
-            }
-            catch (TimeoutException ex)
-            {
-                DataAccessLogger.Log.Debug("Timeout retrieving friends.", ex);
-                return Enumerable.Empty<Player>();
-            }
-            catch (Exception ex)
-            {
-                DataAccessLogger.Log.Error("Unexpected error retrieving friends.", ex);
-                return Enumerable.Empty<Player>();
-            }
-        }
-
-        /// <summary>
-        /// Retrieves pending friend requests for a specific player.
-        /// </summary>
-        public IEnumerable<Player> GetIncomingRequests(Guid playerId)
-        {
-            if (playerId == Guid.Empty)
-            {
-                return Enumerable.Empty<Player>();
-            }
-
-            try
-            {
-                using (var context = _contextFactory.Create())
-                {
-                    var requesterIds = context.Friendships
-                        .Where(f => f.friendID == playerId && !f.requestStatus)
-                        .Select(f => f.playerID);
-
-                    return context.Players
-                             .Include(p => p.User)
-                             .Where(p => requesterIds.Contains(p.playerID))
-                             .AsNoTracking()
-                             .ToList();
-                }
-            }
-            catch (SqlException ex)
-            {
-                DataAccessLogger.Log.Debug("Database connection error retrieving incoming requests.", ex);
-                return Enumerable.Empty<Player>();
-            }
-            catch (EntityException ex)
-            {
-                DataAccessLogger.Log.Debug("Entity error retrieving incoming requests.", ex);
-                return Enumerable.Empty<Player>();
-            }
-            catch (Exception ex)
-            {
-                DataAccessLogger.Log.Error("Unexpected error retrieving incoming requests.", ex);
-                return Enumerable.Empty<Player>();
-            }
-        }
-
-        public IEnumerable<Player> GetSentRequests(Guid playerId)
-        {
-            if (playerId == Guid.Empty)
-            {
-                return Enumerable.Empty<Player>();
-            }
-
-            try
-            {
-                using (var context = _contextFactory.Create())
-                {
-                    var targetIds = context.Friendships
-                        .Where(f => f.playerID == playerId && !f.requestStatus)
-                        .Select(f => f.friendID);
-
-                    return context.Players
-                        .Include(p => p.User)
-                        .Where(p => targetIds.Contains(p.playerID))
-                        .AsNoTracking()
+                    var friends = context.Friendships.Include("Player").Include("Player1")
+                        .Where(f => (f.playerID == mePlayerId || f.friendID == mePlayerId) && f.requestStatus)
+                        .Select(f => f.playerID == mePlayerId ? f.Player1 : f.Player)
                         .ToList();
+
+                    result.Players = friends;
+                    result.IsSuccess = true;
                 }
             }
-            catch (SqlException ex)
+            catch (Exception ex) when (ex is SqlException || ex is EntityException)
             {
-                DataAccessLogger.Log.Debug("Database connection error retrieving sent requests.", ex);
-                return Enumerable.Empty<Player>();
-            }
-            catch (EntityException ex)
-            {
-                DataAccessLogger.Log.Debug("Entity error retrieving sent requests.", ex);
-                return Enumerable.Empty<Player>();
+                DataAccessLogger.Log.Error("Error retrieving friends: ", ex);
+                result.IsSuccess = false;
+                result.ErrorType = ErrorType.DB_ERROR;
+                result.Players = new List<Player>();
             }
             catch (Exception ex)
             {
-                DataAccessLogger.Log.Error("Unexpected error retrieving sent requests.", ex);
-                return Enumerable.Empty<Player>();
+                DataAccessLogger.Log.Error("Unexpected error retrieving friends: ", ex);
+                result.IsSuccess = false;
+                result.ErrorType = ErrorType.DB_ERROR;
             }
+            return result;
+        }
+
+        public PlayerListRequest GetIncomingRequests(Guid mePlayerId)
+        {
+            PlayerListRequest result = new PlayerListRequest();
+            try
+            {
+                using (var context = _contextFactory.Create())
+                {
+                    var requests = context.Friendships.Include("Player")
+                        .Where(f => f.friendID == mePlayerId && !f.requestStatus)
+                        .Select(f => f.Player)
+                        .ToList();
+
+                    result.Players = requests;
+                    result.IsSuccess = true;
+                }
+            }
+            catch (Exception ex) when (ex is SqlException || ex is EntityException)
+            {
+                DataAccessLogger.Log.Error("Error retrieving incoming requests: ", ex);
+                result.IsSuccess = false;
+                result.ErrorType = ErrorType.DB_ERROR;
+                result.Players = new List<Player>();
+            }
+            catch (Exception ex)
+            {
+                DataAccessLogger.Log.Error("Unexpected error retrieving incoming requests: ", ex);
+                result.IsSuccess = false;
+                result.ErrorType = ErrorType.DB_ERROR;
+            }
+            return result;
+        }
+
+        public PlayerListRequest GetSentRequests(Guid mePlayerId)
+        {
+            PlayerListRequest result = new PlayerListRequest();
+            try
+            {
+                using (var context = _contextFactory.Create())
+                {
+                    var requests = context.Friendships.Include("Player1")
+                        .Where(f => f.playerID == mePlayerId && !f.requestStatus)
+                        .Select(f => f.Player1)
+                        .ToList();
+
+                    result.Players = requests;
+                    result.IsSuccess = true;
+                }
+            }
+            catch (Exception ex) when (ex is SqlException || (ex is EntityException))
+            {
+                DataAccessLogger.Log.Error("Error retrieving sent requests: ", ex);
+                result.IsSuccess = false;
+                result.ErrorType = ErrorType.DB_ERROR;
+                result.Players = new List<Player>();
+            }
+            catch (Exception ex)
+            {
+                DataAccessLogger.Log.Error("Unexpected error retrieving sent requests: ", ex);
+                result.IsSuccess = false;
+                result.ErrorType = ErrorType.DB_ERROR;
+            }
+            return result;
         }
 
         /// <summary>

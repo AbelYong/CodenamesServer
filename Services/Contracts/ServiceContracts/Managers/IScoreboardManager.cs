@@ -1,5 +1,6 @@
 ﻿using Services.Contracts.Callback;
 using Services.DTO.DataContract;
+using Services.DTO.Request;
 using System;
 using System.ServiceModel;
 
@@ -17,6 +18,8 @@ namespace Services.Contracts.ServiceContracts.Managers
         [OperationContract]
         Scoreboard GetMyScore(Guid playerID);
 
-        void NotifyMatchConcluded(); //Used by match service, not by the clients
+        [OperationContract]
+        ScoreboardRequest GetTopPlayers();
+        void NotifyMatchConcluded();
     }
 }

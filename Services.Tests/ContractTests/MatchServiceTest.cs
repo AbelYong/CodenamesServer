@@ -20,7 +20,7 @@ namespace Services.Tests.ContractTests
         private Queue<IMatchCallback> _callbackQueue;
         private Mock<ICallbackProvider> _callbackProviderMock;
         private Mock<IScoreboardManager> _scoreboardManagerMock;
-        private Mock<IScoreboardDAO> _scoreboardDAOMock;
+        private Mock<IScoreboardRepository> _scoreboardDAOMock;
         private MatchService _matchService;
 
         [SetUp]
@@ -28,7 +28,7 @@ namespace Services.Tests.ContractTests
         {
             _callbackProviderMock = new Mock<ICallbackProvider>();
             _scoreboardManagerMock = new Mock<IScoreboardManager>();
-            _scoreboardDAOMock = new Mock<IScoreboardDAO>();
+            _scoreboardDAOMock = new Mock<IScoreboardRepository>();
             _callbackQueue = new Queue<IMatchCallback>();
 
             _callbackProviderMock.Setup(cp => cp.GetCallback<IMatchCallback>())

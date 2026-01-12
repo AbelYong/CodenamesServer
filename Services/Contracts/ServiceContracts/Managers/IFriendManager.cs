@@ -28,15 +28,15 @@ namespace Services
         FriendshipRequest RemoveFriend(Guid mePlayerId, Guid friendPlayerId);
 
         [OperationContract]
-        List<Player> SearchPlayers(string query, Guid mePlayerId, int limit);
+        FriendListRequest SearchPlayers(string query, Guid mePlayerId, int limit);
 
         [OperationContract]
-        List<Player> GetFriends(Guid mePlayerId);
+        FriendListRequest GetFriends(Guid mePlayerId);
 
         [OperationContract]
-        List<Player> GetIncomingRequests(Guid mePlayerId);
+        FriendListRequest GetIncomingRequests(Guid mePlayerId);
 
         [OperationContract]
-        List<Player> GetSentRequests(Guid mePlayerId);
+        FriendListRequest GetSentRequests(Guid mePlayerId);
     }
 }

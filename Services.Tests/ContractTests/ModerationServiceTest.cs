@@ -17,8 +17,8 @@ namespace Services.Tests.ContractTests
     public class ModerationServiceTest
     {
         private Mock<ISessionManager> _sessionManagerMock;
-        private Mock<IReportDAO> _reportDaoMock;
-        private Mock<IBanDAO> _banDaoMock;
+        private Mock<IReportRepository> _reportDaoMock;
+        private Mock<IBanRepository> _banDaoMock;
         private Mock<IPlayerRepository> _playerRepositoryMock;
         private ModerationService _moderationService;
 
@@ -26,8 +26,8 @@ namespace Services.Tests.ContractTests
         public void Setup()
         {
             _sessionManagerMock = new Mock<ISessionManager>();
-            _reportDaoMock = new Mock<IReportDAO>();
-            _banDaoMock = new Mock<IBanDAO>();
+            _reportDaoMock = new Mock<IReportRepository>();
+            _banDaoMock = new Mock<IBanRepository>();
             _playerRepositoryMock = new Mock<IPlayerRepository>();
 
             _moderationService = new ModerationService(

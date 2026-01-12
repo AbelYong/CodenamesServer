@@ -14,14 +14,14 @@ namespace Services.Tests.ContractTests
     [TestFixture]
     public class ScoreboardServiceTest
     {
-        private Mock<IScoreboardDAO> _scoreboardDaoMock;
+        private Mock<IScoreboardRepository> _scoreboardDaoMock;
         private Mock<ICallbackProvider> _callbackProviderMock;
         private ScoreboardService _scoreboardService;
 
         [SetUp]
         public void Setup()
         {
-            _scoreboardDaoMock = new Mock<IScoreboardDAO>();
+            _scoreboardDaoMock = new Mock<IScoreboardRepository>();
             _callbackProviderMock = new Mock<ICallbackProvider>();
 
             _scoreboardService = new ScoreboardService(

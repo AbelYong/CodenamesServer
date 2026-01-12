@@ -16,7 +16,7 @@ namespace Services.Tests.ContractTests
     public class FriendServiceTest
     {
         private Mock<ICallbackProvider> _callbackProviderMock;
-        private Mock<IFriendDAO> _friendDaoMock;
+        private Mock<IFriendRepository> _friendDaoMock;
         private Mock<IPlayerRepository> _playerRepositoryMock;
         private FriendService _friendService;
         private Queue<IFriendCallback> _callbackQueue;
@@ -25,7 +25,7 @@ namespace Services.Tests.ContractTests
         public void Setup()
         {
             _callbackProviderMock = new Mock<ICallbackProvider>();
-            _friendDaoMock = new Mock<IFriendDAO>();
+            _friendDaoMock = new Mock<IFriendRepository>();
             _playerRepositoryMock = new Mock<IPlayerRepository>();
             _callbackQueue = new Queue<IFriendCallback>();
             _callbackProviderMock.Setup(cp => cp.GetCallback<IFriendCallback>())

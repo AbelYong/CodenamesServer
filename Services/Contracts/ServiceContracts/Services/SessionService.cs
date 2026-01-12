@@ -66,8 +66,8 @@ namespace Services.Contracts.ServiceContracts.Services
 
                 playersOnlineSnapshot = _playersOnline.ToDictionary(session => session.Key, session => session.Value);
             }
-
-            List<Player> friends = _friendService.GetFriends(playerID);
+            FriendListRequest friendsRequest = _friendService.GetFriends(playerID);
+            List<Player> friends = friendsRequest.IsSuccess ? friendsRequest.FriendsList : new List<Player>();
 
             Dictionary<Player, ISessionCallback> friendCallbacks = GetFriendsOnlineChannels(friends, playersOnlineSnapshot);
             NotifyConnectToOnlineFriends(friendCallbacks, player);
@@ -160,7 +160,8 @@ namespace Services.Contracts.ServiceContracts.Services
             }
 
             Guid playerID = (Guid)player.PlayerID;
-            List<Player> friends = _friendService.GetFriends(playerID);
+            FriendListRequest friendsRequest = _friendService.GetFriends(playerID);
+            List<Player> friends = friendsRequest.IsSuccess ? friendsRequest.FriendsList : new List<Player>();
 
             Dictionary<Player, ISessionCallback> playersOnlineSnapshot = new Dictionary<Player, ISessionCallback>();
 

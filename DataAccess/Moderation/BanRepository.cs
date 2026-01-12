@@ -7,13 +7,13 @@ using System.Linq;
 
 namespace DataAccess.Moderation
 {
-    public class BanDAO : IBanDAO
+    public class BanRepository : IBanRepository
     {
         private readonly IDbContextFactory _contextFactory;
 
-        public BanDAO() : this(new DbContextFactory()) { }
+        public BanRepository() : this(new DbContextFactory()) { }
 
-        public BanDAO(IDbContextFactory contextFactory)
+        public BanRepository(IDbContextFactory contextFactory)
         {
             _contextFactory = contextFactory;
         }

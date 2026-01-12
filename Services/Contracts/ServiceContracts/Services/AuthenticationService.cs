@@ -14,12 +14,12 @@ namespace Services.Contracts.ServiceContracts.Services
     public class AuthenticationService : IAuthenticationManager
     {
         private readonly IUserRepository _userRepository;
-        private readonly IBanDAO _banDAO;
+        private readonly IBanRepository _banDAO;
         private readonly IEmailManager _emailManager;
 
-        public AuthenticationService() : this(new UserRepository(), new BanDAO(), new EmailService()) { }
+        public AuthenticationService() : this(new UserRepository(), new BanRepository(), new EmailService()) { }
 
-        public AuthenticationService(IUserRepository userDAO, IBanDAO banDAO, IEmailManager emailManager)
+        public AuthenticationService(IUserRepository userDAO, IBanRepository banDAO, IEmailManager emailManager)
         {
             _userRepository = userDAO;
             _banDAO = banDAO;
