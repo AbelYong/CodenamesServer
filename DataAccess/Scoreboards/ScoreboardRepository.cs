@@ -23,15 +23,17 @@ namespace DataAccess.Scoreboards
             _playerRepository = playerRepository;
         }
 
-        public bool UpdateMatchesWon(Guid playerID)
+        public UpdateRequest UpdateMatchesWon(Guid playerID)
         {
-            if (_playerRepository.VerifyIsPlayerGuest(playerID))
-            {
-                return true;
-            }
-
+            UpdateRequest dataRequest = new UpdateRequest();
             try
             {
+                if (_playerRepository.VerifyIsPlayerGuest(playerID))
+                {
+                    dataRequest.IsSuccess = true;
+                    return dataRequest;
+                }
+
                 using (var context = _contextFactory.Create())
                 {
                     var query = from s in context.Scoreboards
@@ -43,7 +45,7 @@ namespace DataAccess.Scoreboards
                     {
                         scoreboard.mostGamesWon = (scoreboard.mostGamesWon ?? 0) + 1;
                         context.SaveChanges();
-                        return true;
+                        dataRequest.IsSuccess = true;
                     }
                     else
                     {
@@ -53,31 +55,38 @@ namespace DataAccess.Scoreboards
                         scoreboard.assassinsRevealed = 0;
                         context.Scoreboards.Add(scoreboard);
                         context.SaveChanges();
-                        return true;
+                        dataRequest.IsSuccess = true;
                     }
+                    return dataRequest;
                 }
             }
             catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex is SqlException)
             {
                 DataAccessLogger.Log.Warn("Failed to update number of matches won: ", ex);
-                return false;
+                dataRequest.IsSuccess = false;
+                dataRequest.ErrorType = ErrorType.DB_ERROR;
+                return dataRequest;
             }
             catch (Exception ex)
             {
                 DataAccessLogger.Log.Error("Unexpected exception while updating number of matches won: ", ex);
-                return false;
+                dataRequest.IsSuccess = false;
+                dataRequest.ErrorType = ErrorType.DB_ERROR;
+                return dataRequest;
             }
         }
 
-        public bool UpdateFastestMatchRecord(Guid playerID, TimeSpan matchLength)
+        public UpdateRequest UpdateFastestMatchRecord(Guid playerID, TimeSpan matchLength)
         {
-            if (_playerRepository.VerifyIsPlayerGuest(playerID))
-            {
-                return true;
-            }
-
+            UpdateRequest dataRequest = new UpdateRequest();
             try
             {
+                if (_playerRepository.VerifyIsPlayerGuest(playerID))
+                {
+                    dataRequest.IsSuccess = true;
+                    return dataRequest;
+                }
+
                 using (var context = _contextFactory.Create())
                 {
                     var query = from s in context.Scoreboards
@@ -100,7 +109,7 @@ namespace DataAccess.Scoreboards
                             scoreboard.fastestGame = matchLength;
                             context.SaveChanges();
                         }
-                        return true;
+                        dataRequest.IsSuccess = true;
                     }
                     else
                     {
@@ -109,31 +118,38 @@ namespace DataAccess.Scoreboards
                         scoreboard.fastestGame = matchLength;
                         context.Scoreboards.Add(scoreboard);
                         context.SaveChanges();
-                        return true;
+                        dataRequest.IsSuccess = true;
                     }
+                    return dataRequest;
                 }
             }
             catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex is SqlException)
             {
                 DataAccessLogger.Log.Warn("Failed to update fastest match record: ", ex);
-                return false;
+                dataRequest.IsSuccess = false;
+                dataRequest.ErrorType = ErrorType.DB_ERROR;
+                return dataRequest;
             }
             catch (Exception ex)
             {
                 DataAccessLogger.Log.Error("Unexpected exception while updating fastest match record: ", ex);
-                return false;
+                dataRequest.IsSuccess = false;
+                dataRequest.ErrorType = ErrorType.DB_ERROR;
+                return dataRequest;
             }
         }
 
-        public bool UpdateAssassinsPicked(Guid playerID)
+        public UpdateRequest UpdateAssassinsPicked(Guid playerID)
         {
-            if (_playerRepository.VerifyIsPlayerGuest(playerID))
-            {
-                return true;
-            }
-
+            UpdateRequest dataRequest = new UpdateRequest();
             try
             {
+                if (_playerRepository.VerifyIsPlayerGuest(playerID))
+                {
+                    dataRequest.IsSuccess = true;
+                    return dataRequest;
+                }
+
                 using (var context = _contextFactory.Create())
                 {
                     var query = from s in context.Scoreboards
@@ -145,7 +161,7 @@ namespace DataAccess.Scoreboards
                     {
                         scoreboard.assassinsRevealed = (scoreboard.assassinsRevealed ?? 0) + 1;
                         context.SaveChanges();
-                        return true;
+                        dataRequest.IsSuccess = true;
                     }
                     else
                     {
@@ -155,19 +171,24 @@ namespace DataAccess.Scoreboards
                         scoreboard.mostGamesWon = 0;
                         context.Scoreboards.Add(scoreboard);
                         context.SaveChanges();
-                        return true;
+                        dataRequest.IsSuccess = true;
                     }
+                    return dataRequest;
                 }
             }
             catch (Exception ex) when (ex is EntityException || ex is DbUpdateException || ex is SqlException)
             {
                 DataAccessLogger.Log.Error("Failed to update number of assassins picked: ", ex);
-                return false;
+                dataRequest.IsSuccess = false;
+                dataRequest.ErrorType = ErrorType.DB_ERROR;
+                return dataRequest;
             }
             catch (Exception ex)
             {
                 DataAccessLogger.Log.Error("Unexpected exception while updating number of assassins picked: ", ex);
-                return false;
+                dataRequest.IsSuccess = false;
+                dataRequest.ErrorType = ErrorType.DB_ERROR;
+                return dataRequest;
             }
         }
 

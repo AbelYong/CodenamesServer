@@ -43,7 +43,7 @@ namespace DataAccess.Test.ScoreboardTests
             Guid guestId = Guid.NewGuid();
             _playerRepository.Setup(p => p.VerifyIsPlayerGuest(guestId)).Returns(true);
 
-            bool result = _scoreboardRepository.UpdateMatchesWon(guestId);
+            bool result = _scoreboardRepository.UpdateMatchesWon(guestId).IsSuccess;
 
             Assert.That(result);
             _context.Verify(c => c.SaveChanges(), Times.Never);
@@ -57,7 +57,7 @@ namespace DataAccess.Test.ScoreboardTests
             _data.Add(existingScoreboard);
             _playerRepository.Setup(p => p.VerifyIsPlayerGuest(playerId)).Returns(false);
 
-            bool result = _scoreboardRepository.UpdateMatchesWon(playerId);
+            bool result = _scoreboardRepository.UpdateMatchesWon(playerId).IsSuccess;
 
             Assert.That(result && existingScoreboard.mostGamesWon.Equals(6));
             _context.Verify(c => c.SaveChanges(), Times.Once);
@@ -69,7 +69,7 @@ namespace DataAccess.Test.ScoreboardTests
             Guid playerId = Guid.NewGuid();
             _playerRepository.Setup(p => p.VerifyIsPlayerGuest(playerId)).Returns(false);
 
-            bool result = _scoreboardRepository.UpdateMatchesWon(playerId);
+            bool result = _scoreboardRepository.UpdateMatchesWon(playerId).IsSuccess;
 
             Assert.That(result);
             _scoreboardSet.Verify(s => s.Add(It.Is<Scoreboard>(sb =>
@@ -87,7 +87,7 @@ namespace DataAccess.Test.ScoreboardTests
             _playerRepository.Setup(p => p.VerifyIsPlayerGuest(playerId)).Returns(false);
             _context.Setup(c => c.SaveChanges()).Throws(new DbUpdateException());
 
-            bool result = _scoreboardRepository.UpdateMatchesWon(playerId);
+            bool result = _scoreboardRepository.UpdateMatchesWon(playerId).IsSuccess;
 
             Assert.That(result, Is.False);
         }
@@ -99,7 +99,7 @@ namespace DataAccess.Test.ScoreboardTests
             TimeSpan time = TimeSpan.FromMinutes(5);
             _playerRepository.Setup(p => p.VerifyIsPlayerGuest(guestId)).Returns(true);
 
-            bool result = _scoreboardRepository.UpdateFastestMatchRecord(guestId, time);
+            bool result = _scoreboardRepository.UpdateFastestMatchRecord(guestId, time).IsSuccess;
 
             Assert.That(result);
             _context.Verify(c => c.SaveChanges(), Times.Never);
@@ -115,7 +115,7 @@ namespace DataAccess.Test.ScoreboardTests
             _data.Add(existingScoreboard);
             _playerRepository.Setup(p => p.VerifyIsPlayerGuest(playerId)).Returns(false);
 
-            bool result = _scoreboardRepository.UpdateFastestMatchRecord(playerId, newRecord);
+            bool result = _scoreboardRepository.UpdateFastestMatchRecord(playerId, newRecord).IsSuccess;
 
             Assert.That(result && existingScoreboard.fastestGame.Equals(newRecord));
             _context.Verify(c => c.SaveChanges(), Times.Once);
@@ -132,7 +132,7 @@ namespace DataAccess.Test.ScoreboardTests
             _data.Add(existingScoreboard);
             _playerRepository.Setup(p => p.VerifyIsPlayerGuest(playerId)).Returns(false);
 
-            bool result = _scoreboardRepository.UpdateFastestMatchRecord(playerId, newRecord);
+            bool result = _scoreboardRepository.UpdateFastestMatchRecord(playerId, newRecord).IsSuccess;
 
             Assert.That(result && existingScoreboard.fastestGame.Equals(oldRecord));
             _context.Verify(c => c.SaveChanges(), Times.Never);
@@ -145,7 +145,7 @@ namespace DataAccess.Test.ScoreboardTests
             TimeSpan newRecord = TimeSpan.FromMinutes(5);
             _playerRepository.Setup(p => p.VerifyIsPlayerGuest(playerId)).Returns(false);
 
-            bool result = _scoreboardRepository.UpdateFastestMatchRecord(playerId, newRecord);
+            bool result = _scoreboardRepository.UpdateFastestMatchRecord(playerId, newRecord).IsSuccess;
 
             _scoreboardSet.Verify(s => s.Add(It.Is<Scoreboard>(sb =>
                 sb.playerID == playerId &&
@@ -161,7 +161,7 @@ namespace DataAccess.Test.ScoreboardTests
             Guid guestId = Guid.NewGuid();
             _playerRepository.Setup(p => p.VerifyIsPlayerGuest(guestId)).Returns(true);
 
-            bool result = _scoreboardRepository.UpdateAssassinsPicked(guestId);
+            bool result = _scoreboardRepository.UpdateAssassinsPicked(guestId).IsSuccess;
 
             Assert.That(result);
             _context.Verify(c => c.SaveChanges(), Times.Never);
@@ -175,7 +175,7 @@ namespace DataAccess.Test.ScoreboardTests
             _data.Add(existingScoreboard);
             _playerRepository.Setup(p => p.VerifyIsPlayerGuest(playerId)).Returns(false);
 
-            bool result = _scoreboardRepository.UpdateAssassinsPicked(playerId);
+            bool result = _scoreboardRepository.UpdateAssassinsPicked(playerId).IsSuccess;
 
             Assert.That(result && existingScoreboard.assassinsRevealed.Equals(3));
             _context.Verify(c => c.SaveChanges(), Times.Once);
@@ -187,7 +187,7 @@ namespace DataAccess.Test.ScoreboardTests
             Guid playerId = Guid.NewGuid();
             _playerRepository.Setup(p => p.VerifyIsPlayerGuest(playerId)).Returns(false);
 
-            bool result = _scoreboardRepository.UpdateAssassinsPicked(playerId);
+            bool result = _scoreboardRepository.UpdateAssassinsPicked(playerId).IsSuccess;
 
             Assert.That(result);
             _scoreboardSet.Verify(s => s.Add(It.Is<Scoreboard>(sb =>

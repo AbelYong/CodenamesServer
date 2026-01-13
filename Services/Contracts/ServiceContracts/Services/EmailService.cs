@@ -3,7 +3,6 @@ using System.Runtime.Caching;
 using Services.Operations;
 using System;
 using DataAccess.Users;
-using Services.Operations;
 using Services.Contracts.ServiceContracts.Managers;
 using Services.DTO.Request;
 using Services.DTO.DataContract;

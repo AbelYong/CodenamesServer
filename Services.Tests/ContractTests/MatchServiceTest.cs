@@ -20,7 +20,7 @@ namespace Services.Tests.ContractTests
         private Queue<IMatchCallback> _callbackQueue;
         private Mock<ICallbackProvider> _callbackProviderMock;
         private Mock<IScoreboardManager> _scoreboardManagerMock;
-        private Mock<IScoreboardRepository> _scoreboardDAOMock;
+        private Mock<IScoreboardRepository> _scoreboardRepositoryMock;
         private MatchService _matchService;
 
         [SetUp]
@@ -28,7 +28,7 @@ namespace Services.Tests.ContractTests
         {
             _callbackProviderMock = new Mock<ICallbackProvider>();
             _scoreboardManagerMock = new Mock<IScoreboardManager>();
-            _scoreboardDAOMock = new Mock<IScoreboardRepository>();
+            _scoreboardRepositoryMock = new Mock<IScoreboardRepository>();
             _callbackQueue = new Queue<IMatchCallback>();
 
             _callbackProviderMock.Setup(cp => cp.GetCallback<IMatchCallback>())
@@ -37,7 +37,7 @@ namespace Services.Tests.ContractTests
             _matchService = new MatchService(
                 _callbackProviderMock.Object,
                 _scoreboardManagerMock.Object,
-                _scoreboardDAOMock.Object
+                _scoreboardRepositoryMock.Object
             );
         }
 
@@ -337,6 +337,14 @@ namespace Services.Tests.ContractTests
             ConnectPlayer(guesserId, guesserCallback);
             InitializeActiveMatch(spymasterId, guesserId);
             AgentPickedNotification notification = new AgentPickedNotification { SenderID = guesserId };
+            _scoreboardRepositoryMock.Setup(dao => dao.UpdateMatchesWon(spymasterId))
+                .Returns(new DataAccess.DataRequests.UpdateRequest { IsSuccess = true });
+            _scoreboardRepositoryMock.Setup(dao => dao.UpdateFastestMatchRecord(spymasterId, It.IsAny<TimeSpan>()))
+                .Returns(new DataAccess.DataRequests.UpdateRequest { IsSuccess = true });
+            _scoreboardRepositoryMock.Setup(dao => dao.UpdateMatchesWon(guesserId))
+                .Returns(new DataAccess.DataRequests.UpdateRequest { IsSuccess = true });
+            _scoreboardRepositoryMock.Setup(dao => dao.UpdateFastestMatchRecord(guesserId, It.IsAny<TimeSpan>()))
+                .Returns(new DataAccess.DataRequests.UpdateRequest { IsSuccess = true });
 
             int agentNumber = 15;
             for (int i = 0; i < agentNumber; i++)
@@ -346,8 +354,8 @@ namespace Services.Tests.ContractTests
 
             spymasterCallback.Verify(cb => cb.NotifyMatchWon(It.IsAny<string>()), Times.Once);
             guesserCallback.Verify(cb => cb.NotifyMatchWon(It.IsAny<string>()), Times.Once);
-            _scoreboardDAOMock.Verify(dao => dao.UpdateMatchesWon((spymasterId)), Times.Once);
-            _scoreboardDAOMock.Verify(dao => dao.UpdateMatchesWon((guesserId)), Times.Once);
+            _scoreboardRepositoryMock.Verify(dao => dao.UpdateMatchesWon((spymasterId)), Times.Once);
+            _scoreboardRepositoryMock.Verify(dao => dao.UpdateMatchesWon((guesserId)), Times.Once);
         }
 
         [Test]
@@ -360,12 +368,14 @@ namespace Services.Tests.ContractTests
             ConnectPlayer(spymasterId, spymasterCallback);
             ConnectPlayer(guesserId, guesserCallback);
             InitializeActiveMatch(spymasterId, guesserId);
-            _scoreboardDAOMock.Setup(dao => dao.UpdateMatchesWon(spymasterId))
-                .Returns(true);
-            _scoreboardDAOMock.Setup(dao => dao.UpdateFastestMatchRecord(spymasterId, It.IsAny<TimeSpan>()))
-                .Returns(true);
-            _scoreboardDAOMock.Setup(dao => dao.UpdateMatchesWon(guesserId))
-                .Returns(false);
+            _scoreboardRepositoryMock.Setup(dao => dao.UpdateMatchesWon(spymasterId))
+                .Returns(new DataAccess.DataRequests.UpdateRequest { IsSuccess = true});
+            _scoreboardRepositoryMock.Setup(dao => dao.UpdateFastestMatchRecord(spymasterId, It.IsAny<TimeSpan>()))
+                .Returns(new DataAccess.DataRequests.UpdateRequest { IsSuccess = true });
+            _scoreboardRepositoryMock.Setup(dao => dao.UpdateMatchesWon(guesserId))
+                .Returns(new DataAccess.DataRequests.UpdateRequest { IsSuccess = false });
+            _scoreboardRepositoryMock.Setup(dao => dao.UpdateFastestMatchRecord(guesserId, It.IsAny<TimeSpan>()))
+                .Returns(new DataAccess.DataRequests.UpdateRequest { IsSuccess = false });
 
             AgentPickedNotification notification = new AgentPickedNotification { SenderID = guesserId };
 
@@ -375,8 +385,8 @@ namespace Services.Tests.ContractTests
                 _matchService.NotifyPickedAgent(notification);
             }
 
-            _scoreboardDAOMock.Verify(dao => dao.UpdateMatchesWon((spymasterId)), Times.Once);
-            _scoreboardDAOMock.Verify(dao => dao.UpdateMatchesWon((guesserId)), Times.Once);
+            _scoreboardRepositoryMock.Verify(dao => dao.UpdateMatchesWon((spymasterId)), Times.Once);
+            _scoreboardRepositoryMock.Verify(dao => dao.UpdateMatchesWon((guesserId)), Times.Once);
             spymasterCallback.Verify(cb => cb.NotifyStatsCouldNotBeSaved(), Times.Never);
             guesserCallback.Verify(cb => cb.NotifyStatsCouldNotBeSaved(), Times.Once);
         }
@@ -551,13 +561,14 @@ namespace Services.Tests.ContractTests
             ConnectPlayer(spymasterId, spymasterCallback);
             ConnectPlayer(guesserId, guesserCallback);
             InitializeActiveMatch(spymasterId, guesserId);
+            _scoreboardRepositoryMock.Setup(m => m.UpdateAssassinsPicked(guesserId)).Returns(new DataAccess.DataRequests.UpdateRequest { IsSuccess = true});
             AssassinPickedNotification notification = new AssassinPickedNotification { SenderID = guesserId };
 
             _matchService.NotifyPickedAssassin(notification);
 
             guesserCallback.Verify(cb => cb.NotifyAssassinPicked(notification), Times.Once);
             spymasterCallback.Verify(cb => cb.NotifyAssassinPicked(notification), Times.Once);
-            _scoreboardDAOMock.Verify(dao => dao.UpdateAssassinsPicked(guesserId), Times.Once);
+            _scoreboardRepositoryMock.Verify(dao => dao.UpdateAssassinsPicked(guesserId), Times.Once);
         }
 
         [Test]
@@ -571,14 +582,14 @@ namespace Services.Tests.ContractTests
             ConnectPlayer(guesserId, guesserCallback);
             InitializeActiveMatch(spymasterId, guesserId);
             AssassinPickedNotification notification = new AssassinPickedNotification { SenderID = guesserId };
-            _scoreboardDAOMock.Setup(dao => dao.UpdateAssassinsPicked(spymasterId))
-                .Returns(true);
-            _scoreboardDAOMock.Setup(dao => dao.UpdateAssassinsPicked(guesserId))
-                .Returns(false);
+            _scoreboardRepositoryMock.Setup(dao => dao.UpdateAssassinsPicked(spymasterId))
+                .Returns(new DataAccess.DataRequests.UpdateRequest { IsSuccess = true });
+            _scoreboardRepositoryMock.Setup(dao => dao.UpdateAssassinsPicked(guesserId))
+                .Returns(new DataAccess.DataRequests.UpdateRequest { IsSuccess = false });
 
             _matchService.NotifyPickedAssassin(notification);
 
-            _scoreboardDAOMock.Verify(dao => dao.UpdateAssassinsPicked(guesserId), Times.Once);
+            _scoreboardRepositoryMock.Verify(dao => dao.UpdateAssassinsPicked(guesserId), Times.Once);
             guesserCallback.Verify(cb => cb.NotifyStatsCouldNotBeSaved(), Times.Once);
             spymasterCallback.Verify(cb => cb.NotifyStatsCouldNotBeSaved(), Times.Never);
         }
@@ -593,6 +604,7 @@ namespace Services.Tests.ContractTests
             ConnectPlayer(spymasterId, spymasterCallback);
             ConnectPlayer(guesserId, guesserCallback);
             InitializeActiveMatch(spymasterId, guesserId);
+            _scoreboardRepositoryMock.Setup(m => m.UpdateAssassinsPicked(guesserId)).Returns(new DataAccess.DataRequests.UpdateRequest { IsSuccess = true });
             AssassinPickedNotification notification = new AssassinPickedNotification { SenderID = guesserId };
             spymasterCallback.Setup(cb => cb.NotifyAssassinPicked(notification))
                 .Throws(new CommunicationException("Spymaster disconnected"));
@@ -600,7 +612,7 @@ namespace Services.Tests.ContractTests
             _matchService.NotifyPickedAssassin(notification);
 
             guesserCallback.Verify(cb => cb.NotifyAssassinPicked(notification), Times.Once);
-            _scoreboardDAOMock.Verify(dao => dao.UpdateAssassinsPicked(guesserId), Times.Once);
+            _scoreboardRepositoryMock.Verify(dao => dao.UpdateAssassinsPicked(guesserId), Times.Once);
         }
 
         [Test]
@@ -613,6 +625,7 @@ namespace Services.Tests.ContractTests
             ConnectPlayer(spymasterId, spymasterCallback);
             ConnectPlayer(guesserId, guesserCallback);
             InitializeActiveMatch(spymasterId, guesserId);
+            _scoreboardRepositoryMock.Setup(m => m.UpdateAssassinsPicked(guesserId)).Returns(new DataAccess.DataRequests.UpdateRequest { IsSuccess = true });
             AssassinPickedNotification notification = new AssassinPickedNotification { SenderID = guesserId };
             guesserCallback.Setup(cb => cb.NotifyAssassinPicked(notification))
                 .Throws(new CommunicationException("Gusser disconnected"));
@@ -620,7 +633,7 @@ namespace Services.Tests.ContractTests
             _matchService.NotifyPickedAssassin(notification);
 
             spymasterCallback.Verify(cb => cb.NotifyAssassinPicked(notification), Times.Once);
-            _scoreboardDAOMock.Verify(dao => dao.UpdateAssassinsPicked(guesserId), Times.Once);
+            _scoreboardRepositoryMock.Verify(dao => dao.UpdateAssassinsPicked(guesserId), Times.Once);
         }
 
         [Test]

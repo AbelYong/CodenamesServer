@@ -15,17 +15,17 @@ namespace Services.Contracts.ServiceContracts.Services
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
     public class ScoreboardService : IScoreboardManager
     {
-        private readonly IScoreboardRepository _scoreboard;
+        private readonly IScoreboardRepository _scoreboardRepository;
         private readonly ICallbackProvider _callbackProvider;
         private static readonly ConcurrentDictionary<Guid, IScoreboardCallback> _connectedClients = 
             new ConcurrentDictionary<Guid, IScoreboardCallback>();
 
         public ScoreboardService() : this (new ScoreboardRepository(), new CallbackProvider()) { }
 
-        public ScoreboardService(IScoreboardRepository scoreboardDAO, ICallbackProvider callbackProvider)
+        public ScoreboardService(IScoreboardRepository scoreboardRepository, ICallbackProvider callbackProvider)
         {
             _callbackProvider = callbackProvider;
-            _scoreboard = scoreboardDAO;
+            _scoreboardRepository = scoreboardRepository;
         }
 
         public void NotifyMatchConcluded()
@@ -88,7 +88,7 @@ namespace Services.Contracts.ServiceContracts.Services
         public ScoreboardRequest GetMyScore(Guid playerID)
         {
             ScoreboardRequest response = new ScoreboardRequest();
-            var daoResult = _scoreboard.GetPlayerScoreboard(playerID);
+            var daoResult = _scoreboardRepository.GetPlayerScoreboard(playerID);
 
             if (daoResult.IsSuccess)
             {
@@ -122,7 +122,8 @@ namespace Services.Contracts.ServiceContracts.Services
                 response.ScoreboardList = new List<Scoreboard>();
                 response.StatusCode = GetStatusCodeFromDbError(daoResult.ErrorType);
 
-                ServerLogger.Log.Warn($"Failed to get score for player {playerID}. ErrorType: {daoResult.ErrorType}");
+                string audit = $"Failed to get score for player {playerID}. ErrorType: {daoResult.ErrorType}";
+                ServerLogger.Log.Warn(audit);
             }
 
             return response;
@@ -131,7 +132,7 @@ namespace Services.Contracts.ServiceContracts.Services
         public ScoreboardRequest GetTopPlayers()
         {
             ScoreboardRequest response = new ScoreboardRequest();
-            var daoResult = _scoreboard.GetTopPlayersByWins(10);
+            var daoResult = _scoreboardRepository.GetTopPlayersByWins(10);
 
             if (daoResult.IsSuccess)
             {

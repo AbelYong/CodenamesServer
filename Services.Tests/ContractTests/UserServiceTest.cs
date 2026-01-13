@@ -3,6 +3,7 @@ using DataAccess.Users;
 using DataAccess.Util;
 using Moq;
 using NUnit.Framework;
+using Services.Contracts.ServiceContracts.Managers;
 using Services.Contracts.ServiceContracts.Services;
 using Services.DTO.DataContract;
 using Services.DTO.Request;
@@ -22,7 +23,8 @@ namespace Services.Tests.ContractTests
         {
             _userRepositoryMock = new Mock<IUserRepository>();
             _playerRepositoryMock = new Mock<IPlayerRepository>();
-            _userService = new UserService(_userRepositoryMock.Object, _playerRepositoryMock.Object);
+            Mock<IEmailManager> emailManagerMock = new Mock<IEmailManager>();
+            _userService = new UserService(_userRepositoryMock.Object, _playerRepositoryMock.Object, emailManagerMock.Object);
         }
 
         [Test]

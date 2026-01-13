@@ -6,11 +6,9 @@ namespace DataAccess.Scoreboards
 {
     public interface IScoreboardRepository
     {
-        bool UpdateMatchesWon(Guid playerID);
-
-        bool UpdateFastestMatchRecord(Guid playerID,TimeSpan matchLength);
-        
-        bool UpdateAssassinsPicked(Guid playerID);
+        UpdateRequest UpdateMatchesWon(Guid playerID);
+        UpdateRequest UpdateFastestMatchRecord(Guid playerID,TimeSpan matchLength);
+        UpdateRequest UpdateAssassinsPicked(Guid playerID);
         ScoreboardListRequest GetPlayerScoreboard(Guid playerID);
         ScoreboardListRequest GetTopPlayersByWins(int topCount);
     }

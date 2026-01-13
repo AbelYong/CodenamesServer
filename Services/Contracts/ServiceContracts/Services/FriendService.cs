@@ -14,16 +14,16 @@ namespace Services
     public class FriendService : IFriendManager
     {
         private readonly ICallbackProvider _callbackProvider;
-        private readonly IFriendRepository _friendDAO;
+        private readonly IFriendRepository _friendRepository;
         private readonly IPlayerRepository _playerRepository;
         private Guid _playerId;
 
         public FriendService() : this (new CallbackProvider(), new FriendRepository(), new PlayerRepository()) { }
 
-        public FriendService(ICallbackProvider callbackProvider, IFriendRepository friendDAO, IPlayerRepository playerRepository)
+        public FriendService(ICallbackProvider callbackProvider, IFriendRepository friendRepository, IPlayerRepository playerRepository)
         {
             _callbackProvider = callbackProvider;
-            _friendDAO = friendDAO;
+            _friendRepository = friendRepository;
             _playerRepository = playerRepository;
         }
 
@@ -65,7 +65,7 @@ namespace Services
                 return response;
             }
 
-            var result = _friendDAO.SendFriendRequest(fromPlayerId, toPlayerId);
+            var result = _friendRepository.SendFriendRequest(fromPlayerId, toPlayerId);
 
             if (result.Success)
             {
@@ -90,7 +90,7 @@ namespace Services
         public FriendshipRequest AcceptFriendRequest(Guid mePlayerId, Guid requesterPlayerId)
         {
             var response = new FriendshipRequest();
-            var result = _friendDAO.AcceptFriendRequest(mePlayerId, requesterPlayerId);
+            var result = _friendRepository.AcceptFriendRequest(mePlayerId, requesterPlayerId);
 
             if (result.Success)
             {
@@ -115,7 +115,7 @@ namespace Services
         public FriendshipRequest RejectFriendRequest(Guid mePlayerId, Guid requesterPlayerId)
         {
             var response = new FriendshipRequest();
-            var result = _friendDAO.RejectFriendRequest(mePlayerId, requesterPlayerId);
+            var result = _friendRepository.RejectFriendRequest(mePlayerId, requesterPlayerId);
 
             if (result.Success)
             {
@@ -140,7 +140,7 @@ namespace Services
         public FriendshipRequest RemoveFriend(Guid mePlayerId, Guid friendPlayerId)
         {
             var response = new FriendshipRequest();
-            var result = _friendDAO.RemoveFriend(mePlayerId, friendPlayerId);
+            var result = _friendRepository.RemoveFriend(mePlayerId, friendPlayerId);
 
             if (result.Success)
             {
@@ -166,7 +166,7 @@ namespace Services
         {
             FriendListRequest response = new FriendListRequest();
 
-            var result = _friendDAO.SearchPlayers(query, mePlayerId, limit <= 0 ? 20 : limit);
+            var result = _friendRepository.SearchPlayers(query, mePlayerId, limit <= 0 ? 20 : limit);
 
             if (result.IsSuccess)
             {
@@ -192,7 +192,7 @@ namespace Services
         public FriendListRequest GetFriends(Guid mePlayerId)
         {
             FriendListRequest response = new FriendListRequest();
-            var result = _friendDAO.GetFriends(mePlayerId);
+            var result = _friendRepository.GetFriends(mePlayerId);
 
             if (result.IsSuccess)
             {
@@ -217,7 +217,7 @@ namespace Services
         public FriendListRequest GetIncomingRequests(Guid mePlayerId)
         {
             FriendListRequest response = new FriendListRequest();
-            var result = _friendDAO.GetIncomingRequests(mePlayerId);
+            var result = _friendRepository.GetIncomingRequests(mePlayerId);
 
             if (result.IsSuccess)
             {
@@ -242,7 +242,7 @@ namespace Services
         public FriendListRequest GetSentRequests(Guid mePlayerId)
         {
             FriendListRequest response = new FriendListRequest();
-            var result = _friendDAO.GetSentRequests(mePlayerId);
+            var result = _friendRepository.GetSentRequests(mePlayerId);
 
             if (result.IsSuccess)
             {

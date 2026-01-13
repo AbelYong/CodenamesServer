@@ -14,15 +14,15 @@ namespace Services.Contracts.ServiceContracts.Services
     public class AuthenticationService : IAuthenticationManager
     {
         private readonly IUserRepository _userRepository;
-        private readonly IBanRepository _banDAO;
+        private readonly IBanRepository _banRepository;
         private readonly IEmailManager _emailManager;
 
         public AuthenticationService() : this(new UserRepository(), new BanRepository(), new EmailService()) { }
 
-        public AuthenticationService(IUserRepository userDAO, IBanRepository banDAO, IEmailManager emailManager)
+        public AuthenticationService(IUserRepository userRepository, IBanRepository banRepository, IEmailManager emailManager)
         {
-            _userRepository = userDAO;
-            _banDAO = banDAO;
+            _userRepository = userRepository;
+            _banRepository = banRepository;
             _emailManager = emailManager;
         }
 
@@ -35,7 +35,7 @@ namespace Services.Contracts.ServiceContracts.Services
 
                 if (userID != null)
                 {
-                    var activeBan = _banDAO.GetActiveBan(userID.Value);
+                    var activeBan = _banRepository.GetActiveBan(userID.Value);
 
                     if (activeBan != null)
                     {

@@ -17,7 +17,7 @@ namespace Services.Contracts.ServiceContracts.Services
     {
         private readonly ICallbackProvider _callbackProvider;
         private readonly IScoreboardManager _scoreboardService;
-        private readonly IScoreboardRepository _scoreboardDAO;
+        private readonly IScoreboardRepository _scoreboardRepository;
         private readonly ConcurrentDictionary<Guid, IMatchCallback> _connectedPlayers;
         private readonly ConcurrentDictionary<Guid, OngoingMatch> _matches;
         private readonly ConcurrentDictionary<Guid, Guid> _playersOngoingMatchesMap;
@@ -29,11 +29,11 @@ namespace Services.Contracts.ServiceContracts.Services
             _playersOngoingMatchesMap = new ConcurrentDictionary<Guid, Guid>();
         }
 
-        public MatchService(ICallbackProvider callbackProvider, IScoreboardManager scoreboardService, IScoreboardRepository scoreboardDAO)
+        public MatchService(ICallbackProvider callbackProvider, IScoreboardManager scoreboardService, IScoreboardRepository scoreboardRepository)
         {
             _callbackProvider = callbackProvider;
             _scoreboardService = scoreboardService;
-            _scoreboardDAO = scoreboardDAO;
+            _scoreboardRepository = scoreboardRepository;
             _connectedPlayers = new ConcurrentDictionary<Guid, IMatchCallback>();
             _matches = new ConcurrentDictionary<Guid, OngoingMatch>();
             _playersOngoingMatchesMap = new ConcurrentDictionary<Guid, Guid>();
@@ -460,8 +460,8 @@ namespace Services.Contracts.ServiceContracts.Services
 
         private void NotifyMatchWon(OngoingMatch match, Guid toNotifyID)
         {
-            bool fastestMatchUpdated = _scoreboardDAO.UpdateFastestMatchRecord(toNotifyID, match.GetElapsedTime);
-            bool matchesWonUpdated = _scoreboardDAO.UpdateMatchesWon(toNotifyID);
+            bool fastestMatchUpdated = _scoreboardRepository.UpdateFastestMatchRecord(toNotifyID, match.GetElapsedTime).IsSuccess;
+            bool matchesWonUpdated = _scoreboardRepository.UpdateMatchesWon(toNotifyID).IsSuccess;
             if (_connectedPlayers.TryGetValue(toNotifyID, out IMatchCallback channel))
             {
                 try
@@ -635,7 +635,7 @@ namespace Services.Contracts.ServiceContracts.Services
 
         private void UpdateAssassinsPicked(Guid pickerID)
         {
-            bool assassinsPickedUpdated = _scoreboardDAO.UpdateAssassinsPicked(pickerID);
+            bool assassinsPickedUpdated = _scoreboardRepository.UpdateAssassinsPicked(pickerID).IsSuccess;
             if (!assassinsPickedUpdated)
             {
                 SendStatsNotSavedNotification(pickerID);

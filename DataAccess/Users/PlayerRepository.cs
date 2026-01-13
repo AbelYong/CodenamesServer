@@ -165,27 +165,21 @@ namespace DataAccess.Users
             }
         }
 
+        /// <summary>
+        /// Verifies if a player's playerID belongs to a registered user
+        /// </summary>
+        /// <param name="playerID"></param>
+        /// <returns>True if the player is a guest, false otherwise</returns>
+        /// <exception cref="EntityException"></exception>
+        /// <exception cref="SqlException"></exception>
         public bool VerifyIsPlayerGuest(Guid playerID)
         {
-            try
+            using (var context = _contextFactory.Create())
             {
-                using (var context = _contextFactory.Create())
-                {
-                    var query = from p in context.Players
-                                where p.playerID == playerID
-                                select p;
-                    return !query.Any();
-                }
-            }
-            catch (Exception ex) when (ex is EntityException || ex is SqlException)
-            {
-                DataAccessLogger.Log.Debug("Failed to verify if player is a guest: ", ex);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                DataAccessLogger.Log.Error("Unexpected exception while trying to verify if a player is a guest", ex);
-                return true;
+                var query = from p in context.Players
+                            where p.playerID == playerID
+                            select p;
+                return !query.Any();
             }
         }
 

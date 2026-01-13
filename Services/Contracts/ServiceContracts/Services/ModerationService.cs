@@ -14,17 +14,17 @@ namespace Services.Contracts.ServiceContracts.Services
     public class ModerationService : IModerationManager
     {
         private readonly ISessionManager _sessionService;
-        private readonly IReportRepository _reportDAO;
-        private readonly IBanRepository _banDAO;
+        private readonly IReportRepository _reportRepository;
+        private readonly IBanRepository _banRepository;
         private readonly IPlayerRepository _playerRepository;
 
         public ModerationService() : this (SessionService.Instance, new ReportRepository(), new BanRepository(), new PlayerRepository()) { }
 
-        public ModerationService(ISessionManager sessionService, IReportRepository reportDAO, IBanRepository banDAO, IPlayerRepository playerRepository)
+        public ModerationService(ISessionManager sessionService, IReportRepository reportRepository, IBanRepository banRepository, IPlayerRepository playerRepository)
         {
             _sessionService = sessionService;
-            _reportDAO = reportDAO;
-            _banDAO = banDAO;
+            _reportRepository = reportRepository;
+            _banRepository = banRepository;
             _playerRepository = playerRepository;
         }
 
@@ -55,7 +55,7 @@ namespace Services.Contracts.ServiceContracts.Services
                 Guid reportedUserID = reportedEntity.userID;
 
 
-                if (_reportDAO.HasPlayerReportedTarget(reporterUserID, reportedUserID))
+                if (_reportRepository.HasPlayerReportedTarget(reporterUserID, reportedUserID))
                 {
                     request.IsSuccess = false;
                     request.StatusCode = StatusCode.REPORT_DUPLICATED;
@@ -70,9 +70,9 @@ namespace Services.Contracts.ServiceContracts.Services
                     reason = reason,
                     reportDatetime = DateTimeOffset.Now
                 };
-                _reportDAO.AddReport(report);
+                _reportRepository.AddReport(report);
 
-                int reportCount = _reportDAO.CountUniqueReports(reportedUserID);
+                int reportCount = _reportRepository.CountUniqueReports(reportedUserID);
                 TimeSpan? banDuration = null;
                 bool isPermanent = false;
 
@@ -105,7 +105,7 @@ namespace Services.Contracts.ServiceContracts.Services
                         banDatetime = DateTimeOffset.Now,
                         timeout = timeout
                     };
-                    _banDAO.ApplyBan(ban);
+                    _banRepository.ApplyBan(ban);
 
                     KickReason kickReason = isPermanent ? KickReason.PERMANTENT_BAN : KickReason.TEMPORARY_BAN;
 
